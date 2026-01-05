@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, LogOut, Copy, Check, ExternalLink } from 'lucide-react';
+import { Plus, LogOut, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
-import { getTripsByDate, createTrip } from '../utils/firestoreUtils';
+import { getTripsByDate, createTrip, deleteTrip } from '../utils/firestoreUtils';
 import CreateTripModal from '../components/CreateTripModal';
+import IrviLogo from '../components/IrviLogo';
 import colors from '../utils/colors';
 
 const AdminDashboard = () => {
@@ -15,6 +16,8 @@ const AdminDashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [viewFilter, setViewFilter] = useState('all'); // 'all', 'upcoming', 'past'
+  const [deletingId, setDeletingId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,15 +62,60 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteTrip = async (tripId) => {
+    if (!confirm('Are you sure you want to delete this trip? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeletingId(tripId);
+    try {
+      await deleteTrip(tripId);
+      loadTrips();
+    } catch (error) {
+      console.error('Error deleting trip:', error);
+      alert('Failed to delete trip. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const getFilteredTrips = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (viewFilter === 'upcoming') {
+      return trips.filter(trip => {
+        const tripDate = trip.date?.toDate?.() || new Date(trip.date);
+        tripDate.setHours(0, 0, 0, 0);
+        return tripDate >= today;
+      });
+    } else if (viewFilter === 'past') {
+      return trips.filter(trip => {
+        const tripDate = trip.date?.toDate?.() || new Date(trip.date);
+        tripDate.setHours(0, 0, 0, 0);
+        return tripDate < today;
+      });
+    }
+    return trips;
+  };
+
+  const filteredTrips = getFilteredTrips();
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Trip Management Dashboard
-            </h1>
+            <div className="flex items-center gap-4">
+              <IrviLogo size="md" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Trip Management Dashboard
+                </h1>
+                <p className="text-sm text-gray-500 mt-1">IRVI Tours - Admin Portal</p>
+              </div>
+            </div>
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -84,10 +132,50 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Side - Trip List */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Trips for {selectedDate.toLocaleDateString()}
-              </h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Trips for {selectedDate.toLocaleDateString()}
+                </h2>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => setViewFilter('all')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      viewFilter === 'all'
+                        ? 'text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                    style={viewFilter === 'all' ? { backgroundColor: colors.primary.teal } : {}}
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    All Trips
+                  </button>
+                  <button
+                    onClick={() => setViewFilter('upcoming')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      viewFilter === 'upcoming'
+                        ? 'text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                    style={viewFilter === 'upcoming' ? { backgroundColor: colors.primary.teal } : {}}
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    Current Trips
+                  </button>
+                  <button
+                    onClick={() => setViewFilter('past')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      viewFilter === 'past'
+                        ? 'text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                    style={viewFilter === 'past' ? { backgroundColor: colors.primary.teal } : {}}
+                  >
+                    <Archive className="w-4 h-4" />
+                    Old Trips
+                  </button>
+                </div>
+              </div>
               <button
                 onClick={() => setShowCreateModal(true)}
                 style={{ backgroundColor: colors.primary.teal }}
@@ -102,10 +190,12 @@ const AdminDashboard = () => {
               <div className="text-center py-12">
                 <div className="text-gray-500">Loading trips...</div>
               </div>
-            ) : trips.length === 0 ? (
+            ) : filteredTrips.length === 0 ? (
               <div className="bg-white rounded-lg shadow p-8 text-center">
                 <p className="text-gray-500">
-                  No trips scheduled for this date.
+                  {viewFilter === 'upcoming' && 'No upcoming trips scheduled.'}
+                  {viewFilter === 'past' && 'No past trips found.'}
+                  {viewFilter === 'all' && 'No trips scheduled for this date.'}
                 </p>
                 <button
                   onClick={() => setShowCreateModal(true)}
@@ -116,7 +206,7 @@ const AdminDashboard = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {trips.map((trip) => (
+                {filteredTrips.map((trip) => (
                   <div
                     key={trip.id}
                     className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
@@ -166,6 +256,17 @@ const AdminDashboard = () => {
                         >
                           <ExternalLink className="w-4 h-4" />
                           View
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteTrip(trip.id)}
+                          disabled={deletingId === trip.id}
+                          style={{ backgroundColor: colors.button.danger }}
+                          className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete trip"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {deletingId === trip.id ? 'Deleting...' : 'Delete'}
                         </button>
                       </div>
                     </div>
