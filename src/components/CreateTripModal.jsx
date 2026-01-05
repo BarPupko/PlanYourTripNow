@@ -97,8 +97,8 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
             >
-              <option value="sprinter_15">Mercedes Sprinter 2017 (15 Passenger)</option>
-              <option value="bus_30">30-Passenger Bus</option>
+              <option value="sprinter_15">Mercedes Sprinter Black (13 Seats)</option>
+              <option value="bus_30">Mercedes Sprinter White (10 Seats)</option>
             </select>
           </div>
 

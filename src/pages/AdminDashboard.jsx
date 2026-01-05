@@ -231,10 +231,10 @@ const AdminDashboard = () => {
                         </h3>
                         <p className="text-sm text-gray-600 mt-1">
                           {trip.vehicleLayout === 'sprinter_15'
-                            ? 'Mercedes Sprinter 2017 (15 Passenger)'
-                            : trip.vehicleLayout === 'van_15'
-                            ? '15-Passenger Van'
-                            : '30-Passenger Bus'}
+                            ? 'Mercedes Sprinter Black (13 Seats)'
+                            : trip.vehicleLayout === 'bus_30'
+                            ? 'Mercedes Sprinter White (10 Seats)'
+                            : trip.vehicleLayout}
                         </p>
                         {trip.driverName && (
                           <p className="text-sm mt-1" style={{ color: '#00BCD4' }}>
