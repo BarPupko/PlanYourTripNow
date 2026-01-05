@@ -96,6 +96,7 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
             >
               <option value="sprinter_15">Mercedes Sprinter Black (13 Seats)</option>
               <option value="bus_30">Mercedes Sprinter White (10 Seats)</option>
+              <option value="highlander_7">Toyota Highlander (7 Seats)</option>
             </select>
           </div>
 

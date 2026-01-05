@@ -234,6 +234,8 @@ const AdminDashboard = () => {
                             ? 'Mercedes Sprinter Black (13 Seats)'
                             : trip.vehicleLayout === 'bus_30'
                             ? 'Mercedes Sprinter White (10 Seats)'
+                            : trip.vehicleLayout === 'highlander_7'
+                            ? 'Toyota Highlander (7 Seats)'
                             : trip.vehicleLayout}
                         </p>
                         {trip.driverName && (

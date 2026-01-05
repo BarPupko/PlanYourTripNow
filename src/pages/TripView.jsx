@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, UserPlus } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getTrip } from '../utils/firestoreUtils';
+import { getTrip, updateRegistration } from '../utils/firestoreUtils';
 import VehicleSeatingMap from '../components/VehicleSeatingMap';
 import AddParticipantModal from '../components/AddParticipantModal';
 import colors from '../utils/colors';
@@ -15,6 +15,7 @@ const TripView = () => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedParticipant, setSelectedParticipant] = useState(null);
 
   useEffect(() => {
     loadTrip();
@@ -47,6 +48,15 @@ const TripView = () => {
     });
 
     return () => unsubscribe();
+  };
+
+  const handleTogglePaid = async (registrationId, currentStatus) => {
+    try {
+      await updateRegistration(registrationId, { paid: !currentStatus });
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      alert('Failed to update payment status');
+    }
   };
 
   if (loading) {
@@ -140,7 +150,8 @@ const TripView = () => {
                   {sortedRegistrations.map((reg) => (
                     <div
                       key={reg.id}
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      onClick={() => setSelectedParticipant(reg)}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                     >
                       <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: colors.seat.occupied }}>
                         {reg.seatNumber}
@@ -152,6 +163,13 @@ const TripView = () => {
                         <p className="text-sm text-gray-600 truncate">
                           {reg.email}
                         </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {reg.paid ? (
+                          <CheckCircle2 className="w-5 h-5 text-green-500" title="Paid" />
+                        ) : (
+                          <XCircle className="w-5 h-5 text-red-500" title="Not Paid" />
+                        )}
                       </div>
                     </div>
                   ))}
@@ -172,6 +190,126 @@ const TripView = () => {
             // Modal will close automatically and real-time listener will update the list
           }}
         />
+      )}
+
+      {/* Participant Details Modal */}
+      {selectedParticipant && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedParticipant(null)}>
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Participant Details
+              </h2>
+
+              <div className="space-y-4">
+                {/* Basic Info */}
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Name</label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {selectedParticipant.firstName} {selectedParticipant.lastName}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Email</label>
+                  <p className="text-gray-900">{selectedParticipant.email}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Phone</label>
+                  <p className="text-gray-900">{selectedParticipant.phone}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Seat Number</label>
+                  <p className="text-gray-900">#{selectedParticipant.seatNumber}</p>
+                </div>
+
+                {/* Payment Info */}
+                <div className="border-t pt-4">
+                  <label className="text-sm font-medium text-gray-500">Payment Method</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    {selectedParticipant.paymentMethod === 'card' ? (
+                      <>
+                        <CreditCard className="w-4 h-4 text-blue-600" />
+                        <span className="text-gray-900">Card Payment</span>
+                      </>
+                    ) : (
+                      <>
+                        <Banknote className="w-4 h-4 text-green-600" />
+                        <span className="text-gray-900">Pay on Trip</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Payment Status</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    {selectedParticipant.paid ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-500" />
+                    )}
+                    <span className="text-gray-900 font-semibold">
+                      {selectedParticipant.paid ? 'Paid' : 'Not Paid'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Registration Status */}
+                <div className="border-t pt-4">
+                  <label className="text-sm font-medium text-gray-500">Registration Status</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    <span className="text-gray-900">Complete</span>
+                  </div>
+                  {selectedParticipant.registrationDate && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Registered: {new Date(selectedParticipant.registrationDate).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+
+                {/* Agreements */}
+                <div className="border-t pt-4">
+                  <label className="text-sm font-medium text-gray-500">Signed Agreements</label>
+                  <div className="space-y-1 mt-2">
+                    {selectedParticipant.agreedToCancellationPolicy && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <span className="text-gray-700">Cancellation Policy</span>
+                      </div>
+                    )}
+                    {selectedParticipant.agreedToWaiver && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <span className="text-gray-700">Liability Waiver</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 space-y-3">
+                <button
+                  onClick={() => handleTogglePaid(selectedParticipant.id, selectedParticipant.paid)}
+                  style={{ backgroundColor: selectedParticipant.paid ? colors.button.danger : colors.success }}
+                  className="w-full px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity"
+                >
+                  {selectedParticipant.paid ? 'Mark as Not Paid' : 'Mark as Paid'}
+                </button>
+                <button
+                  onClick={() => setSelectedParticipant(null)}
+                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
