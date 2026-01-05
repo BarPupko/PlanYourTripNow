@@ -47,7 +47,7 @@ const AdminDashboard = () => {
   };
 
   const handleCopyLink = (tripId) => {
-    const link = `${window.location.origin}/register/${tripId}`;
+    const link = `${window.location.origin}/PlanYourTripNow/register/${tripId}`;
     navigator.clipboard.writeText(link);
     setCopiedId(tripId);
     setTimeout(() => setCopiedId(null), 2000);
