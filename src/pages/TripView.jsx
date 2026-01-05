@@ -92,16 +92,17 @@ const TripView = () => {
       {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/')}
-              className="text-gray-600 hover:text-gray-900"
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Back to dashboard"
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{trip.title}</h1>
-              <p className="text-sm text-gray-600">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{trip.title}</h1>
+              <p className="text-xs sm:text-sm text-gray-600">
                 {trip.date?.toDate().toLocaleDateString()}
               </p>
             </div>
@@ -135,9 +136,10 @@ const TripView = () => {
                   onClick={() => setShowAddModal(true)}
                   style={{ backgroundColor: colors.primary.teal }}
                   className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                  title="Add participant"
                 >
-                  <UserPlus className="w-4 h-4" />
-                  Add
+                  <UserPlus className="w-5 h-5" />
+                  <span className="hidden sm:inline">Add</span>
                 </button>
               </div>
 
@@ -296,13 +298,13 @@ const TripView = () => {
                 <button
                   onClick={() => handleTogglePaid(selectedParticipant.id, selectedParticipant.paid)}
                   style={{ backgroundColor: selectedParticipant.paid ? colors.button.danger : colors.success }}
-                  className="w-full px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity"
+                  className="w-full px-4 py-3 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
                 >
                   {selectedParticipant.paid ? 'Mark as Not Paid' : 'Mark as Paid'}
                 </button>
                 <button
                   onClick={() => setSelectedParticipant(null)}
-                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
                   Close
                 </button>

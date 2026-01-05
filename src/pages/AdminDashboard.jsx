@@ -9,9 +9,14 @@ import { getTripsByDate, createTrip, deleteTrip, updateTrip } from '../utils/fir
 import CreateTripModal from '../components/CreateTripModal';
 import EditTripModal from '../components/EditTripModal';
 import IrviLogo from '../components/IrviLogo';
+import LanguageSelector from '../components/LanguageSelector';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../utils/translations';
 import colors from '../utils/colors';
 
 const AdminDashboard = () => {
+  const { language } = useLanguage();
+  const t = translations[language];
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [trips, setTrips] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -119,23 +124,28 @@ const AdminDashboard = () => {
       {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
+          <div className="flex justify-between items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <IrviLogo size="md" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Trip Management Dashboard
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-2xl font-bold text-gray-900 truncate">
+                  <span className="hidden sm:inline">{t.dashboard}</span>
+                  <span className="sm:hidden">{t.dashboardShort}</span>
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">IRVI Tours - Admin Portal</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">{t.irviTours}</p>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <LanguageSelector />
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title={t.logout}
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">{t.logout}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -150,7 +160,7 @@ const AdminDashboard = () => {
                 <h2 className="text-xl font-semibold text-gray-900">
                   Trips for {selectedDate.toLocaleDateString()}
                 </h2>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-3 flex-wrap">
                   <button
                     onClick={() => setViewFilter('all')}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -159,9 +169,10 @@ const AdminDashboard = () => {
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                     style={viewFilter === 'all' ? { backgroundColor: colors.primary.teal } : {}}
+                    title="Show all trips"
                   >
                     <CalendarIcon className="w-4 h-4" />
-                    All Trips
+                    <span className="hidden xs:inline">All</span>
                   </button>
                   <button
                     onClick={() => setViewFilter('upcoming')}
@@ -171,9 +182,10 @@ const AdminDashboard = () => {
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                     style={viewFilter === 'upcoming' ? { backgroundColor: colors.primary.teal } : {}}
+                    title="Show current trips"
                   >
                     <CalendarIcon className="w-4 h-4" />
-                    Current Trips
+                    <span className="hidden xs:inline">Current</span>
                   </button>
                   <button
                     onClick={() => setViewFilter('past')}
@@ -183,9 +195,10 @@ const AdminDashboard = () => {
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                     style={viewFilter === 'past' ? { backgroundColor: colors.primary.teal } : {}}
+                    title="Show old trips"
                   >
                     <Archive className="w-4 h-4" />
-                    Old Trips
+                    <span className="hidden xs:inline">Old</span>
                   </button>
                 </div>
               </div>
@@ -193,9 +206,10 @@ const AdminDashboard = () => {
                 onClick={() => setShowCreateModal(true)}
                 style={{ backgroundColor: colors.primary.teal }}
                 className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity"
+                title="Create new trip"
               >
-                <Plus className="w-4 h-4" />
-                Create Trip
+                <Plus className="w-5 h-5" />
+                <span className="hidden sm:inline">Create Trip</span>
               </button>
             </div>
 
@@ -256,7 +270,7 @@ const AdminDashboard = () => {
                             title="Join WhatsApp Group"
                           >
                             <MessageCircle className="w-4 h-4" />
-                            WhatsApp
+                            <span className="hidden sm:inline">WhatsApp</span>
                           </a>
                         )}
 
@@ -264,16 +278,17 @@ const AdminDashboard = () => {
                           onClick={() => handleCopyLink(trip.id)}
                           className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
                           style={{ backgroundColor: copiedId === trip.id ? colors.success : colors.primary.teal }}
+                          title={copiedId === trip.id ? "Link copied!" : "Share trip link"}
                         >
                           {copiedId === trip.id ? (
                             <>
                               <Check className="w-4 h-4" />
-                              Copied!
+                              <span className="hidden sm:inline">Copied!</span>
                             </>
                           ) : (
                             <>
                               <Copy className="w-4 h-4" />
-                              Share
+                              <span className="hidden sm:inline">Share</span>
                             </>
                           )}
                         </button>
@@ -282,9 +297,10 @@ const AdminDashboard = () => {
                           onClick={() => navigate(`/trip/${trip.id}`)}
                           style={{ backgroundColor: colors.primary.black }}
                           className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                          title="View trip details"
                         >
                           <ExternalLink className="w-4 h-4" />
-                          View
+                          <span className="hidden sm:inline">View</span>
                         </button>
 
                         <button
@@ -294,7 +310,7 @@ const AdminDashboard = () => {
                           title="Edit trip"
                         >
                           <Edit className="w-4 h-4" />
-                          Edit
+                          <span className="hidden sm:inline">Edit</span>
                         </button>
 
                         <button
@@ -305,7 +321,7 @@ const AdminDashboard = () => {
                           title="Delete trip"
                         >
                           <Trash2 className="w-4 h-4" />
-                          {deletingId === trip.id ? 'Deleting...' : 'Delete'}
+                          <span className="hidden sm:inline">{deletingId === trip.id ? 'Deleting...' : 'Delete'}</span>
                         </button>
                       </div>
                     </div>

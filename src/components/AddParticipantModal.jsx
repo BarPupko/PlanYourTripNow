@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, UserPlus } from 'lucide-react';
 import { createRegistration } from '../utils/firestoreUtils';
+import { getVehicleLayout } from '../utils/vehicleLayouts';
 import colors from '../utils/colors';
 
 const AddParticipantModal = ({ trip, registrations, onClose, onSuccess }) => {
@@ -9,13 +10,16 @@ const AddParticipantModal = ({ trip, registrations, onClose, onSuccess }) => {
     lastName: '',
     email: '',
     phone: '',
-    seatNumber: null
+    seatNumber: null,
+    paymentMethod: 'on-trip',
+    paid: false
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const vehicleLayout = getVehicleLayout(trip.vehicleLayout);
   const occupiedSeats = registrations.map(r => r.seatNumber);
-  const availableSeats = Array.from({ length: 15 }, (_, i) => i + 1)
+  const availableSeats = Array.from({ length: vehicleLayout.totalSeats }, (_, i) => i + 1)
     .filter(seat => !occupiedSeats.includes(seat));
 
   const handleSubmit = async (e) => {
@@ -140,6 +144,58 @@ const AddParticipantModal = ({ trip, registrations, onClose, onSuccess }) => {
             {availableSeats.length === 0 && (
               <p className="text-sm text-red-600 mt-1">No available seats</p>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Payment Method *
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors" style={{ borderColor: formData.paymentMethod === 'card' ? colors.primary.teal : '#D1D5DB' }}>
+                <input
+                  type="radio"
+                  value="card"
+                  checked={formData.paymentMethod === 'card'}
+                  onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                  className="mr-3"
+                  style={{ accentColor: colors.primary.teal }}
+                />
+                <div>
+                  <div className="font-medium text-gray-900">Pay with Card</div>
+                  <div className="text-sm text-gray-500">Pay now using credit/debit card</div>
+                </div>
+              </label>
+              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors" style={{ borderColor: formData.paymentMethod === 'on-trip' ? colors.primary.teal : '#D1D5DB' }}>
+                <input
+                  type="radio"
+                  value="on-trip"
+                  checked={formData.paymentMethod === 'on-trip'}
+                  onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                  className="mr-3"
+                  style={{ accentColor: colors.primary.teal }}
+                />
+                <div>
+                  <div className="font-medium text-gray-900">Pay on Trip</div>
+                  <div className="text-sm text-gray-500">Pay cash/card on the day of the trip</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors" style={{ borderColor: formData.paid ? colors.primary.teal : '#D1D5DB' }}>
+              <input
+                type="checkbox"
+                checked={formData.paid}
+                onChange={(e) => setFormData({ ...formData, paid: e.target.checked })}
+                className="w-5 h-5 rounded border-gray-300"
+                style={{ accentColor: colors.primary.teal }}
+              />
+              <div>
+                <div className="font-medium text-gray-900">Mark as Paid</div>
+                <div className="text-sm text-gray-500">Check if participant has already paid</div>
+              </div>
+            </label>
           </div>
 
           {error && (
