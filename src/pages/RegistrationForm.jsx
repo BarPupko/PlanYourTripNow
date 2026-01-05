@@ -62,14 +62,18 @@ const RegistrationForm = () => {
 
   const loadTripData = async () => {
     try {
+      console.log('Loading trip with ID:', tripId);
       const [tripData, regsData] = await Promise.all([
         getTrip(tripId),
         getRegistrationsByTrip(tripId)
       ]);
+      console.log('Trip data loaded:', tripData);
+      console.log('Registrations loaded:', regsData);
       setTrip(tripData);
       setRegistrations(regsData);
     } catch (error) {
       console.error('Error loading trip data:', error);
+      alert('Error loading trip: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -136,10 +140,18 @@ const RegistrationForm = () => {
   if (!trip) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Trip Not Found</h1>
-          <p className="text-gray-600">This trip link may be invalid or expired.</p>
+          <p className="text-gray-600 mb-4">This trip link may be invalid or expired.</p>
+          <div className="bg-gray-100 p-4 rounded-lg text-left">
+            <p className="text-sm text-gray-700">
+              <strong>Trip ID:</strong> {tripId}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              If you believe this is an error, please contact the trip organizer.
+            </p>
+          </div>
         </div>
       </div>
     );
