@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, LogOut, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive } from 'lucide-react';
+import { Plus, LogOut, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
-import { getTripsByDate, createTrip, deleteTrip } from '../utils/firestoreUtils';
+import { getTripsByDate, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
 import CreateTripModal from '../components/CreateTripModal';
+import EditTripModal from '../components/EditTripModal';
 import IrviLogo from '../components/IrviLogo';
 import colors from '../utils/colors';
 
@@ -18,6 +19,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [viewFilter, setViewFilter] = useState('all'); // 'all', 'upcoming', 'past'
   const [deletingId, setDeletingId] = useState(null);
+  const [editingTrip, setEditingTrip] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,6 +78,17 @@ const AdminDashboard = () => {
       alert('Failed to delete trip. Please try again.');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleUpdateTrip = async (tripId, updates) => {
+    try {
+      await updateTrip(tripId, updates);
+      setEditingTrip(null);
+      loadTrips();
+    } catch (error) {
+      console.error('Error updating trip:', error);
+      alert('Failed to update trip. Please try again.');
     }
   };
 
@@ -230,7 +243,21 @@ const AdminDashboard = () => {
                         )}
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        {trip.whatsappGroupLink && (
+                          <a
+                            href={trip.whatsappGroupLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ backgroundColor: '#25D366' }}
+                            className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                            title="Join WhatsApp Group"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            WhatsApp
+                          </a>
+                        )}
+
                         <button
                           onClick={() => handleCopyLink(trip.id)}
                           className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
@@ -244,7 +271,7 @@ const AdminDashboard = () => {
                           ) : (
                             <>
                               <Copy className="w-4 h-4" />
-                              Share Link
+                              Share
                             </>
                           )}
                         </button>
@@ -256,6 +283,16 @@ const AdminDashboard = () => {
                         >
                           <ExternalLink className="w-4 h-4" />
                           View
+                        </button>
+
+                        <button
+                          onClick={() => setEditingTrip(trip)}
+                          style={{ backgroundColor: colors.primary.teal }}
+                          className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                          title="Edit trip"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit
                         </button>
 
                         <button
@@ -298,6 +335,15 @@ const AdminDashboard = () => {
           selectedDate={selectedDate}
           onClose={() => setShowCreateModal(false)}
           onCreate={handleCreateTrip}
+        />
+      )}
+
+      {/* Edit Trip Modal */}
+      {editingTrip && (
+        <EditTripModal
+          trip={editingTrip}
+          onClose={() => setEditingTrip(null)}
+          onUpdate={handleUpdateTrip}
         />
       )}
     </div>

@@ -3,12 +3,12 @@ import { X } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import colors from '../utils/colors';
 
-const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
+const EditTripModal = ({ trip, onClose, onUpdate }) => {
   const [formData, setFormData] = useState({
-    title: '',
-    vehicleLayout: 'sprinter_15',
-    driverName: '',
-    whatsappGroupLink: ''
+    title: trip.title || '',
+    vehicleLayout: trip.vehicleLayout || 'sprinter_15',
+    driverName: trip.driverName || '',
+    whatsappGroupLink: trip.whatsappGroupLink || ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -17,12 +17,9 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     setLoading(true);
 
     try {
-      await onCreate({
-        ...formData,
-        date: Timestamp.fromDate(selectedDate)
-      });
+      await onUpdate(trip.id, formData);
     } catch (error) {
-      console.error('Error creating trip:', error);
+      console.error('Error updating trip:', error);
     } finally {
       setLoading(false);
     }
@@ -32,7 +29,7 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-900">Create New Trip</h2>
+          <h2 className="text-xl font-bold text-gray-900">Edit Trip</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -64,7 +61,7 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
             </label>
             <input
               type="text"
-              value={selectedDate.toLocaleDateString()}
+              value={trip.date?.toDate?.().toLocaleDateString() || 'N/A'}
               disabled
               className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
             />
@@ -134,7 +131,7 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
               style={{ backgroundColor: colors.primary.teal }}
               className="flex-1 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating...' : 'Create Trip'}
+              {loading ? 'Updating...' : 'Update Trip'}
             </button>
           </div>
         </form>
@@ -143,4 +140,4 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
   );
 };
 
-export default CreateTripModal;
+export default EditTripModal;
