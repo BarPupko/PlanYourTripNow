@@ -7,7 +7,7 @@ import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
-    <Router>
+    <Router basename="/PlanYourTripNow">
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register/:tripId" element={<RegistrationForm />} />
