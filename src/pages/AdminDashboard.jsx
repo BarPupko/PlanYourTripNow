@@ -70,7 +70,7 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteTrip = async (tripId) => {
-    if (!confirm('Are you sure you want to delete this trip? This action cannot be undone.')) {
+    if (!confirm(t.deleteConfirm)) {
       return;
     }
 
@@ -80,7 +80,7 @@ const AdminDashboard = () => {
       loadTrips();
     } catch (error) {
       console.error('Error deleting trip:', error);
-      alert('Failed to delete trip. Please try again.');
+      alert(t.failedToDelete);
     } finally {
       setDeletingId(null);
     }
@@ -93,7 +93,7 @@ const AdminDashboard = () => {
       loadTrips();
     } catch (error) {
       console.error('Error updating trip:', error);
-      alert('Failed to update trip. Please try again.');
+      alert(t.failedToUpdate);
     }
   };
 
@@ -158,7 +158,7 @@ const AdminDashboard = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Trips for {selectedDate.toLocaleDateString()}
+                  {t.tripsFor} {selectedDate.toLocaleDateString()}
                 </h2>
                 <div className="flex gap-2 mt-3 flex-wrap">
                   <button
@@ -169,10 +169,10 @@ const AdminDashboard = () => {
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                     style={viewFilter === 'all' ? { backgroundColor: colors.primary.teal } : {}}
-                    title="Show all trips"
+                    title={t.showAllTrips}
                   >
                     <CalendarIcon className="w-4 h-4" />
-                    <span className="hidden xs:inline">All</span>
+                    <span className="hidden xs:inline">{t.all}</span>
                   </button>
                   <button
                     onClick={() => setViewFilter('upcoming')}
@@ -182,10 +182,10 @@ const AdminDashboard = () => {
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                     style={viewFilter === 'upcoming' ? { backgroundColor: colors.primary.teal } : {}}
-                    title="Show current trips"
+                    title={t.showCurrentTrips}
                   >
                     <CalendarIcon className="w-4 h-4" />
-                    <span className="hidden xs:inline">Current</span>
+                    <span className="hidden xs:inline">{t.current}</span>
                   </button>
                   <button
                     onClick={() => setViewFilter('past')}
@@ -195,10 +195,10 @@ const AdminDashboard = () => {
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                     style={viewFilter === 'past' ? { backgroundColor: colors.primary.teal } : {}}
-                    title="Show old trips"
+                    title={t.showOldTrips}
                   >
                     <Archive className="w-4 h-4" />
-                    <span className="hidden xs:inline">Old</span>
+                    <span className="hidden xs:inline">{t.old}</span>
                   </button>
                 </div>
               </div>
@@ -206,29 +206,29 @@ const AdminDashboard = () => {
                 onClick={() => setShowCreateModal(true)}
                 style={{ backgroundColor: colors.primary.teal }}
                 className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity"
-                title="Create new trip"
+                title={t.createNewTrip}
               >
                 <Plus className="w-5 h-5" />
-                <span className="hidden sm:inline">Create Trip</span>
+                <span className="hidden sm:inline">{t.createTrip}</span>
               </button>
             </div>
 
             {loading ? (
               <div className="text-center py-12">
-                <div className="text-gray-500">Loading trips...</div>
+                <div className="text-gray-500">{t.loadingTrips}</div>
               </div>
             ) : filteredTrips.length === 0 ? (
               <div className="bg-white rounded-lg shadow p-8 text-center">
                 <p className="text-gray-500">
-                  {viewFilter === 'upcoming' && 'No upcoming trips scheduled.'}
-                  {viewFilter === 'past' && 'No past trips found.'}
-                  {viewFilter === 'all' && 'No trips scheduled for this date.'}
+                  {viewFilter === 'upcoming' && t.noUpcomingTrips}
+                  {viewFilter === 'past' && t.noPastTrips}
+                  {viewFilter === 'all' && t.noTripsForDate}
                 </p>
                 <button
                   onClick={() => setShowCreateModal(true)}
                   className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
                 >
-                  Create your first trip
+                  {t.createFirstTrip}
                 </button>
               </div>
             ) : (
@@ -245,16 +245,16 @@ const AdminDashboard = () => {
                         </h3>
                         <p className="text-sm text-gray-600 mt-1">
                           {trip.vehicleLayout === 'sprinter_15'
-                            ? 'Mercedes Sprinter Black (13 Seats)'
+                            ? t.mercedesSprinterBlack
                             : trip.vehicleLayout === 'bus_30'
-                            ? 'Mercedes Sprinter White (10 Seats)'
+                            ? t.mercedesSprinterWhite
                             : trip.vehicleLayout === 'highlander_7'
-                            ? 'Toyota Highlander (7 Seats)'
+                            ? t.toyotaHighlander
                             : trip.vehicleLayout}
                         </p>
                         {trip.driverName && (
                           <p className="text-sm mt-1" style={{ color: '#00BCD4' }}>
-                            Driver: {trip.driverName}
+                            {t.driver}: {trip.driverName}
                           </p>
                         )}
                       </div>
@@ -267,10 +267,10 @@ const AdminDashboard = () => {
                             rel="noopener noreferrer"
                             style={{ backgroundColor: '#25D366' }}
                             className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-                            title="Join WhatsApp Group"
+                            title={t.joinWhatsappGroup}
                           >
                             <MessageCircle className="w-4 h-4" />
-                            <span className="hidden sm:inline">WhatsApp</span>
+                            <span className="hidden sm:inline">{t.whatsapp}</span>
                           </a>
                         )}
 
@@ -278,17 +278,17 @@ const AdminDashboard = () => {
                           onClick={() => handleCopyLink(trip.id)}
                           className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
                           style={{ backgroundColor: copiedId === trip.id ? colors.success : colors.primary.teal }}
-                          title={copiedId === trip.id ? "Link copied!" : "Share trip link"}
+                          title={copiedId === trip.id ? t.linkCopied : t.shareTripLink}
                         >
                           {copiedId === trip.id ? (
                             <>
                               <Check className="w-4 h-4" />
-                              <span className="hidden sm:inline">Copied!</span>
+                              <span className="hidden sm:inline">{t.copied}</span>
                             </>
                           ) : (
                             <>
                               <Copy className="w-4 h-4" />
-                              <span className="hidden sm:inline">Share</span>
+                              <span className="hidden sm:inline">{t.share}</span>
                             </>
                           )}
                         </button>
@@ -297,20 +297,20 @@ const AdminDashboard = () => {
                           onClick={() => navigate(`/trip/${trip.id}`)}
                           style={{ backgroundColor: colors.primary.black }}
                           className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-                          title="View trip details"
+                          title={t.viewTripDetails}
                         >
                           <ExternalLink className="w-4 h-4" />
-                          <span className="hidden sm:inline">View</span>
+                          <span className="hidden sm:inline">{t.view}</span>
                         </button>
 
                         <button
                           onClick={() => setEditingTrip(trip)}
                           style={{ backgroundColor: colors.primary.teal }}
                           className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-                          title="Edit trip"
+                          title={t.editTrip}
                         >
                           <Edit className="w-4 h-4" />
-                          <span className="hidden sm:inline">Edit</span>
+                          <span className="hidden sm:inline">{t.edit}</span>
                         </button>
 
                         <button
@@ -318,10 +318,10 @@ const AdminDashboard = () => {
                           disabled={deletingId === trip.id}
                           style={{ backgroundColor: colors.button.danger }}
                           className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Delete trip"
+                          title={t.deleteTrip}
                         >
                           <Trash2 className="w-4 h-4" />
-                          <span className="hidden sm:inline">{deletingId === trip.id ? 'Deleting...' : 'Delete'}</span>
+                          <span className="hidden sm:inline">{deletingId === trip.id ? t.deleting : t.delete}</span>
                         </button>
                       </div>
                     </div>
@@ -335,7 +335,7 @@ const AdminDashboard = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-4 sticky top-4">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Calendar
+                {t.calendar}
               </h2>
               <Calendar
                 onChange={setSelectedDate}
