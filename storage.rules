@@ -1,0 +1,16 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Signatures - anyone can write (during registration), only admins can read
+    match /signatures/{tripId}/{fileName} {
+      allow write: if true;
+      allow read: if request.auth != null;
+    }
+
+    // Waivers - only cloud functions and admins can access
+    match /waivers/{tripId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only Cloud Functions can write
+    }
+  }
+}
