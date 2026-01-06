@@ -215,7 +215,7 @@ const AdminDashboard = () => {
                 <div className="flex gap-2 mt-3 flex-wrap">
                   <button
                     onClick={() => setStatusFilter('all')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       statusFilter === 'all'
                         ? 'text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -224,11 +224,12 @@ const AdminDashboard = () => {
                     title="Show all statuses"
                   >
                     <CalendarIcon className="w-4 h-4" />
+                    <span className="sm:hidden">A</span>
                     <span className="hidden sm:inline">All Status</span>
                   </button>
                   <button
                     onClick={() => setStatusFilter('planned')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       statusFilter === 'planned'
                         ? 'text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -237,11 +238,12 @@ const AdminDashboard = () => {
                     title="Show planned trips"
                   >
                     <Clock className="w-4 h-4" />
+                    <span className="sm:hidden">P</span>
                     <span className="hidden sm:inline">Planned</span>
                   </button>
                   <button
                     onClick={() => setStatusFilter('scheduled')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       statusFilter === 'scheduled'
                         ? 'text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -250,11 +252,12 @@ const AdminDashboard = () => {
                     title="Show scheduled trips"
                   >
                     <CalendarIcon className="w-4 h-4" />
+                    <span className="sm:hidden">S</span>
                     <span className="hidden sm:inline">Scheduled</span>
                   </button>
                   <button
                     onClick={() => setStatusFilter('done')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       statusFilter === 'done'
                         ? 'text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -263,6 +266,7 @@ const AdminDashboard = () => {
                     title="Show completed trips"
                   >
                     <CheckCircle2 className="w-4 h-4" />
+                    <span className="sm:hidden">D</span>
                     <span className="hidden sm:inline">Done</span>
                   </button>
                 </div>

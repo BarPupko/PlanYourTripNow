@@ -206,15 +206,48 @@ const RegistrationForm = () => {
             Registration Successful!
           </h1>
           <p className="text-gray-600 mb-4">
-            Thank you for registering for {trip.title}. You will receive confirmation emails shortly with your signed waivers.
+            Thank you for registering for <span className="font-semibold">{trip.title}</span>.
           </p>
+
+          {/* Email Confirmation Notice */}
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <div className="text-left">
+                <p className="text-sm font-medium text-blue-900 mb-1">
+                  Confirmation Email Sent!
+                </p>
+                <p className="text-xs text-blue-700">
+                  A confirmation email with your trip details and signed waiver has been sent to:
+                </p>
+                <p className="text-sm font-semibold text-blue-900 mt-1">
+                  {passengers[0].email}
+                </p>
+                {passengers.length > 1 && (
+                  <p className="text-xs text-blue-700 mt-2">
+                    Each passenger will receive their own confirmation email.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Seat Information */}
           <div className="p-4 rounded-lg" style={{ backgroundColor: '#E0F7FA' }}>
             <p className="font-semibold mb-2" style={{ color: colors.primary.teal }}>
               {passengers.length === 1 ? 'Your Seat:' : 'Your Seats:'}
             </p>
-            <p className="text-lg">
+            <p className="text-lg font-bold">
               {passengers.map(p => `#${p.seatNumber}`).join(', ')}
             </p>
+          </div>
+
+          {/* Additional Info */}
+          <div className="mt-6 text-sm text-gray-600">
+            <p>Please check your email inbox and spam folder.</p>
+            <p className="mt-2">If you don't receive the email within 10 minutes, please contact support.</p>
           </div>
         </div>
       </div>
@@ -430,19 +463,72 @@ const RegistrationForm = () => {
               );
             })}
 
-            {/* Visual Seating Map */}
+            {/* Visual Seating Map - Interactive */}
             <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Seating Map (View Only)</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                Seating Map - Click to Select Seats
+              </h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Tap on available (gray) seats to assign them to your passengers
+              </p>
+
+              {/* Show which passenger is being assigned */}
+              {passengers.some(p => !p.seatNumber) && (
+                <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm font-medium text-blue-900">
+                    Next: Select seat for Passenger {passengers.findIndex(p => !p.seatNumber) + 1}
+                    {passengers[passengers.findIndex(p => !p.seatNumber)]?.firstName &&
+                      ` (${passengers[passengers.findIndex(p => !p.seatNumber)].firstName})`}
+                  </p>
+                </div>
+              )}
+
               <VehicleSeatingMap
                 vehicleType={trip.vehicleLayout}
-                registrations={[...registrations, ...passengers.filter(p => p.seatNumber).map((p, idx) => ({
-                  id: `temp-${idx}`,
-                  seatNumber: p.seatNumber,
-                  firstName: p.firstName,
-                  lastName: p.lastName
-                }))]}
+                registrations={registrations}
                 driverName={trip.driverName}
+                selectedSeat={null}
+                onSeatClick={(seatNumber) => {
+                  // Find first passenger without a seat
+                  const passengerIndex = passengers.findIndex(p => !p.seatNumber);
+                  if (passengerIndex !== -1) {
+                    const newPassengers = [...passengers];
+                    newPassengers[passengerIndex].seatNumber = seatNumber;
+                    setPassengers(newPassengers);
+                  }
+                }}
+                reservedSeats={passengers.map(p => p.seatNumber).filter(Boolean)}
               />
+
+              {/* Show assigned seats */}
+              {passengers.some(p => p.seatNumber) && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Assigned Seats:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {passengers.map((p, idx) =>
+                      p.seatNumber && (
+                        <div key={idx} className="flex items-center gap-2 px-3 py-1 bg-white border border-gray-300 rounded-full text-sm">
+                          <span className="font-semibold">#{p.seatNumber}</span>
+                          <span className="text-gray-600">
+                            {p.firstName || `Passenger ${idx + 1}`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newPassengers = [...passengers];
+                              newPassengers[idx].seatNumber = null;
+                              setPassengers(newPassengers);
+                            }}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
