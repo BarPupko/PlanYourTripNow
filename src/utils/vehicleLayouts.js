@@ -3,7 +3,7 @@
 
 export const vehicleLayouts = {
   sprinter_15: {
-    name: 'Mercedes Sprinter Black (14 Seats)',
+    name: 'Mercedes Sprinter Black (13 Seats)',
     totalSeats: 14,
     hasDriverName: true,
     seats: [
@@ -34,7 +34,7 @@ export const vehicleLayouts = {
   },
 
   bus_30: {
-    name: 'Mercedes Sprinter White (11 Seats)',
+    name: 'Mercedes Sprinter White (10 Seats)',
     totalSeats: 11,
     hasDriverName: true,
     seats: [

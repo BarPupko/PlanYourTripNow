@@ -119,7 +119,11 @@ const AdminDashboard = () => {
 
     // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(trip => trip.status === statusFilter);
+      filtered = filtered.filter(trip => {
+        // Default to 'planned' if status is not set
+        const tripStatus = trip.status || 'planned';
+        return tripStatus === statusFilter;
+      });
     }
 
     return filtered;
@@ -128,7 +132,9 @@ const AdminDashboard = () => {
   const filteredTrips = getFilteredTrips();
 
   const getStatusColor = (status) => {
-    switch (status) {
+    // Default to 'planned' if status is not set
+    const tripStatus = status || 'planned';
+    switch (tripStatus) {
       case 'planned':
         return { bg: '#FEF3C7', text: '#92400E', label: 'Planned' };
       case 'scheduled':
