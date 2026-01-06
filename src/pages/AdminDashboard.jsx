@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle } from 'lucide-react';
+import { Plus, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { getAllTrips, getTripsByDate, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
 import CreateTripModal from '../components/CreateTripModal';
 import EditTripModal from '../components/EditTripModal';
@@ -20,6 +20,7 @@ const AdminDashboard = () => {
   const [copiedId, setCopiedId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [viewFilter, setViewFilter] = useState('date'); // 'date', 'all', 'upcoming', 'past'
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'planned', 'scheduled', 'done'
   const [deletingId, setDeletingId] = useState(null);
   const [editingTrip, setEditingTrip] = useState(null);
   const [viewingTripId, setViewingTripId] = useState(null);
@@ -94,24 +95,33 @@ const AdminDashboard = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    let filtered = allTrips;
+
+    // Apply date/time filter
     if (viewFilter === 'date') {
       // Already filtered by date in loadTrips
-      return allTrips;
+      filtered = allTrips;
     } else if (viewFilter === 'upcoming') {
-      return allTrips.filter(trip => {
+      filtered = allTrips.filter(trip => {
         const tripDate = trip.date?.toDate?.() || new Date(trip.date);
         tripDate.setHours(0, 0, 0, 0);
         return tripDate >= today;
       });
     } else if (viewFilter === 'past') {
-      return allTrips.filter(trip => {
+      filtered = allTrips.filter(trip => {
         const tripDate = trip.date?.toDate?.() || new Date(trip.date);
         tripDate.setHours(0, 0, 0, 0);
         return tripDate < today;
       });
     }
-    // 'all' filter
-    return allTrips;
+    // 'all' filter - use all trips
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(trip => trip.status === statusFilter);
+    }
+
+    return filtered;
   };
 
   const filteredTrips = getFilteredTrips();
@@ -198,6 +208,62 @@ const AdminDashboard = () => {
                   >
                     <Archive className="w-4 h-4" />
                     <span className="hidden sm:inline">{t.oldTrips}</span>
+                  </button>
+                </div>
+
+                {/* Status Filter Buttons */}
+                <div className="flex gap-2 mt-3 flex-wrap">
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      statusFilter === 'all'
+                        ? 'text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                    style={statusFilter === 'all' ? { backgroundColor: colors.primary.teal } : {}}
+                    title="Show all statuses"
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline">All Status</span>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('planned')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      statusFilter === 'planned'
+                        ? 'text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                    style={statusFilter === 'planned' ? { backgroundColor: '#92400E' } : {}}
+                    title="Show planned trips"
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span className="hidden sm:inline">Planned</span>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('scheduled')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      statusFilter === 'scheduled'
+                        ? 'text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                    style={statusFilter === 'scheduled' ? { backgroundColor: '#6B21A8' } : {}}
+                    title="Show scheduled trips"
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline">Scheduled</span>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('done')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      statusFilter === 'done'
+                        ? 'text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                    style={statusFilter === 'done' ? { backgroundColor: '#065F46' } : {}}
+                    title="Show completed trips"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Done</span>
                   </button>
                 </div>
               </div>

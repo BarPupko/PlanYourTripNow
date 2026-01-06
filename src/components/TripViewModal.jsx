@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2 } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getTrip, updateRegistration } from '../utils/firestoreUtils';
+import { getTrip, updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
 import VehicleSeatingMap from './VehicleSeatingMap';
 import AddParticipantModal from './AddParticipantModal';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -17,6 +17,9 @@ const TripViewModal = ({ tripId, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedParticipant, setExpandedParticipant] = useState(null);
+  const [editingParticipant, setEditingParticipant] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     loadTrip();
@@ -59,6 +62,49 @@ const TripViewModal = ({ tripId, onClose }) => {
       console.error('Error updating payment status:', error);
       alert(t.failedToUpdatePayment);
     }
+  };
+
+  const handleDeleteParticipant = async (registrationId) => {
+    if (!confirm('Are you sure you want to delete this participant? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeletingId(registrationId);
+    try {
+      await deleteRegistration(registrationId);
+      setExpandedParticipant(null);
+    } catch (error) {
+      console.error('Error deleting participant:', error);
+      alert('Failed to delete participant. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleEditParticipant = (registration) => {
+    setEditingParticipant(registration.id);
+    setEditFormData({
+      firstName: registration.firstName,
+      lastName: registration.lastName,
+      email: registration.email,
+      phone: registration.phone
+    });
+  };
+
+  const handleSaveEdit = async (registrationId) => {
+    try {
+      await updateRegistration(registrationId, editFormData);
+      setEditingParticipant(null);
+      setEditFormData({});
+    } catch (error) {
+      console.error('Error updating participant:', error);
+      alert('Failed to update participant. Please try again.');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingParticipant(null);
+    setEditFormData({});
   };
 
   if (loading) {
@@ -189,89 +235,178 @@ const TripViewModal = ({ tripId, onClose }) => {
                         {/* Expanded Details */}
                         {expandedParticipant === reg.id && (
                           <div className="px-3 pb-3 border-t border-gray-200">
-                            <div className="space-y-3 pt-3">
-                              {/* Phone */}
-                              <div>
-                                <label className="text-xs font-medium text-gray-500">{t.phone}</label>
-                                <p className="text-sm text-gray-900">{reg.phone}</p>
-                              </div>
-
-                              {/* Payment Method */}
-                              <div>
-                                <label className="text-xs font-medium text-gray-500">{t.paymentMethod}</label>
-                                <div className="flex items-center gap-2 mt-1">
-                                  {reg.paymentMethod === 'card' ? (
-                                    <>
-                                      <CreditCard className="w-4 h-4 text-blue-600" />
-                                      <span className="text-sm text-gray-900">{t.payWithCard}</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Banknote className="w-4 h-4 text-green-600" />
-                                      <span className="text-sm text-gray-900">{t.payOnTrip}</span>
-                                    </>
-                                  )}
+                            {editingParticipant === reg.id ? (
+                              /* Edit Mode */
+                              <div className="space-y-3 pt-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-500">First Name</label>
+                                    <input
+                                      type="text"
+                                      value={editFormData.firstName}
+                                      onChange={(e) => setEditFormData({ ...editFormData, firstName: e.target.value })}
+                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-500">Last Name</label>
+                                    <input
+                                      type="text"
+                                      value={editFormData.lastName}
+                                      onChange={(e) => setEditFormData({ ...editFormData, lastName: e.target.value })}
+                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                                    />
+                                  </div>
                                 </div>
-                              </div>
-
-                              {/* Payment Status */}
-                              <div>
-                                <label className="text-xs font-medium text-gray-500">{t.paymentStatus}</label>
-                                <div className="flex items-center gap-2 mt-1">
-                                  {reg.paid ? (
-                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                  ) : (
-                                    <XCircle className="w-4 h-4 text-red-500" />
-                                  )}
-                                  <span className="text-sm text-gray-900 font-semibold">
-                                    {reg.paid ? t.paid : t.notPaid}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Registration Date */}
-                              {reg.registrationDate && (
                                 <div>
-                                  <label className="text-xs font-medium text-gray-500">{t.registered}</label>
-                                  <p className="text-sm text-gray-900">
-                                    {new Date(reg.registrationDate).toLocaleDateString()}
-                                  </p>
+                                  <label className="text-xs font-medium text-gray-500">Email</label>
+                                  <input
+                                    type="email"
+                                    value={editFormData.email}
+                                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                                  />
                                 </div>
-                              )}
-
-                              {/* Agreements */}
-                              {(reg.agreedToCancellationPolicy || reg.agreedToWaiver) && (
                                 <div>
-                                  <label className="text-xs font-medium text-gray-500">{t.signedAgreements}</label>
-                                  <div className="space-y-1 mt-1">
-                                    {reg.agreedToCancellationPolicy && (
-                                      <div className="flex items-center gap-2">
-                                        <CheckCircle2 className="w-3 h-3 text-green-500" />
-                                        <span className="text-xs text-gray-700">{t.cancellationPolicy}</span>
-                                      </div>
-                                    )}
-                                    {reg.agreedToWaiver && (
-                                      <div className="flex items-center gap-2">
-                                        <CheckCircle2 className="w-3 h-3 text-green-500" />
-                                        <span className="text-xs text-gray-700">{t.liabilityWaiver}</span>
-                                      </div>
+                                  <label className="text-xs font-medium text-gray-500">Phone</label>
+                                  <input
+                                    type="tel"
+                                    value={editFormData.phone}
+                                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                                  />
+                                </div>
+                                <div className="flex gap-2 pt-2">
+                                  <button
+                                    onClick={() => handleSaveEdit(reg.id)}
+                                    style={{ backgroundColor: colors.success }}
+                                    className="flex-1 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="flex-1 px-3 py-2 bg-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-400 transition-colors font-medium"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              /* View Mode */
+                              <div className="space-y-3 pt-3">
+                                {/* Phone */}
+                                <div>
+                                  <label className="text-xs font-medium text-gray-500">{t.phone}</label>
+                                  <p className="text-sm text-gray-900">{reg.phone}</p>
+                                </div>
+
+                                {/* Payment Method */}
+                                <div>
+                                  <label className="text-xs font-medium text-gray-500">{t.paymentMethod}</label>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    {reg.paymentMethod === 'card' ? (
+                                      <>
+                                        <CreditCard className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm text-gray-900">{t.payWithCard}</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Banknote className="w-4 h-4 text-green-600" />
+                                        <span className="text-sm text-gray-900">{t.payOnTrip}</span>
+                                      </>
                                     )}
                                   </div>
                                 </div>
-                              )}
 
-                              {/* Action Button */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleTogglePaid(reg.id, reg.paid);
-                                }}
-                                style={{ backgroundColor: reg.paid ? colors.button.danger : colors.success }}
-                                className="w-full px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium mt-2"
-                              >
-                                {reg.paid ? t.markAsNotPaid : t.markAsPaidBtn}
-                              </button>
-                            </div>
+                                {/* Payment Status */}
+                                <div>
+                                  <label className="text-xs font-medium text-gray-500">{t.paymentStatus}</label>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    {reg.paid ? (
+                                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                    ) : (
+                                      <XCircle className="w-4 h-4 text-red-500" />
+                                    )}
+                                    <span className="text-sm text-gray-900 font-semibold">
+                                      {reg.paid ? t.paid : t.notPaid}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Registration Date */}
+                                {reg.registrationDate && (
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-500">{t.registered}</label>
+                                    <p className="text-sm text-gray-900">
+                                      {new Date(reg.registrationDate).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* Agreements */}
+                                {(reg.agreedToCancellationPolicy || reg.agreedToWaiver) && (
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-500">{t.signedAgreements}</label>
+                                    <div className="space-y-1 mt-1">
+                                      {reg.agreedToCancellationPolicy && (
+                                        <div className="flex items-center gap-2">
+                                          <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                          <span className="text-xs text-gray-700">{t.cancellationPolicy}</span>
+                                        </div>
+                                      )}
+                                      {reg.agreedToWaiver && (
+                                        <div className="flex items-center gap-2">
+                                          <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                          <span className="text-xs text-gray-700">{t.liabilityWaiver}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Action Buttons */}
+                                <div className="space-y-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleTogglePaid(reg.id, reg.paid);
+                                    }}
+                                    style={{ backgroundColor: reg.paid ? colors.button.danger : colors.success }}
+                                    className="w-full px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium"
+                                  >
+                                    {reg.paid ? t.markAsNotPaid : t.markAsPaidBtn}
+                                  </button>
+
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditParticipant(reg);
+                                      }}
+                                      style={{ backgroundColor: colors.primary.teal }}
+                                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                      <span>Edit</span>
+                                    </button>
+
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteParticipant(reg.id);
+                                      }}
+                                      disabled={deletingId === reg.id}
+                                      style={{ backgroundColor: colors.button.danger }}
+                                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                      <span>{deletingId === reg.id ? 'Deleting...' : 'Delete'}</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

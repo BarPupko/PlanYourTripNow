@@ -1,7 +1,7 @@
 import { getVehicleLayout } from '../utils/vehicleLayouts';
 import colors from '../utils/colors';
 
-const VehicleSeatingMap = ({ vehicleType, registrations, onSeatClick, selectedSeat, driverName }) => {
+const VehicleSeatingMap = ({ vehicleType, registrations, onSeatClick, selectedSeat, driverName, reservedSeats = [] }) => {
   const layout = getVehicleLayout(vehicleType);
 
   const getSeatOccupant = (seatNumber) => {
@@ -11,6 +11,7 @@ const VehicleSeatingMap = ({ vehicleType, registrations, onSeatClick, selectedSe
   const getSeatColor = (seatNumber) => {
     const occupant = getSeatOccupant(seatNumber);
     if (occupant) return colors.seat.occupied; // Green for occupied
+    if (reservedSeats.includes(seatNumber)) return colors.seat.occupied; // Reserved by other passengers in this form
     if (selectedSeat === seatNumber) return colors.seat.selected; // Teal for selected
     return colors.seat.vacant; // Gray for vacant
   };

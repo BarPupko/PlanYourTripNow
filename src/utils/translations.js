@@ -46,8 +46,8 @@ export const translations = {
     showOldTrips: 'Show old trips',
 
     // Vehicle Types
-    mercedesSprinterBlack: 'Mercedes Sprinter Black (13 Seats)',
-    mercedesSprinterWhite: 'Mercedes Sprinter White (10 Seats)',
+    mercedesSprinterBlack: 'Mercedes Sprinter Black (14 Seats)',
+    mercedesSprinterWhite: 'Mercedes Sprinter White (11 Seats)',
     toyotaHighlander: 'Toyota Highlander (7 Seats)',
     driver: 'Driver',
 
@@ -210,8 +210,8 @@ export const translations = {
     showOldTrips: 'Показать старые поездки',
 
     // Vehicle Types
-    mercedesSprinterBlack: 'Mercedes Sprinter Черный (13 мест)',
-    mercedesSprinterWhite: 'Mercedes Sprinter Белый (10 мест)',
+    mercedesSprinterBlack: 'Mercedes Sprinter Черный (14 мест)',
+    mercedesSprinterWhite: 'Mercedes Sprinter Белый (11 мест)',
     toyotaHighlander: 'Toyota Highlander (7 мест)',
     driver: 'Водитель',
 
