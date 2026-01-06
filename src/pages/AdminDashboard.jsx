@@ -116,6 +116,19 @@ const AdminDashboard = () => {
 
   const filteredTrips = getFilteredTrips();
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'planned':
+        return { bg: '#FEF3C7', text: '#92400E', label: 'Planned' };
+      case 'scheduled':
+        return { bg: '#E9D5FF', text: '#6B21A8', label: 'Scheduled' };
+      case 'done':
+        return { bg: '#D1FAE5', text: '#065F46', label: 'Done' };
+      default:
+        return { bg: '#FEF3C7', text: '#92400E', label: 'Planned' };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
@@ -227,9 +240,20 @@ const AdminDashboard = () => {
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {trip.title}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {trip.title}
+                          </h3>
+                          <span
+                            className="px-2 py-1 rounded-full text-xs font-semibold"
+                            style={{
+                              backgroundColor: getStatusColor(trip.status).bg,
+                              color: getStatusColor(trip.status).text
+                            }}
+                          >
+                            {getStatusColor(trip.status).label}
+                          </span>
+                        </div>
                         <p className="text-sm text-gray-600 mt-1">
                           {trip.date?.toDate?.().toLocaleDateString() || new Date(trip.date).toLocaleDateString()} - {trip.vehicleLayout === 'sprinter_15'
                             ? t.mercedesSprinterBlack

@@ -63,7 +63,7 @@ const TripViewModal = ({ tripId, onClose }) => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-15 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={onClose}>
         <div className="bg-white rounded-lg p-8">
           <div className="text-lg">{t.loadingTripInfo}</div>
         </div>
@@ -73,7 +73,7 @@ const TripViewModal = ({ tripId, onClose }) => {
 
   if (!trip) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-15 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={onClose}>
         <div className="bg-white rounded-lg p-8 text-center">
           <p className="text-lg text-gray-600 mb-4">{t.tripNotFound}</p>
           <button
@@ -92,7 +92,7 @@ const TripViewModal = ({ tripId, onClose }) => {
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-2 sm:p-4 z-50" onClick={onClose}>
+    <div className="fixed inset-0 bg-black bg-opacity-15 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50" onClick={onClose}>
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden border-4 border-teal-400"
         onClick={(e) => e.stopPropagation()}

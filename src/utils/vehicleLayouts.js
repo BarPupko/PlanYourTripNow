@@ -69,15 +69,15 @@ export const vehicleLayouts = {
       // Front row - 1 passenger seat next to driver
       { id: 1, row: 1, position: 'right', x: 250, y: 50 },
 
-      // Row 2 - Captain's chairs (2 seats, aisle in middle)
-      { id: 2, row: 2, position: 'left', x: 80, y: 180 },
-      { id: 3, row: 2, position: 'right', x: 250, y: 180 },
+      // Row 2 - Bench (3 seats)
+      { id: 2, row: 2, position: 'left', x: 60, y: 180 },
+      { id: 3, row: 2, position: 'center', x: 165, y: 180 },
+      { id: 4, row: 2, position: 'right', x: 270, y: 180 },
 
-      // Row 3 - Back bench (4 seats)
-      { id: 4, row: 3, position: 'left', x: 50, y: 350 },
-      { id: 5, row: 3, position: 'center-left', x: 130, y: 350 },
-      { id: 6, row: 3, position: 'center-right', x: 200, y: 350 },
-      { id: 7, row: 3, position: 'right', x: 280, y: 350 }
+      // Row 3 - Back bench (3 seats)
+      { id: 5, row: 3, position: 'left', x: 60, y: 310 },
+      { id: 6, row: 3, position: 'center', x: 165, y: 310 },
+      { id: 7, row: 3, position: 'right', x: 270, y: 310 }
     ]
   }
 };

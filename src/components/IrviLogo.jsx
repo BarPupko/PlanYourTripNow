@@ -30,7 +30,7 @@ const IrviLogo = ({ className = '', size = 'md' }) => {
             letterSpacing: '2px',
             lineHeight: '1',
           }}>
-            IRVI
+            IVRI
           </div>
           <div style={{
             fontSize: sizeConfig.subSize,

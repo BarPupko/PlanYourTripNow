@@ -8,7 +8,8 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     title: '',
     vehicleLayout: 'sprinter_15',
     driverName: '',
-    whatsappGroupLink: ''
+    whatsappGroupLink: '',
+    status: 'planned'
   });
   const [loading, setLoading] = useState(false);
 
@@ -119,6 +120,23 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
             <p className="text-xs text-gray-500 mt-1">
               Add a WhatsApp group link for trip participants to join
             </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Trip Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+            >
+              <option value="planned">Planned (Yellow)</option>
+              <option value="scheduled">Scheduled (Purple)</option>
+              <option value="done">Done (Green)</option>
+            </select>
           </div>
 
           <div className="flex gap-3 pt-4">
