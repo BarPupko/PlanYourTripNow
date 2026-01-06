@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, ArrowLeft, Gift } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
-import IVRILogo from './IVRILogo';
+import IVRILogo from './IrviLogo';
 import LanguageSelector from './LanguageSelector';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
