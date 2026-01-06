@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, ArrowLeft } from 'lucide-react';
+import { LogOut, ArrowLeft, Gift } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import IrviLogo from './IrviLogo';
@@ -29,6 +29,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
 
   // Check if we're on admin dashboard
   const isAdminDashboard = location.pathname === '/';
+  const isGiftCardsPage = location.pathname === '/gift-cards';
   const isPublicPage = location.pathname.includes('/register/');
 
   return (
@@ -75,6 +76,34 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
 
           <div className="flex items-center gap-2 flex-shrink-0">
             <LanguageSelector />
+
+            {!isPublicPage && (
+              <>
+                {isAdminDashboard && (
+                  <button
+                    onClick={() => navigate('/gift-cards')}
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    style={{ color: colors.primary.teal }}
+                    title="Gift Cards"
+                  >
+                    <Gift className="w-4 h-4" />
+                    <span className="hidden sm:inline">Gift Cards</span>
+                  </button>
+                )}
+
+                {isGiftCardsPage && (
+                  <button
+                    onClick={() => navigate('/')}
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    style={{ color: colors.primary.teal }}
+                    title="Dashboard"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Dashboard</span>
+                  </button>
+                )}
+              </>
+            )}
 
             {showLogout && !isPublicPage && (
               <button
