@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote } from 'lucide-react';
+import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getTrip, updateRegistration } from '../utils/firestoreUtils';
@@ -16,7 +16,7 @@ const TripViewModal = ({ tripId, onClose }) => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedParticipant, setSelectedParticipant] = useState(null);
+  const [expandedParticipant, setExpandedParticipant] = useState(null);
 
   useEffect(() => {
     loadTrip();
@@ -153,31 +153,127 @@ const TripViewModal = ({ tripId, onClose }) => {
                     {t.noRegistrations}
                   </p>
                 ) : (
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  <div className="space-y-2 max-h-[600px] overflow-y-auto">
                     {sortedRegistrations.map((reg) => (
-                      <div
-                        key={reg.id}
-                        onClick={() => setSelectedParticipant(reg)}
-                        className="flex items-center gap-3 p-3 bg-white rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-gray-200"
-                      >
-                        <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: colors.seat.occupied }}>
-                          {reg.seatNumber}
+                      <div key={reg.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        {/* Collapsed View */}
+                        <div
+                          onClick={() => setExpandedParticipant(expandedParticipant === reg.id ? null : reg.id)}
+                          className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: colors.seat.occupied }}>
+                            {reg.seatNumber}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 truncate">
+                              {reg.firstName} {reg.lastName}
+                            </p>
+                            <p className="text-sm text-gray-600 truncate">
+                              {reg.email}
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0 flex items-center gap-2">
+                            {reg.paid ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-500" title={t.paid} />
+                            ) : (
+                              <XCircle className="w-5 h-5 text-red-500" title={t.notPaid} />
+                            )}
+                            {expandedParticipant === reg.id ? (
+                              <ChevronUp className="w-5 h-5 text-gray-400" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5 text-gray-400" />
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 truncate">
-                            {reg.firstName} {reg.lastName}
-                          </p>
-                          <p className="text-sm text-gray-600 truncate">
-                            {reg.email}
-                          </p>
-                        </div>
-                        <div className="flex-shrink-0">
-                          {reg.paid ? (
-                            <CheckCircle2 className="w-5 h-5 text-green-500" title={t.paid} />
-                          ) : (
-                            <XCircle className="w-5 h-5 text-red-500" title={t.notPaid} />
-                          )}
-                        </div>
+
+                        {/* Expanded Details */}
+                        {expandedParticipant === reg.id && (
+                          <div className="px-3 pb-3 border-t border-gray-200">
+                            <div className="space-y-3 pt-3">
+                              {/* Phone */}
+                              <div>
+                                <label className="text-xs font-medium text-gray-500">{t.phone}</label>
+                                <p className="text-sm text-gray-900">{reg.phone}</p>
+                              </div>
+
+                              {/* Payment Method */}
+                              <div>
+                                <label className="text-xs font-medium text-gray-500">{t.paymentMethod}</label>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {reg.paymentMethod === 'card' ? (
+                                    <>
+                                      <CreditCard className="w-4 h-4 text-blue-600" />
+                                      <span className="text-sm text-gray-900">{t.payWithCard}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Banknote className="w-4 h-4 text-green-600" />
+                                      <span className="text-sm text-gray-900">{t.payOnTrip}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Payment Status */}
+                              <div>
+                                <label className="text-xs font-medium text-gray-500">{t.paymentStatus}</label>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {reg.paid ? (
+                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                  ) : (
+                                    <XCircle className="w-4 h-4 text-red-500" />
+                                  )}
+                                  <span className="text-sm text-gray-900 font-semibold">
+                                    {reg.paid ? t.paid : t.notPaid}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Registration Date */}
+                              {reg.registrationDate && (
+                                <div>
+                                  <label className="text-xs font-medium text-gray-500">{t.registered}</label>
+                                  <p className="text-sm text-gray-900">
+                                    {new Date(reg.registrationDate).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Agreements */}
+                              {(reg.agreedToCancellationPolicy || reg.agreedToWaiver) && (
+                                <div>
+                                  <label className="text-xs font-medium text-gray-500">{t.signedAgreements}</label>
+                                  <div className="space-y-1 mt-1">
+                                    {reg.agreedToCancellationPolicy && (
+                                      <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                        <span className="text-xs text-gray-700">{t.cancellationPolicy}</span>
+                                      </div>
+                                    )}
+                                    {reg.agreedToWaiver && (
+                                      <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                        <span className="text-xs text-gray-700">{t.liabilityWaiver}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Action Button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTogglePaid(reg.id, reg.paid);
+                                }}
+                                style={{ backgroundColor: reg.paid ? colors.button.danger : colors.success }}
+                                className="w-full px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium mt-2"
+                              >
+                                {reg.paid ? t.markAsNotPaid : t.markAsPaidBtn}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -196,126 +292,6 @@ const TripViewModal = ({ tripId, onClose }) => {
           onClose={() => setShowAddModal(false)}
           onSuccess={() => setShowAddModal(false)}
         />
-      )}
-
-      {/* Participant Details Modal */}
-      {selectedParticipant && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]" onClick={() => setSelectedParticipant(null)}>
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                {t.participantDetails}
-              </h2>
-
-              <div className="space-y-4">
-                {/* Basic Info */}
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t.name}</label>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {selectedParticipant.firstName} {selectedParticipant.lastName}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t.email}</label>
-                  <p className="text-gray-900">{selectedParticipant.email}</p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t.phone}</label>
-                  <p className="text-gray-900">{selectedParticipant.phone}</p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t.seat}</label>
-                  <p className="text-gray-900">#{selectedParticipant.seatNumber}</p>
-                </div>
-
-                {/* Payment Info */}
-                <div className="border-t pt-4">
-                  <label className="text-sm font-medium text-gray-500">{t.paymentMethod}</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    {selectedParticipant.paymentMethod === 'card' ? (
-                      <>
-                        <CreditCard className="w-4 h-4 text-blue-600" />
-                        <span className="text-gray-900">{t.payWithCard}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Banknote className="w-4 h-4 text-green-600" />
-                        <span className="text-gray-900">{t.payOnTrip}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t.paymentStatus}</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    {selectedParticipant.paid ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-red-500" />
-                    )}
-                    <span className="text-gray-900 font-semibold">
-                      {selectedParticipant.paid ? t.paid : t.notPaid}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Registration Status */}
-                <div className="border-t pt-4">
-                  <label className="text-sm font-medium text-gray-500">{t.registrationStatus}</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    <span className="text-gray-900">{t.complete}</span>
-                  </div>
-                  {selectedParticipant.registrationDate && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      {t.registered}: {new Date(selectedParticipant.registrationDate).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-
-                {/* Agreements */}
-                <div className="border-t pt-4">
-                  <label className="text-sm font-medium text-gray-500">{t.signedAgreements}</label>
-                  <div className="space-y-1 mt-2">
-                    {selectedParticipant.agreedToCancellationPolicy && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                        <span className="text-gray-700">{t.cancellationPolicy}</span>
-                      </div>
-                    )}
-                    {selectedParticipant.agreedToWaiver && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                        <span className="text-gray-700">{t.liabilityWaiver}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="mt-6 space-y-3">
-                <button
-                  onClick={() => handleTogglePaid(selectedParticipant.id, selectedParticipant.paid)}
-                  style={{ backgroundColor: selectedParticipant.paid ? colors.button.danger : colors.success }}
-                  className="w-full px-4 py-3 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
-                >
-                  {selectedParticipant.paid ? t.markAsNotPaid : t.markAsPaidBtn}
-                </button>
-                <button
-                  onClick={() => setSelectedParticipant(null)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                >
-                  {t.close}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

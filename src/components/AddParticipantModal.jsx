@@ -55,18 +55,18 @@ const AddParticipantModal = ({ trip, registrations, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
+    <div className="fixed inset-0 bg-black bg-opacity-15 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border-4 border-teal-400" onClick={(e) => e.stopPropagation()} style={{ borderColor: colors.primary.teal }}>
+        <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-4 rounded-t-xl flex justify-between items-center sticky top-0 z-10">
           <div className="flex items-center gap-2">
-            <UserPlus className="w-6 h-6" style={{ color: colors.primary.teal }} />
-            <h2 className="text-xl font-bold" style={{ color: colors.primary.black }}>
+            <UserPlus className="w-6 h-6" />
+            <h2 className="text-xl font-bold">
               Add Participant
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
