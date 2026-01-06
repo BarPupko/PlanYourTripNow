@@ -6,6 +6,7 @@ import { getAllTrips, getTripsByDate, createTrip, deleteTrip, updateTrip } from 
 import CreateTripModal from '../components/CreateTripModal';
 import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
+import WeatherWidget from '../components/WeatherWidget';
 import Header from '../components/Header';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
@@ -412,20 +413,26 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          {/* Right Side - Calendar */}
+          {/* Right Side - Calendar & Weather */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow p-4 sticky top-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                {t.calendar}
-              </h2>
-              <Calendar
-                onChange={(date) => {
-                  setSelectedDate(date);
-                  setViewFilter('date');
-                }}
-                value={selectedDate}
-                className="border-0 w-full"
-              />
+            <div className="space-y-4 sticky top-4">
+              {/* Calendar */}
+              <div className="bg-white rounded-lg shadow p-4">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  {t.calendar}
+                </h2>
+                <Calendar
+                  onChange={(date) => {
+                    setSelectedDate(date);
+                    setViewFilter('date');
+                  }}
+                  value={selectedDate}
+                  className="border-0 w-full"
+                />
+              </div>
+
+              {/* Weather Widget */}
+              <WeatherWidget />
             </div>
           </div>
         </div>
