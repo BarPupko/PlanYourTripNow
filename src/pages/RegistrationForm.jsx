@@ -56,6 +56,7 @@ const RegistrationForm = () => {
     seatNumber: null
   }]);
   const [paymentMethod, setPaymentMethod] = useState('on-trip');
+  const [useSameEmail, setUseSameEmail] = useState(false);
 
   const [agreements, setAgreements] = useState({
     cancellationPolicy: false,
@@ -340,18 +341,50 @@ const RegistrationForm = () => {
                   </label>
                   <input
                     type="email"
-                    value={passenger.email}
+                    value={index === 0 || !useSameEmail ? passenger.email : passengers[0].email}
                     onChange={(e) => {
                       const newPassengers = [...passengers];
                       newPassengers[index].email = e.target.value;
                       setPassengers(newPassengers);
+                      // If this is the first passenger and useSameEmail is enabled, update all
+                      if (index === 0 && useSameEmail) {
+                        newPassengers.forEach((p, i) => {
+                          if (i > 0) p.email = e.target.value;
+                        });
+                        setPassengers(newPassengers);
+                      }
                     }}
+                    disabled={index > 0 && useSameEmail}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors[`passenger${index}Email`] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    } ${index > 0 && useSameEmail ? 'bg-gray-100' : ''}`}
                   />
                   {errors[`passenger${index}Email`] && (
                     <p className="text-red-500 text-sm mt-1">{errors[`passenger${index}Email`]}</p>
+                  )}
+                  {/* Show checkbox only for first passenger and only if more than 1 seat */}
+                  {index === 0 && numberOfSeats > 1 && (
+                    <label className="flex items-center mt-2 text-sm text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={useSameEmail}
+                        onChange={(e) => {
+                          setUseSameEmail(e.target.checked);
+                          if (e.target.checked) {
+                            // Copy first passenger's email to all others
+                            const newPassengers = [...passengers];
+                            const firstEmail = passengers[0].email;
+                            newPassengers.forEach((p, i) => {
+                              if (i > 0) p.email = firstEmail;
+                            });
+                            setPassengers(newPassengers);
+                          }
+                        }}
+                        className="mr-2"
+                        style={{ accentColor: colors.primary.teal }}
+                      />
+                      Use this email for all passengers
+                    </label>
                   )}
                 </div>
 

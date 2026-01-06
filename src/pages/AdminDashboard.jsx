@@ -313,7 +313,8 @@ const AdminDashboard = () => {
                 {filteredTrips.map((trip) => (
                   <div
                     key={trip.id}
-                    className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow"
+                    onClick={() => setViewingTripId(trip.id)}
+                    className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow cursor-pointer"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -347,7 +348,7 @@ const AdminDashboard = () => {
                         )}
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
                         {trip.whatsappGroupLink && (
                           <a
                             href={trip.whatsappGroupLink}
@@ -379,16 +380,6 @@ const AdminDashboard = () => {
                               <span className="hidden sm:inline">{t.share}</span>
                             </>
                           )}
-                        </button>
-
-                        <button
-                          onClick={() => setViewingTripId(trip.id)}
-                          style={{ backgroundColor: colors.primary.black }}
-                          className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-                          title={t.viewTripDetails}
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          <span className="hidden sm:inline">{t.view}</span>
                         </button>
 
                         <button
