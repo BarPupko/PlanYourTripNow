@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, ArrowLeft, Gift } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
-import IrviLogo from './IrviLogo';
+import IVRILogo from './IVRILogo';
 import LanguageSelector from './LanguageSelector';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
@@ -47,7 +47,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
               </button>
             )}
 
-            <IrviLogo size="md" />
+            <IVRILogo size="md" />
 
             <div className="min-w-0 flex-1">
               {isAdminDashboard ? (
@@ -56,7 +56,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                     <span className="hidden sm:inline">{t.dashboard}</span>
                     <span className="sm:hidden">{t.dashboardShort}</span>
                   </h1>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">{t.irviTours}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">{t.IVRITours}</p>
                 </>
               ) : title ? (
                 <>
@@ -67,7 +67,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                 </>
               ) : (
                 <>
-                  <h1 className="text-base sm:text-2xl font-bold text-gray-900 truncate">{t.irviTours}</h1>
+                  <h1 className="text-base sm:text-2xl font-bold text-gray-900 truncate">{t.IVRITours}</h1>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">{t.tripManagement}</p>
                 </>
               )}

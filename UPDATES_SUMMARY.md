@@ -20,7 +20,7 @@
 - Automatically selects available seats
 - Real-time updates when participants are added
 
-### ✅ 4. Applied IRVI Tours Color Scheme
+### ✅ 4. Applied IVRI Tours Color Scheme
 - Created color configuration: [src/utils/colors.js](src/utils/colors.js)
 - **Primary Teal**: `#00BCD4` (from logo)
 - **Black**: `#2B2B2B` (from logo)
@@ -35,7 +35,7 @@
 ### ✅ 5. Enhanced Vehicle Seating Map
 - Driver name displayed below driver seat
 - Taller SVG viewBox to accommodate Sprinter layout
-- Updated colors to match IRVI branding
+- Updated colors to match IVRI branding
 - Better visual hierarchy
 
 ---
@@ -86,7 +86,7 @@
 
 ## Still To Do
 
-### 🔲 Complete IRVI Color Application
+### 🔲 Complete IVRI Color Application
 
 **What's Left**:
 - [ ] Update AdminDashboard header background
@@ -95,7 +95,7 @@
 - [ ] Update "View" button styling
 - [ ] Update Login page gradient to use teal
 - [ ] Update Login button to teal
-- [ ] Add IRVI Tours logo to header (optional)
+- [ ] Add IVRI Tours logo to header (optional)
 
 **Files to Update**:
 - [src/pages/AdminDashboard.jsx](src/pages/AdminDashboard.jsx) - Button colors
@@ -171,7 +171,7 @@ firebase deploy --only storage
 
 ## Color Reference
 
-### IRVI Tours Brand Colors
+### IVRI Tours Brand Colors
 ```javascript
 Primary Teal: #00BCD4
 Teal Dark: #00ACC1

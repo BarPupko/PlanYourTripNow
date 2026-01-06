@@ -3,7 +3,7 @@ export const translations = {
     // Header
     dashboard: 'Trip Management Dashboard',
     dashboardShort: 'Dashboard',
-    irviTours: 'IVRI Tours',
+    IVRITours: 'IVRI Tours',
     tripManagement: 'Trip Management System',
     adminPortal: 'Admin Portal',
     logout: 'Logout',
@@ -167,7 +167,7 @@ export const translations = {
     // Header
     dashboard: 'Панель управления поездками',
     dashboardShort: 'Панель',
-    irviTours: 'IVRI Tours',
+    IVRITours: 'IVRI Tours',
     tripManagement: 'Система управления поездками',
     adminPortal: 'Портал администратора',
     logout: 'Выйти',

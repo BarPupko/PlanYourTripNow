@@ -1,4 +1,4 @@
-// IRVI Tours Brand Colors
+// IVRI Tours Brand Colors
 export const colors = {
   // Primary brand colors from logo
   primary: {

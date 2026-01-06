@@ -1,6 +1,6 @@
 import colors from '../utils/colors';
 
-const IrviLogo = ({ className = '', size = 'md' }) => {
+const IVRILogo = ({ className = '', size = 'md' }) => {
   const sizes = {
     sm: { width: '80px', fontSize: '14px', subSize: '10px' },
     md: { width: '120px', fontSize: '20px', subSize: '12px' },
@@ -46,4 +46,4 @@ const IrviLogo = ({ className = '', size = 'md' }) => {
   );
 };
 
-export default IrviLogo;
+export default IVRILogo;

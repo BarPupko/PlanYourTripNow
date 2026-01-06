@@ -12,9 +12,9 @@ const WeatherWidget = () => {
   const [showSearch, setShowSearch] = useState(false);
 
   // Popular locations
-  const popularLocations = ['New York', 'Los Angeles', 'Chicago', 'Miami', 'Seattle', 'Boston'];
+  const popularLocations = ['Toronto', 'Ottawa', 'Barrie','Montreal','Mont Tremblant ','Chicago','New York', 'Miami',  'Boston'];
 
-  useEffect(() => {
+  useEffect(() => { 
     fetchWeather(location);
   }, [location]);
 
@@ -40,7 +40,7 @@ const WeatherWidget = () => {
 
       // Get weather data
       const weatherResponse = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=5`
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=celsius&wind_speed_unit=mph&timezone=auto&forecast_days=5`
       );
       const weatherData = await weatherResponse.json();
 
@@ -191,7 +191,7 @@ const WeatherWidget = () => {
         <>
           <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
             <div>
-              <div className="text-4xl font-bold text-gray-900">{weather.temperature}°F</div>
+              <div className="text-4xl font-bold text-gray-900">{weather.temperature}°C</div>
               <div className="text-sm text-gray-600 mt-1">
                 {getWeatherDescription(weather.weatherCode)}
               </div>
