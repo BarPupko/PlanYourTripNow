@@ -4,6 +4,9 @@ import SignatureCanvas from 'react-signature-canvas';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { getTrip, createRegistration, getRegistrationsByTrip } from '../utils/firestoreUtils';
 import VehicleSeatingMap from '../components/VehicleSeatingMap';
+import Header from '../components/Header';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../utils/translations';
 import colors from '../utils/colors';
 
 const CANCELLATION_POLICY = `CANCELLATION POLICY
@@ -34,6 +37,8 @@ const RegistrationForm = () => {
   const { tripId } = useParams();
   const navigate = useNavigate();
   const signatureRef = useRef(null);
+  const { language } = useLanguage();
+  const t = translations[language];
 
   const [trip, setTrip] = useState(null);
   const [registrations, setRegistrations] = useState([]);
@@ -184,20 +189,15 @@ const RegistrationForm = () => {
   }
 
   return (
-    <div className="min-h-screen py-8 px-4" style={{ background: 'linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%)' }}>
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{trip.title}</h1>
-          <p className="text-gray-600">
-            {trip.date?.toDate().toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </p>
-        </div>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%)' }}>
+      <Header showLogout={false} title={trip.title} subtitle={trip.date?.toDate().toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })} />
+
+      <div className="max-w-4xl mx-auto py-8 px-4">
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information */}

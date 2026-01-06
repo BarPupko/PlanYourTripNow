@@ -41,6 +41,19 @@ export const getTrip = async (tripId) => {
   }
 };
 
+export const getAllTrips = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'trips'));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error getting all trips:', error);
+    throw error;
+  }
+};
+
 export const getTripsByDate = async (date) => {
   try {
     const startOfDay = new Date(date);

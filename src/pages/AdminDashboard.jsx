@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, LogOut, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle } from 'lucide-react';
-import { auth } from '../firebase';
-import { signOut } from 'firebase/auth';
-import { getTripsByDate, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
+import { Plus, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle } from 'lucide-react';
+import { getAllTrips, getTripsByDate, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
 import CreateTripModal from '../components/CreateTripModal';
 import EditTripModal from '../components/EditTripModal';
-import IrviLogo from '../components/IrviLogo';
-import LanguageSelector from '../components/LanguageSelector';
+import TripViewModal from '../components/TripViewModal';
+import Header from '../components/Header';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import colors from '../utils/colors';
@@ -18,24 +15,29 @@ const AdminDashboard = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [trips, setTrips] = useState([]);
+  const [allTrips, setAllTrips] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [viewFilter, setViewFilter] = useState('all'); // 'all', 'upcoming', 'past'
+  const [viewFilter, setViewFilter] = useState('date'); // 'date', 'all', 'upcoming', 'past'
   const [deletingId, setDeletingId] = useState(null);
   const [editingTrip, setEditingTrip] = useState(null);
-  const navigate = useNavigate();
+  const [viewingTripId, setViewingTripId] = useState(null);
 
   useEffect(() => {
     loadTrips();
-  }, [selectedDate]);
+  }, [selectedDate, viewFilter]);
 
   const loadTrips = async () => {
     setLoading(true);
     try {
-      const tripsData = await getTripsByDate(selectedDate);
-      setTrips(tripsData);
+      let tripsData;
+      if (viewFilter === 'date') {
+        tripsData = await getTripsByDate(selectedDate);
+      } else {
+        tripsData = await getAllTrips();
+      }
+      setAllTrips(tripsData);
     } catch (error) {
       console.error('Error loading trips:', error);
     } finally {
@@ -58,15 +60,6 @@ const AdminDashboard = () => {
     navigator.clipboard.writeText(link);
     setCopiedId(tripId);
     setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate('/login');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
   };
 
   const handleDeleteTrip = async (tripId) => {
@@ -101,54 +94,31 @@ const AdminDashboard = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (viewFilter === 'upcoming') {
-      return trips.filter(trip => {
+    if (viewFilter === 'date') {
+      // Already filtered by date in loadTrips
+      return allTrips;
+    } else if (viewFilter === 'upcoming') {
+      return allTrips.filter(trip => {
         const tripDate = trip.date?.toDate?.() || new Date(trip.date);
         tripDate.setHours(0, 0, 0, 0);
         return tripDate >= today;
       });
     } else if (viewFilter === 'past') {
-      return trips.filter(trip => {
+      return allTrips.filter(trip => {
         const tripDate = trip.date?.toDate?.() || new Date(trip.date);
         tripDate.setHours(0, 0, 0, 0);
         return tripDate < today;
       });
     }
-    return trips;
+    // 'all' filter
+    return allTrips;
   };
 
   const filteredTrips = getFilteredTrips();
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center gap-2 sm:gap-4">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <IrviLogo size="md" />
-              <div className="min-w-0">
-                <h1 className="text-base sm:text-2xl font-bold text-gray-900 truncate">
-                  <span className="hidden sm:inline">{t.dashboard}</span>
-                  <span className="sm:hidden">{t.dashboardShort}</span>
-                </h1>
-                <p className="text-xs sm:text-sm text-gray-500 mt-1">{t.irviTours}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <LanguageSelector />
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                title={t.logout}
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">{t.logout}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -158,9 +128,25 @@ const AdminDashboard = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {t.tripsFor} {selectedDate.toLocaleDateString()}
+                  {viewFilter === 'date' ? `${t.tripsFor} ${selectedDate.toLocaleDateString()}` :
+                   viewFilter === 'all' ? t.allTrips :
+                   viewFilter === 'upcoming' ? t.currentTrips :
+                   t.oldTrips}
                 </h2>
                 <div className="flex gap-2 mt-3 flex-wrap">
+                  <button
+                    onClick={() => setViewFilter('date')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      viewFilter === 'date'
+                        ? 'text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                    style={viewFilter === 'date' ? { backgroundColor: colors.primary.teal } : {}}
+                    title={`${t.tripsFor} ${selectedDate.toLocaleDateString()}`}
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline">{selectedDate.toLocaleDateString()}</span>
+                  </button>
                   <button
                     onClick={() => setViewFilter('all')}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -172,7 +158,7 @@ const AdminDashboard = () => {
                     title={t.showAllTrips}
                   >
                     <CalendarIcon className="w-4 h-4" />
-                    <span className="hidden xs:inline">{t.all}</span>
+                    <span className="hidden sm:inline">{t.allTrips}</span>
                   </button>
                   <button
                     onClick={() => setViewFilter('upcoming')}
@@ -185,7 +171,7 @@ const AdminDashboard = () => {
                     title={t.showCurrentTrips}
                   >
                     <CalendarIcon className="w-4 h-4" />
-                    <span className="hidden xs:inline">{t.current}</span>
+                    <span className="hidden sm:inline">{t.currentTrips}</span>
                   </button>
                   <button
                     onClick={() => setViewFilter('past')}
@@ -198,7 +184,7 @@ const AdminDashboard = () => {
                     title={t.showOldTrips}
                   >
                     <Archive className="w-4 h-4" />
-                    <span className="hidden xs:inline">{t.old}</span>
+                    <span className="hidden sm:inline">{t.oldTrips}</span>
                   </button>
                 </div>
               </div>
@@ -220,9 +206,10 @@ const AdminDashboard = () => {
             ) : filteredTrips.length === 0 ? (
               <div className="bg-white rounded-lg shadow p-8 text-center">
                 <p className="text-gray-500">
+                  {viewFilter === 'date' && t.noTripsForDate}
                   {viewFilter === 'upcoming' && t.noUpcomingTrips}
                   {viewFilter === 'past' && t.noPastTrips}
-                  {viewFilter === 'all' && t.noTripsForDate}
+                  {viewFilter === 'all' && 'No trips found'}
                 </p>
                 <button
                   onClick={() => setShowCreateModal(true)}
@@ -244,7 +231,7 @@ const AdminDashboard = () => {
                           {trip.title}
                         </h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          {trip.vehicleLayout === 'sprinter_15'
+                          {trip.date?.toDate?.().toLocaleDateString() || new Date(trip.date).toLocaleDateString()} - {trip.vehicleLayout === 'sprinter_15'
                             ? t.mercedesSprinterBlack
                             : trip.vehicleLayout === 'bus_30'
                             ? t.mercedesSprinterWhite
@@ -294,7 +281,7 @@ const AdminDashboard = () => {
                         </button>
 
                         <button
-                          onClick={() => navigate(`/trip/${trip.id}`)}
+                          onClick={() => setViewingTripId(trip.id)}
                           style={{ backgroundColor: colors.primary.black }}
                           className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
                           title={t.viewTripDetails}
@@ -338,7 +325,10 @@ const AdminDashboard = () => {
                 {t.calendar}
               </h2>
               <Calendar
-                onChange={setSelectedDate}
+                onChange={(date) => {
+                  setSelectedDate(date);
+                  setViewFilter('date');
+                }}
                 value={selectedDate}
                 className="border-0 w-full"
               />
@@ -362,6 +352,14 @@ const AdminDashboard = () => {
           trip={editingTrip}
           onClose={() => setEditingTrip(null)}
           onUpdate={handleUpdateTrip}
+        />
+      )}
+
+      {/* Trip View Modal */}
+      {viewingTripId && (
+        <TripViewModal
+          tripId={viewingTripId}
+          onClose={() => setViewingTripId(null)}
         />
       )}
     </div>

@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote } from 'lucide-react';
+import { Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getTrip, updateRegistration } from '../utils/firestoreUtils';
 import VehicleSeatingMap from '../components/VehicleSeatingMap';
 import AddParticipantModal from '../components/AddParticipantModal';
+import Header from '../components/Header';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../utils/translations';
 import colors from '../utils/colors';
 
 const TripView = () => {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [trip, setTrip] = useState(null);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,26 +94,11 @@ const TripView = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Back to dashboard"
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </button>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{trip.title}</h1>
-              <p className="text-xs sm:text-sm text-gray-600">
-                {trip.date?.toDate().toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header
+        showBackButton={true}
+        title={trip.title}
+        subtitle={trip.date?.toDate().toLocaleDateString()}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

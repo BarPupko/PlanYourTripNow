@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
-import TripView from './pages/TripView';
 import RegistrationForm from './pages/RegistrationForm';
 import Login from './pages/Login';
 import PrivateRoute from './components/PrivateRoute';
@@ -18,14 +17,6 @@ function App() {
             element={
               <PrivateRoute>
                 <AdminDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/trip/:tripId"
-            element={
-              <PrivateRoute>
-                <TripView />
               </PrivateRoute>
             }
           />
