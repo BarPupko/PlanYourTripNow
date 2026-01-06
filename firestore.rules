@@ -13,8 +13,9 @@ service cloud.firestore {
       // Anyone can create a registration (public form)
       allow create: if true;
 
-      // Only authenticated users (admins) can read all registrations
-      allow read: if request.auth != null;
+      // Allow reading registrations to see occupied seats (public)
+      // This is needed for the registration form to show which seats are taken
+      allow read: if true;
 
       // Only authenticated users (admins) can update/delete
       allow update, delete: if request.auth != null;
