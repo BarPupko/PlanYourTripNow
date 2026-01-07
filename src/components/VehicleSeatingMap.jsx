@@ -83,12 +83,12 @@ const VehicleSeatingMap = ({ vehicleType, registrations, onSeatClick, selectedSe
         {/* Seats */}
         {layout.seats.map((seat) => {
           const occupant = getSeatOccupant(seat.id);
-          const isClickable = onSeatClick && !occupant;
+          const isClickable = onSeatClick;
 
           return (
             <g
               key={seat.id}
-              onClick={() => isClickable && onSeatClick(seat.id)}
+              onClick={() => isClickable && onSeatClick(seat.id, occupant)}
               className={isClickable ? 'cursor-pointer hover:opacity-80' : ''}
             >
               <rect

@@ -149,6 +149,11 @@ const TripView = () => {
               vehicleType={trip.vehicleLayout}
               registrations={registrations}
               driverName={trip.driverName}
+              onSeatClick={(seatNumber, occupant) => {
+                if (occupant) {
+                  setSelectedParticipant(occupant);
+                }
+              }}
             />
           </div>
 
