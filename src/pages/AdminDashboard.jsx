@@ -152,26 +152,29 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Weather Widget - Mobile Only at Top */}
-        <div className="lg:hidden mb-6">
-          <WeatherWidget />
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Side - Trip List */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="w-full sm:w-auto">
-                {/* Date Display */}
-                <div className="text-sm text-gray-600 mb-2">
-                  {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+              <div className="flex-1">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1">
+                    {/* Date Display */}
+                    <div className="text-sm text-gray-600 mb-2">
+                      {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      {viewFilter === 'date' ? `${t.tripsFor} ${selectedDate.toLocaleDateString()}` :
+                       viewFilter === 'all' ? t.allTrips :
+                       viewFilter === 'upcoming' ? t.currentTrips :
+                       t.oldTrips}
+                    </h2>
+                  </div>
+                  {/* Compact Weather - Mobile Only */}
+                  <div className="lg:hidden w-48 flex-shrink-0">
+                    <WeatherWidget compact={true} />
+                  </div>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {viewFilter === 'date' ? `${t.tripsFor} ${selectedDate.toLocaleDateString()}` :
-                   viewFilter === 'all' ? t.allTrips :
-                   viewFilter === 'upcoming' ? t.currentTrips :
-                   t.oldTrips}
-                </h2>
                 <div className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
                   <button
                     onClick={() => setViewFilter('date')}
@@ -306,11 +309,12 @@ const AdminDashboard = () => {
               <button
                 onClick={() => setShowCreateModal(true)}
                 style={{ backgroundColor: colors.primary.teal }}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm sm:text-base whitespace-nowrap"
                 title={t.createNewTrip}
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span className="hidden sm:inline">{t.createTrip}</span>
+                <span className="sm:hidden">New</span>
               </button>
             </div>
 

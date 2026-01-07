@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Cloud, CloudRain, Sun, CloudSnow, Wind, MapPin, Search } from 'lucide-react';
 import colors from '../utils/colors';
 
-const WeatherWidget = () => {
+const WeatherWidget = ({ compact = false }) => {
   const [location, setLocation] = useState('New York');
   const [locationInput, setLocationInput] = useState('');
   const [weather, setWeather] = useState(null);
@@ -103,6 +103,63 @@ const WeatherWidget = () => {
     if (code >= 80) return 'Rain showers';
     return 'Cloudy';
   };
+
+  // Compact mobile version
+  if (compact && weather && !loading && !error) {
+    return (
+      <div className="bg-white rounded-lg shadow p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="scale-75">
+              {getWeatherIcon(weather.weatherCode)}
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{weather.temperature}°C</div>
+              <div className="text-xs text-gray-600">{weather.city}</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+            title="Change location"
+          >
+            <Search className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
+        {showSearch && (
+          <div className="mt-3 space-y-2">
+            <form onSubmit={handleSearchSubmit} className="flex gap-1">
+              <input
+                type="text"
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
+                placeholder="Enter city..."
+                className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs"
+              />
+              <button
+                type="submit"
+                style={{ backgroundColor: colors.primary.teal }}
+                className="px-3 py-1 text-white rounded text-xs"
+              >
+                Go
+              </button>
+            </form>
+            <div className="flex flex-wrap gap-1">
+              {popularLocations.slice(0, 5).map((loc) => (
+                <button
+                  key={loc}
+                  onClick={() => handleLocationChange(loc)}
+                  className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-700"
+                >
+                  {loc}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
