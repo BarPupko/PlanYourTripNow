@@ -47,28 +47,33 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
               </button>
             )}
 
-            <IVRILogo size="md" />
+            <div className="hidden sm:block">
+              <IVRILogo size="md" />
+            </div>
+            <div className="sm:hidden">
+              <IVRILogo size="xs" />
+            </div>
 
             <div className="min-w-0 flex-1">
               {isAdminDashboard ? (
                 <>
-                  <h1 className="text-base sm:text-2xl font-bold text-gray-900 truncate">
+                  <h1 className="text-sm sm:text-2xl font-bold text-gray-900 truncate">
                     <span className="hidden sm:inline">{t.dashboard}</span>
                     <span className="sm:hidden">{t.dashboardShort}</span>
                   </h1>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">{t.IVRITours}</p>
+                  <p className="text-[10px] sm:text-sm text-gray-500 mt-1">{t.IVRITours}</p>
                 </>
               ) : title ? (
                 <>
-                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{title}</h1>
+                  <h1 className="text-sm sm:text-2xl font-bold text-gray-900 truncate">{title}</h1>
                   {subtitle && (
-                    <p className="text-xs sm:text-sm text-gray-600">{subtitle}</p>
+                    <p className="text-[10px] sm:text-sm text-gray-600">{subtitle}</p>
                   )}
                 </>
               ) : (
                 <>
-                  <h1 className="text-base sm:text-2xl font-bold text-gray-900 truncate">{t.IVRITours}</h1>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">{t.tripManagement}</p>
+                  <h1 className="text-sm sm:text-2xl font-bold text-gray-900 truncate">{t.IVRITours}</h1>
+                  <p className="text-[10px] sm:text-sm text-gray-500 mt-1">{t.tripManagement}</p>
                 </>
               )}
             </div>

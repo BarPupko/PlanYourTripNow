@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote } from 'lucide-react';
+import { Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, Copy, Check } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getTrip, updateRegistration } from '../utils/firestoreUtils';
@@ -21,6 +21,7 @@ const TripView = () => {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState(null);
+  const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
 
   useEffect(() => {
     loadTrip();
@@ -62,6 +63,45 @@ const TripView = () => {
       console.error('Error updating payment status:', error);
       alert('Failed to update payment status');
     }
+  };
+
+  const handleCopyForWhatsApp = () => {
+    if (!trip || registrations.length === 0) return;
+
+    // Create formatted message
+    let message = `🚌 *${trip.title}*\n`;
+    message += `📅 Date: ${trip.date?.toDate().toLocaleDateString()}\n`;
+    if (trip.driverName) {
+      message += `🚗 Driver: ${trip.driverName}\n`;
+    }
+    message += `\n👥 *Participants (${registrations.length})*\n`;
+    message += `${'='.repeat(40)}\n\n`;
+
+    // Sort by seat number
+    const sorted = [...registrations].sort((a, b) => a.seatNumber - b.seatNumber);
+
+    sorted.forEach((reg, index) => {
+      message += `${index + 1}. *${reg.firstName} ${reg.lastName}*\n`;
+      message += `   💺 Seat: ${reg.seatNumber}\n`;
+      message += `   📧 ${reg.email}\n`;
+      message += `   📱 ${reg.phone}\n`;
+      message += `   💳 ${reg.paid ? '✅ Paid' : '❌ Not Paid'}\n`;
+      message += `\n`;
+    });
+
+    message += `${'='.repeat(40)}\n`;
+    message += `✨ Total Participants: ${registrations.length}\n`;
+    message += `💰 Paid: ${registrations.filter(r => r.paid).length}\n`;
+    message += `⏳ Pending: ${registrations.filter(r => !r.paid).length}\n`;
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(message).then(() => {
+      setCopiedWhatsApp(true);
+      setTimeout(() => setCopiedWhatsApp(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy to clipboard');
+    });
   };
 
   if (loading) {
@@ -122,16 +162,40 @@ const TripView = () => {
                     Participants ({registrations.length})
                   </h2>
                 </div>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  style={{ backgroundColor: colors.primary.teal }}
-                  className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-                  title="Add participant"
-                >
-                  <UserPlus className="w-5 h-5" />
-                  <span className="hidden sm:inline">Add</span>
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    style={{ backgroundColor: colors.primary.teal }}
+                    className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                    title="Add participant"
+                  >
+                    <UserPlus className="w-5 h-5" />
+                    <span className="hidden sm:inline">Add</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Copy to WhatsApp Button */}
+              {registrations.length > 0 && (
+                <button
+                  onClick={handleCopyForWhatsApp}
+                  style={{ backgroundColor: copiedWhatsApp ? colors.success : '#25D366' }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all mb-4 font-medium"
+                  title="Copy all participant details for WhatsApp"
+                >
+                  {copiedWhatsApp ? (
+                    <>
+                      <Check className="w-5 h-5" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-5 h-5" />
+                      <span>Copy for WhatsApp</span>
+                    </>
+                  )}
+                </button>
+              )}
 
               {registrations.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">

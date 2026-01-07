@@ -2,6 +2,7 @@ import colors from '../utils/colors';
 
 const IVRILogo = ({ className = '', size = 'md' }) => {
   const sizes = {
+    xs: { width: '50px', fontSize: '10px', subSize: '7px' },
     sm: { width: '80px', fontSize: '14px', subSize: '10px' },
     md: { width: '120px', fontSize: '20px', subSize: '12px' },
     lg: { width: '160px', fontSize: '28px', subSize: '16px' },

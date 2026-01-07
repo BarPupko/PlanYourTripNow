@@ -4,8 +4,18 @@ import { Timestamp } from 'firebase/firestore';
 import colors from '../utils/colors';
 
 const EditTripModal = ({ trip, onClose, onUpdate }) => {
+  // Convert Firestore Timestamp to date string for input
+  const getTripDate = () => {
+    if (trip.date?.toDate) {
+      const date = trip.date.toDate();
+      return date.toISOString().split('T')[0];
+    }
+    return new Date().toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     title: trip.title || '',
+    date: getTripDate(),
     vehicleLayout: trip.vehicleLayout || 'sprinter_15',
     driverName: trip.driverName || '',
     whatsappGroupLink: trip.whatsappGroupLink || '',
@@ -18,7 +28,12 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
     setLoading(true);
 
     try {
-      await onUpdate(trip.id, formData);
+      // Convert date string to Firestore Timestamp
+      const updatedData = {
+        ...formData,
+        date: Timestamp.fromDate(new Date(formData.date))
+      };
+      await onUpdate(trip.id, updatedData);
     } catch (error) {
       console.error('Error updating trip:', error);
     } finally {
@@ -61,10 +76,13 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
               Date
             </label>
             <input
-              type="text"
-              value={trip.date?.toDate?.().toLocaleDateString() || 'N/A'}
-              disabled
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+              required
             />
           </div>
 

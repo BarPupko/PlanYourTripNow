@@ -319,11 +319,11 @@ const AdminDashboard = () => {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-sm sm:text-lg font-semibold text-gray-900">
                             {trip.title}
                           </h3>
                           <span
-                            className="px-2 py-1 rounded-full text-xs font-semibold"
+                            className="px-2 py-1 rounded-full text-[10px] sm:text-xs font-semibold"
                             style={{
                               backgroundColor: getStatusColor(trip.status).bg,
                               color: getStatusColor(trip.status).text
@@ -332,7 +332,7 @@ const AdminDashboard = () => {
                             {getStatusColor(trip.status).label}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-[10px] sm:text-sm text-gray-600 mt-1">
                           {trip.date?.toDate?.().toLocaleDateString() || new Date(trip.date).toLocaleDateString()} - {trip.vehicleLayout === 'sprinter_15'
                             ? t.mercedesSprinterBlack
                             : trip.vehicleLayout === 'bus_30'
@@ -342,7 +342,7 @@ const AdminDashboard = () => {
                             : trip.vehicleLayout}
                         </p>
                         {trip.driverName && (
-                          <p className="text-sm mt-1" style={{ color: '#00BCD4' }}>
+                          <p className="text-[10px] sm:text-sm mt-1" style={{ color: '#00BCD4' }}>
                             {t.driver}: {trip.driverName}
                           </p>
                         )}
