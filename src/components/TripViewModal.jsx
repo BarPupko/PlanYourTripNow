@@ -170,6 +170,11 @@ const TripViewModal = ({ tripId, onClose }) => {
                 vehicleType={trip.vehicleLayout}
                 registrations={registrations}
                 driverName={trip.driverName}
+                onSeatClick={(seatNumber, occupant) => {
+                  if (occupant) {
+                    setExpandedParticipant(occupant.id);
+                  }
+                }}
               />
             </div>
 
