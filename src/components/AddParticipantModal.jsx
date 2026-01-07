@@ -4,13 +4,13 @@ import { createRegistration } from '../utils/firestoreUtils';
 import { getVehicleLayout } from '../utils/vehicleLayouts';
 import colors from '../utils/colors';
 
-const AddParticipantModal = ({ trip, registrations, onClose, onSuccess }) => {
+const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    seatNumber: null,
+    seatNumber: preselectedSeat,
     paymentMethod: 'on-trip',
     paid: false
   });

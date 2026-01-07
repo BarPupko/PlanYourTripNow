@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2 } from 'lucide-react';
+import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2, Copy, Check } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getTrip, updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
@@ -16,10 +16,12 @@ const TripViewModal = ({ tripId, onClose }) => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [preselectedSeat, setPreselectedSeat] = useState(null);
   const [expandedParticipant, setExpandedParticipant] = useState(null);
   const [editingParticipant, setEditingParticipant] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [deletingId, setDeletingId] = useState(null);
+  const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
 
   useEffect(() => {
     loadTrip();
@@ -53,6 +55,45 @@ const TripViewModal = ({ tripId, onClose }) => {
     });
 
     return unsubscribe;
+  };
+
+  const handleCopyForWhatsApp = () => {
+    if (!trip || registrations.length === 0) return;
+
+    // Create formatted message
+    let message = `🚌 *${trip.title}*\n`;
+    message += `📅 Date: ${trip.date?.toDate().toLocaleDateString()}\n`;
+    if (trip.driverName) {
+      message += `🚗 Driver: ${trip.driverName}\n`;
+    }
+    message += `\n👥 *Participants (${registrations.length})*\n`;
+    message += `${'='.repeat(40)}\n\n`;
+
+    // Sort by seat number
+    const sorted = [...registrations].sort((a, b) => a.seatNumber - b.seatNumber);
+
+    sorted.forEach((reg, index) => {
+      message += `${index + 1}. *${reg.firstName} ${reg.lastName}*\n`;
+      message += `   💺 Seat: ${reg.seatNumber}\n`;
+      message += `   📧 ${reg.email}\n`;
+      message += `   📱 ${reg.phone}\n`;
+      message += `   💳 ${reg.paid ? '✅ Paid' : '❌ Not Paid'}\n`;
+      message += `\n`;
+    });
+
+    message += `${'='.repeat(40)}\n`;
+    message += `✨ Total Participants: ${registrations.length}\n`;
+    message += `💰 Paid: ${registrations.filter(r => r.paid).length}\n`;
+    message += `⏳ Pending: ${registrations.filter(r => !r.paid).length}\n`;
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(message).then(() => {
+      setCopiedWhatsApp(true);
+      setTimeout(() => setCopiedWhatsApp(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy to clipboard');
+    });
   };
 
   const handleTogglePaid = async (registrationId, currentStatus) => {
@@ -173,6 +214,9 @@ const TripViewModal = ({ tripId, onClose }) => {
                 onSeatClick={(seatNumber, occupant) => {
                   if (occupant) {
                     setExpandedParticipant(occupant.id);
+                  } else {
+                    setPreselectedSeat(seatNumber);
+                    setShowAddModal(true);
                   }
                 }}
               />
@@ -198,6 +242,28 @@ const TripViewModal = ({ tripId, onClose }) => {
                     <span className="hidden sm:inline">{t.add}</span>
                   </button>
                 </div>
+
+                {/* Copy to WhatsApp Button */}
+                {registrations.length > 0 && (
+                  <button
+                    onClick={handleCopyForWhatsApp}
+                    style={{ backgroundColor: copiedWhatsApp ? colors.success : '#25D366' }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all mb-4 font-medium"
+                    title="Copy all participant details for WhatsApp"
+                  >
+                    {copiedWhatsApp ? (
+                      <>
+                        <Check className="w-5 h-5" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-5 h-5" />
+                        <span>Copy for WhatsApp</span>
+                      </>
+                    )}
+                  </button>
+                )}
 
                 {registrations.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">
@@ -429,8 +495,15 @@ const TripViewModal = ({ tripId, onClose }) => {
         <AddParticipantModal
           trip={trip}
           registrations={registrations}
-          onClose={() => setShowAddModal(false)}
-          onSuccess={() => setShowAddModal(false)}
+          preselectedSeat={preselectedSeat}
+          onClose={() => {
+            setShowAddModal(false);
+            setPreselectedSeat(null);
+          }}
+          onSuccess={() => {
+            setShowAddModal(false);
+            setPreselectedSeat(null);
+          }}
         />
       )}
     </div>

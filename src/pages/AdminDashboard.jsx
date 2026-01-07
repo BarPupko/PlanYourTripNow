@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { Plus, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle, CheckCircle2, Clock, XCircle } from 'lucide-react';
-import { getAllTrips, getTripsByDate, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
+import { getAllTrips, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
 import CreateTripModal from '../components/CreateTripModal';
 import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
@@ -20,7 +20,7 @@ const AdminDashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [viewFilter, setViewFilter] = useState('date'); // 'date', 'all', 'upcoming', 'past'
+  const [viewFilter, setViewFilter] = useState('upcoming'); // 'all', 'upcoming', 'past'
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'planned', 'scheduled', 'done'
   const [deletingId, setDeletingId] = useState(null);
   const [editingTrip, setEditingTrip] = useState(null);
@@ -33,12 +33,7 @@ const AdminDashboard = () => {
   const loadTrips = async () => {
     setLoading(true);
     try {
-      let tripsData;
-      if (viewFilter === 'date') {
-        tripsData = await getTripsByDate(selectedDate);
-      } else {
-        tripsData = await getAllTrips();
-      }
+      const tripsData = await getAllTrips();
       setAllTrips(tripsData);
     } catch (error) {
       console.error('Error loading trips:', error);
@@ -99,10 +94,7 @@ const AdminDashboard = () => {
     let filtered = allTrips;
 
     // Apply date/time filter
-    if (viewFilter === 'date') {
-      // Already filtered by date in loadTrips
-      filtered = allTrips;
-    } else if (viewFilter === 'upcoming') {
+    if (viewFilter === 'upcoming') {
       filtered = allTrips.filter(trip => {
         const tripDate = trip.date?.toDate?.() || new Date(trip.date);
         tripDate.setHours(0, 0, 0, 0);
@@ -164,8 +156,7 @@ const AdminDashboard = () => {
                       {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
                     <h2 className="text-xl font-semibold text-gray-900">
-                      {viewFilter === 'date' ? `${t.tripsFor} ${selectedDate.toLocaleDateString()}` :
-                       viewFilter === 'all' ? t.allTrips :
+                      {viewFilter === 'all' ? t.allTrips :
                        viewFilter === 'upcoming' ? t.currentTrips :
                        t.oldTrips}
                     </h2>
@@ -176,20 +167,6 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
-                  <button
-                    onClick={() => setViewFilter('date')}
-                    className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
-                      viewFilter === 'date'
-                        ? 'text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                    style={viewFilter === 'date' ? { backgroundColor: colors.primary.teal } : {}}
-                    title={`${t.tripsFor} ${selectedDate.toLocaleDateString()}`}
-                  >
-                    <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">{selectedDate.toLocaleDateString()}</span>
-                    <span className="sm:hidden">{selectedDate.toLocaleDateString().split('/')[0]}/{selectedDate.toLocaleDateString().split('/')[1]}</span>
-                  </button>
                   <button
                     onClick={() => setViewFilter('all')}
                     className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
@@ -325,7 +302,6 @@ const AdminDashboard = () => {
             ) : filteredTrips.length === 0 ? (
               <div className="bg-white rounded-lg shadow p-8 text-center">
                 <p className="text-gray-500">
-                  {viewFilter === 'date' && t.noTripsForDate}
                   {viewFilter === 'upcoming' && t.noUpcomingTrips}
                   {viewFilter === 'past' && t.noPastTrips}
                   {viewFilter === 'all' && 'No trips found'}

@@ -20,6 +20,7 @@ const TripView = () => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [preselectedSeat, setPreselectedSeat] = useState(null);
   const [selectedParticipant, setSelectedParticipant] = useState(null);
   const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
 
@@ -152,6 +153,9 @@ const TripView = () => {
               onSeatClick={(seatNumber, occupant) => {
                 if (occupant) {
                   setSelectedParticipant(occupant);
+                } else {
+                  setPreselectedSeat(seatNumber);
+                  setShowAddModal(true);
                 }
               }}
             />
@@ -246,9 +250,14 @@ const TripView = () => {
         <AddParticipantModal
           trip={trip}
           registrations={registrations}
-          onClose={() => setShowAddModal(false)}
+          preselectedSeat={preselectedSeat}
+          onClose={() => {
+            setShowAddModal(false);
+            setPreselectedSeat(null);
+          }}
           onSuccess={() => {
-            // Modal will close automatically and real-time listener will update the list
+            setShowAddModal(false);
+            setPreselectedSeat(null);
           }}
         />
       )}
