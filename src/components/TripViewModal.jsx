@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2, Copy, Check } from 'lucide-react';
+import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2, Copy, Check, MessageCircle } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getTrip, updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
@@ -57,8 +57,8 @@ const TripViewModal = ({ tripId, onClose }) => {
     return unsubscribe;
   };
 
-  const handleCopyForWhatsApp = () => {
-    if (!trip || registrations.length === 0) return;
+  const generateWhatsAppMessage = () => {
+    if (!trip || registrations.length === 0) return '';
 
     // Create formatted message
     let message = `🚌 *${trip.title}*\n`;
@@ -86,6 +86,13 @@ const TripViewModal = ({ tripId, onClose }) => {
     message += `💰 Paid: ${registrations.filter(r => r.paid).length}\n`;
     message += `⏳ Pending: ${registrations.filter(r => !r.paid).length}\n`;
 
+    return message;
+  };
+
+  const handleCopyForWhatsApp = () => {
+    const message = generateWhatsAppMessage();
+    if (!message) return;
+
     // Copy to clipboard
     navigator.clipboard.writeText(message).then(() => {
       setCopiedWhatsApp(true);
@@ -94,6 +101,22 @@ const TripViewModal = ({ tripId, onClose }) => {
       console.error('Failed to copy:', err);
       alert('Failed to copy to clipboard');
     });
+  };
+
+  const handleSendToGroup = () => {
+    const message = generateWhatsAppMessage();
+    if (!message) return;
+
+    // Extract group ID from WhatsApp group link if available
+    if (trip.whatsappGroupLink) {
+      // Open WhatsApp with the message pre-filled
+      const encodedMessage = encodeURIComponent(message);
+      window.open(`${trip.whatsappGroupLink}?text=${encodedMessage}`, '_blank');
+    } else {
+      // If no group link, just open WhatsApp with the message
+      const encodedMessage = encodeURIComponent(message);
+      window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+    }
   };
 
   const handleTogglePaid = async (registrationId, currentStatus) => {
@@ -243,26 +266,37 @@ const TripViewModal = ({ tripId, onClose }) => {
                   </button>
                 </div>
 
-                {/* Copy to WhatsApp Button */}
+                {/* WhatsApp Buttons */}
                 {registrations.length > 0 && (
-                  <button
-                    onClick={handleCopyForWhatsApp}
-                    style={{ backgroundColor: copiedWhatsApp ? colors.success : '#25D366' }}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all mb-4 font-medium"
-                    title="Copy all participant details for WhatsApp"
-                  >
-                    {copiedWhatsApp ? (
-                      <>
-                        <Check className="w-5 h-5" />
-                        <span>Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-5 h-5" />
-                        <span>Copy for WhatsApp</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex gap-2 mb-4">
+                    <button
+                      onClick={handleCopyForWhatsApp}
+                      style={{ backgroundColor: copiedWhatsApp ? colors.success : '#25D366' }}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
+                      title="Copy all participant details for WhatsApp"
+                    >
+                      {copiedWhatsApp ? (
+                        <>
+                          <Check className="w-5 h-5" />
+                          <span className="hidden sm:inline">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-5 h-5" />
+                          <span className="hidden sm:inline">Copy</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleSendToGroup}
+                      style={{ backgroundColor: '#25D366' }}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
+                      title="Send to WhatsApp group"
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      <span className="hidden sm:inline">Send to Group</span>
+                    </button>
+                  </div>
                 )}
 
                 {registrations.length === 0 ? (
