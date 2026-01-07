@@ -457,8 +457,10 @@ const AdminDashboard = () => {
                 />
               </div>
 
-              {/* Weather Widget */}
-              <WeatherWidget />
+              {/* Weather Widget - Desktop Only */}
+              <div className="hidden lg:block">
+                <WeatherWidget />
+              </div>
             </div>
           </div>
         </div>

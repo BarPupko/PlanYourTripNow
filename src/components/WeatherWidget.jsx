@@ -10,6 +10,7 @@ const WeatherWidget = ({ compact = false }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Popular locations
   const popularLocations = ['Toronto', 'Ottawa', 'Barrie','Montreal','Mont Tremblant ','Chicago','New York', 'Miami',  'Boston'];
@@ -104,60 +105,213 @@ const WeatherWidget = ({ compact = false }) => {
     return 'Cloudy';
   };
 
-  // Compact mobile version
-  if (compact && weather && !loading && !error) {
+  // Compact mobile version with expandable overlay
+  if (compact) {
     return (
-      <div className="bg-white rounded-lg shadow p-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="scale-75">
-              {getWeatherIcon(weather.weatherCode)}
+      <>
+        {/* Compact Icon */}
+        <button
+          onClick={() => setIsExpanded(true)}
+          className="bg-white rounded-full shadow-lg p-3 hover:shadow-xl transition-all"
+          title="View Weather"
+        >
+          {weather && !loading && !error ? (
+            <div className="flex items-center gap-2">
+              <div className="scale-75">
+                {getWeatherIcon(weather.weatherCode)}
+              </div>
+              <div className="text-sm font-bold text-gray-900">{weather.temperature}°C</div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{weather.temperature}°C</div>
-              <div className="text-xs text-gray-600">{weather.city}</div>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-            title="Change location"
+          ) : (
+            <Cloud className="w-6 h-6" style={{ color: colors.primary.teal }} />
+          )}
+        </button>
+
+        {/* Expanded Overlay */}
+        {isExpanded && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-end p-4 animate-fadeIn"
+            onClick={() => setIsExpanded(false)}
           >
-            <Search className="w-4 h-4 text-gray-600" />
-          </button>
-        </div>
-        {showSearch && (
-          <div className="mt-3 space-y-2">
-            <form onSubmit={handleSearchSubmit} className="flex gap-1">
-              <input
-                type="text"
-                value={locationInput}
-                onChange={(e) => setLocationInput(e.target.value)}
-                placeholder="Enter city..."
-                className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs"
-              />
-              <button
-                type="submit"
-                style={{ backgroundColor: colors.primary.teal }}
-                className="px-3 py-1 text-white rounded text-xs"
-              >
-                Go
-              </button>
-            </form>
-            <div className="flex flex-wrap gap-1">
-              {popularLocations.slice(0, 5).map((loc) => (
+            <div
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mt-16 mr-0 animate-slideInRight"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header with close */}
+              <div className="flex justify-between items-center p-4 border-b">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Cloud className="w-5 h-5" style={{ color: colors.primary.teal }} />
+                  Weather
+                </h3>
                 <button
-                  key={loc}
-                  onClick={() => handleLocationChange(loc)}
-                  className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-700"
+                  onClick={() => setIsExpanded(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  {loc}
+                  <span className="text-2xl text-gray-600">&times;</span>
                 </button>
-              ))}
+              </div>
+
+              {/* Weather Content */}
+              <div className="p-4 max-h-[70vh] overflow-y-auto">
+                {loading && (
+                  <div className="text-center py-8">
+                    <div className="text-gray-500 text-sm">Loading weather...</div>
+                  </div>
+                )}
+
+                {error && !loading && (
+                  <div className="text-center py-8">
+                    <div className="text-red-500 text-sm">{error}</div>
+                    <button
+                      onClick={() => fetchWeather(location)}
+                      className="mt-2 text-blue-600 hover:text-blue-700 text-sm"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                )}
+
+                {weather && !loading && !error && (
+                  <>
+                    {/* Location */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4" style={{ color: colors.primary.teal }} />
+                        <span className="text-sm font-medium text-gray-700">
+                          {weather.city}, {weather.country}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setShowSearch(!showSearch)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Change location"
+                      >
+                        <Search className="w-4 h-4 text-gray-600" />
+                      </button>
+                    </div>
+
+                    {/* Search */}
+                    {showSearch && (
+                      <div className="mb-4 space-y-3">
+                        <form onSubmit={handleSearchSubmit} className="flex gap-2">
+                          <input
+                            type="text"
+                            value={locationInput}
+                            onChange={(e) => setLocationInput(e.target.value)}
+                            placeholder="Enter city name..."
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          />
+                          <button
+                            type="submit"
+                            style={{ backgroundColor: colors.primary.teal }}
+                            className="px-4 py-2 text-white rounded-lg text-sm"
+                          >
+                            Go
+                          </button>
+                        </form>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-2">Popular locations:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {popularLocations.map((loc) => (
+                              <button
+                                key={loc}
+                                onClick={() => handleLocationChange(loc)}
+                                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-700"
+                              >
+                                {loc}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Current Weather */}
+                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4 mb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-4xl font-bold text-gray-900">{weather.temperature}°C</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            {getWeatherDescription(weather.weatherCode)}
+                          </div>
+                        </div>
+                        <div>
+                          {getWeatherIcon(weather.weatherCode)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="flex items-center gap-2">
+                        <Wind className="w-4 h-4 text-gray-400" />
+                        <div>
+                          <div className="text-xs text-gray-500">Wind</div>
+                          <div className="text-sm font-semibold text-gray-900">{weather.windSpeed} mph</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CloudRain className="w-4 h-4 text-gray-400" />
+                        <div>
+                          <div className="text-xs text-gray-500">Humidity</div>
+                          <div className="text-sm font-semibold text-gray-900">{weather.humidity}%</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Forecast */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">5-Day Forecast</h4>
+                      <div className="space-y-2">
+                        {forecast.map((day, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="scale-75">
+                                {getWeatherIcon(day.weatherCode)}
+                              </div>
+                              <span className="text-xs text-gray-700">{day.date}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-gray-900">{day.maxTemp}°</span>
+                              <span className="text-sm text-gray-500">{day.minTemp}°</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}
-      </div>
+
+        <style jsx>{`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes slideInRight {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.2s ease-out;
+          }
+          .animate-slideInRight {
+            animation: slideInRight 0.3s ease-out;
+          }
+        `}</style>
+      </>
     );
   }
 
