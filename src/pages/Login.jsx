@@ -19,7 +19,7 @@ const Login = () => {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/admin');
+      navigate('/');
     } catch (err) {
       setError('Invalid email or password');
       console.error(err);

@@ -13,18 +13,18 @@ function App() {
     <LanguageProvider>
       <Router basename="/PlanYourTripNow">
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register/:tripId" element={<RegistrationForm />} />
-          <Route path="/gift/:giftCardId" element={<GiftCardReveal />} />
           <Route
-            path="/admin"
+            path="/"
             element={
               <PrivateRoute>
                 <AdminDashboard />
               </PrivateRoute>
             }
           />
+          <Route path="/tours" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register/:tripId" element={<RegistrationForm />} />
+          <Route path="/gift/:giftCardId" element={<GiftCardReveal />} />
           <Route
             path="/gift-cards"
             element={

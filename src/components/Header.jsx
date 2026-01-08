@@ -25,11 +25,11 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
   };
 
   const handleBack = () => {
-    navigate('/admin');
+    navigate('/');
   };
 
   // Check if we're on admin dashboard
-  const isAdminDashboard = location.pathname === '/admin';
+  const isAdminDashboard = location.pathname === '/';
   const isGiftCardsPage = location.pathname === '/gift-cards';
   const isPublicPage = location.pathname.includes('/register/');
 
@@ -98,7 +98,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
 
                 {isGiftCardsPage && (
                   <button
-                    onClick={() => navigate('/admin')}
+                    onClick={() => navigate('/')}
                     className="flex items-center gap-2 px-3 sm:px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors"
                     style={{ color: colors.primary.teal }}
                     title="Dashboard"
