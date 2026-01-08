@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { Facebook } from 'lucide-react';
 import colors from '../utils/colors';
 
 const LandingPage = () => {
@@ -33,6 +34,9 @@ const LandingPage = () => {
       destinationsTitle: "Our Amazing Destinations",
       multiLang: "Multi-language Tours Available",
       testimonialsTitle: "What People Say About Us",
+      facebookTitle: "Follow Us on Facebook",
+      facebookDesc: "Stay connected with our latest tours, photos, and travel tips!",
+      visitFacebook: "Visit Our Facebook Page",
       contactTitle: "Contact Us",
       nameLabel: "Name",
       emailLabel: "Email",
@@ -88,6 +92,9 @@ const LandingPage = () => {
       destinationsTitle: "היעדים המדהימים שלנו",
       multiLang: "סיורים בריבוי שפות זמינים",
       testimonialsTitle: "מה אומרים עלינו",
+      facebookTitle: "עקבו אחרינו בפייסבוק",
+      facebookDesc: "הישארו מחוברים עם הטיולים האחרונים שלנו, תמונות וטיפים לטיולים!",
+      visitFacebook: "בקרו בדף הפייסבוק שלנו",
       contactTitle: "צרו קשר",
       nameLabel: "שם",
       emailLabel: "אימייל",
@@ -98,18 +105,39 @@ const LandingPage = () => {
       footerText: "כל הזכויות שמורות. חקרו את העולם איתנו!",
       adminLogin: "כניסת מנהל",
       destinations: {
-        toronto: { title: "מרכז טורונטו", desc: "חוו את הלב התוסס של העיר הגדולה ביותר בקנדה. גלו את מגדל CN האייקוני, הנמל השוקק והשכונות המגוונות עם המדריכים המומחים שלנו." },
-        niagara: { title: "מפלי ניאגרה", desc: "התרשמו מהכוח המלכותי של אחד ממפלי המים המפורסמים בעולם. התקרבו בסיורי סירה ותיהנו מנופים עוצרי נשימה ממגוון נקודות תצפית." },
-        tremblant: { title: "מון טרמבלן", desc: "גלו את הקסם של כפר הנופש המוביל בקוויבק. תיהנו מנופי הרים מרהיבים, פעילויות חוצות כל השנה ואווירת כפר אירופית." },
-        quebec: { title: "קוויבק סיטי", desc: "היכנסו לאגדת אגדות אירופית בצפון אמריקה. טיילו ברחובות מרוצפים, בקרו בביצורים היסטוריים והשתלבו בתרבות הצרפתית-קנדית." },
-        barrie: { title: "בארי", desc: "חקרו את העיר החופית היפה הזו על חופי אגם סימקו. תיהנו מפארקים על שפת המים, חופים ומרכז עיר מקסים עם היסטוריה מקומית עשירה." },
-        detroit: { title: "דטרויט", desc: "גלו את מורשת הרכב העשירה של עיר המנועים ואת תחיית התרבות התוססת. בקרו במוזיאונים ברמה עולמית, אדריכלות מרהיבה ורובעי אמנות משגשגים." },
-        chicago: { title: "שיקגו", desc: "חוו את קו הרקיע האייקוני של עיר הרוחות, אדריכלות מפורסמת עולמית, פיצה דיפ-דיש וסצנה תרבותית תוססת לאורך אגם מישיגן היפה." }
+        toronto: {
+          title: "מרכז טורונטו",
+          desc: "חוו את הלב התוסס של העיר הגדולה ביותר בקנדה. חקרו את מגדל CN האיקוני, הנמל התוסס והשכונות המגוונות עם המדריכים המומחים שלנו."
+        },
+        niagara: {
+          title: "מפלי ניאגרה",
+          desc: "היו עדים לעוצמה המלכותית של אחד ממפלי המים המפורסמים בעולם. התקרבו עם סיורי סירה ותהנו מנופים עוצרי נשימה מנקודות תצפית מרובות."
+        },
+        tremblant: {
+          title: "מון טרמבלן",
+          desc: "גלו את הקסם של כפר הנופש המוביל בקוויבק. תהנו מנוף הרים מדהים, פעילויות חוצות כל השנה ואווירה בסגנון אירופאי."
+        },
+        quebec: {
+          title: "קוויבק סיטי",
+          desc: "היכנסו לאגדה אירופאית בצפון אמריקה. טיילו ברחובות מרוצפים, בקרו בביצורים היסטוריים והיטמעו בתרבות הקנדית-צרפתית."
+        },
+        barrie: {
+          title: "בארי",
+          desc: "חקרו את העיר היפה הזו על שפת אגם סימקו. תהנו מפארקי חוף, חופים ומרכז עיר מקסים עם היסטוריה מקומית עשירה."
+        },
+        detroit: {
+          title: "דטרויט",
+          desc: "גלו את המורשת הרכבית העשירה של עיר המוטורים ואת הרנסנס התרבותי התוסס. בקרו במוזיאונים ברמה עולמית, אדריכלות מדהימה ורובעי אמנות משגשגים."
+        },
+        chicago: {
+          title: "שיקגו",
+          desc: "חוו את קו הרקיע האיקוני של העיר הסוערת, אדריכלות בעלת שם עולמי, פיצה עמוקה וסצנה תרבותית תוססת לאורך אגם מישיגן היפהפה."
+        }
       },
       testimonials: [
-        { text: "חוויה מדהימה! המדריך היה בעל ידע וידידותי. לראות את מפלי ניאגרה היה הגשמת חלום!", author: "שרה מ." },
-        { text: "התמיכה הרב-לשונית הפכה הכל לנוח כל כך למשפחה שלנו. ממליצים בחום על IVRI Tours!", author: "דוד ל." },
-        { text: "הסיור בקוויבק סיטי היה קסום! המדריך שלנו שיתף סיפורים מרתקים וטיפים פנימיים. החופשה הכי טובה אי פעם!", author: "רחל כ." },
+        { text: "חוויה מדהימה! המדריך היה בעל ידע ויוד ידידותי. לראות את מפלי ניאגרה היה חלום שהתגשם!", author: "שרה מ." },
+        { text: "התמיכה הרב-לשונית הפכה הכל לנוח כל כך עבור המשפחה שלנו. ממליץ בחום על IVRI Tours!", author: "דוד ל." },
+        { text: "סיור קוויבק סיטי היה קסום! המדריך שלנו שיתף סיפורים מרתקים וטיפים פנימיים. החופשה הכי טובה אי פעם!", author: "רחל כ." },
         { text: "מקצועי, מאורגן ומהנה! סיור האדריכלות בשיקגו עלה על כל הציפיות. תודה IVRI Tours!", author: "מיכאל ר." }
       ]
     },
@@ -122,29 +150,53 @@ const LandingPage = () => {
       destinationsTitle: "Наши удивительные направления",
       multiLang: "Туры на нескольких языках доступны",
       testimonialsTitle: "Что говорят о нас",
-      contactTitle: "Свяжитесь с нами",
+      facebookTitle: "Следите за нами в Facebook",
+      facebookDesc: "Будьте в курсе наших последних туров, фотографий и советов путешественникам!",
+      visitFacebook: "Посетите нашу страницу в Facebook",
+      contactTitle: "Связаться с нами",
       nameLabel: "Имя",
       emailLabel: "Электронная почта",
       phoneLabel: "Телефон",
-      destinationLabel: "Предпочтительное направление",
+      destinationLabel: "Предпочитаемое направление",
       messageLabel: "Сообщение",
       submitBtn: "Отправить сообщение",
-      footerText: "Все права защищены. Исследуйте мир с нами!",
+      footerText: "Все права защищены. Исследуйте мир вместе с нами!",
       adminLogin: "Вход администратора",
       destinations: {
-        toronto: { title: "Центр Торонто", desc: "Ощутите яркое сердце крупнейшего города Канады. Исследуйте знаменитую башню CN, оживленную набережную и разнообразные районы с нашими опытными гидами." },
-        niagara: { title: "Ниагарский водопад", desc: "Станьте свидетелем величественной мощи одного из самых известных водопадов в мире. Подойдите поближе на лодочных турах и насладитесь захватывающими видами с разных точек обзора." },
-        tremblant: { title: "Мон-Трамблан", desc: "Откройте для себя очарование ведущего курортного поселка Квебека. Наслаждайтесь потрясающими горными пейзажами, круглогодичными активностями на свежем воздухе и атмосферой деревни в европейском стиле." },
-        quebec: { title: "Квебек-Сити", desc: "Шагните в европейскую сказку в Северной Америке. Прогуляйтесь по мощеным улицам, посетите исторические укрепления и погрузитесь во франко-канадскую культуру." },
-        barrie: { title: "Барри", desc: "Исследуйте этот красивый прибрежный город на берегу озера Симко. Наслаждайтесь набережными парками, пляжами и очаровательным центром города с богатой местной историей." },
-        detroit: { title: "Детройт", desc: "Откройте для себя богатое автомобильное наследие Города моторов и яркое культурное возрождение. Посетите музеи мирового класса, потрясающую архитектуру и процветающие арт-районы." },
-        chicago: { title: "Чикаго", desc: "Испытайте знаменитый силуэт Города ветров, всемирно известную архитектуру, глубокую пиццу и яркую культурную сцену вдоль красивого озера Мичиган." }
+        toronto: {
+          title: "Центр Торонто",
+          desc: "Испытайте живое сердце крупнейшего города Канады. Исследуйте культовую башню CN, оживленную набережную и разнообразные районы с нашими опытными гидами."
+        },
+        niagara: {
+          title: "Ниагарский водопад",
+          desc: "Станьте свидетелем величественной мощи одного из самых известных водопадов в мире. Приблизьтесь на лодочных турах и насладитесь захватывающими видами с нескольких точек обзора."
+        },
+        tremblant: {
+          title: "Мон-Трамблан",
+          desc: "Откройте для себя очарование главного курортного поселка Квебека. Наслаждайтесь потрясающими горными пейзажами, круглогодичными мероприятиями на свежем воздухе и атмосферой европейского стиля."
+        },
+        quebec: {
+          title: "Квебек-Сити",
+          desc: "Войдите в европейскую сказку в Северной Америке. Прогуляйтесь по мощеным улицам, посетите исторические укрепления и погрузитесь во франко-канадскую культуру."
+        },
+        barrie: {
+          title: "Барри",
+          desc: "Исследуйте этот красивый прибрежный город на берегу озера Симко. Наслаждайтесь набережными парками, пляжами и очаровательным центром города с богатой местной историей."
+        },
+        detroit: {
+          title: "Детройт",
+          desc: "Откройте для себя богатое автомобильное наследие Мотор-Сити и яркий культурный ренессанс. Посетите музеи мирового класса, потрясающую архитектуру и процветающие художественные районы."
+        },
+        chicago: {
+          title: "Чикаго",
+          desc: "Испытайте культовый горизонт Города ветров, всемирно известную архитектуру, глубокую пиццу и яркую культурную сцену вдоль красивого озера Мичиган."
+        }
       },
       testimonials: [
-        { text: "Потрясающий опыт! Гид был знающим и дружелюбным. Увидеть Ниагарский водопад было мечтой, которая сбылась!", author: "Сара М." },
-        { text: "Многоязычная поддержка сделала все настолько комфортным для нашей семьи. Очень рекомендую IVRI Tours!", author: "Давид Л." },
-        { text: "Тур по Квебек-Сити был волшебным! Наш гид поделился увлекательными историями и инсайдерскими советами. Лучший отпуск в жизни!", author: "Рахель К." },
-        { text: "Профессионально, организованно и весело! Архитектурный тур по Чикаго превзошел все ожидания. Спасибо IVRI Tours!", author: "Михаэль Р." }
+        { text: "Потрясающий опыт! Гид был знающим и дружелюбным. Увидеть Ниагарский водопад было сбывшейся мечтой!", author: "Сара М." },
+        { text: "Многоязычная поддержка сделала все таким комфортным для нашей семьи. Настоятельно рекомендую IVRI Tours!", author: "Давид Л." },
+        { text: "Тур по Квебеку был волшебным! Наш гид делился захватывающими историями и инсайдерскими советами. Лучший отпуск в истории!", author: "Рахиль К." },
+        { text: "Профессионально, организованно и весело! Архитектурный тур по Чикаго превзошел все ожидания. Спасибо IVRI Tours!", author: "Михаил Р." }
       ]
     }
   };
@@ -152,13 +204,13 @@ const LandingPage = () => {
   const t = translations[language];
 
   const destinations = [
-    { key: 'toronto', image: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80' },
-    { key: 'niagara', image: 'https://images.unsplash.com/photo-1489619547086-6c96ab34b1cb?w=800&q=80' },
-    { key: 'tremblant', image: 'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=800&q=80' },
-    { key: 'quebec', image: 'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=800&q=80' },
-    { key: 'barrie', image: 'https://images.unsplash.com/photo-1570977484372-d1291a79f32e?w=800&q=80' },
-    { key: 'detroit', image: 'https://images.unsplash.com/photo-1599586120429-48281b6f0ece?w=800&q=80' },
-    { key: 'chicago', image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80' }
+    { key: 'toronto', image: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80' }, // CN Tower
+    { key: 'niagara', image: 'https://images.unsplash.com/photo-1489447068241-b3490214e879?w=800&q=80' }, // Niagara Falls close-up
+    { key: 'tremblant', image: 'https://images.unsplash.com/photo-1551524164-687a55dd1126?w=800&q=80' }, // Mont Tremblant skiing
+    { key: 'quebec', image: 'https://images.unsplash.com/photo-1608211838603-5c511cfaefd9?w=800&q=80' }, // Quebec City Old Town
+    { key: 'barrie', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=800&q=80' }, // Lake Simcoe waterfront
+    { key: 'detroit', image: 'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=800&q=80' }, // Detroit skyline
+    { key: 'chicago', image: 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80' } // Chicago Bean/Cloud Gate
   ];
 
   const testimonialImages = [
@@ -239,6 +291,48 @@ const LandingPage = () => {
                 <h4 className="font-bold" style={{ color: colors.primary.teal }}>{testimonial.author}</h4>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <Facebook className="w-16 h-16 mx-auto mb-6" style={{ color: colors.primary.teal }} />
+          <h2 className="text-4xl font-bold mb-4" style={{ color: colors.primary.teal }}>{t.facebookTitle}</h2>
+          <p className="text-xl text-gray-600 mb-8">{t.facebookDesc}</p>
+          <a
+            href="https://www.facebook.com/ivritours"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-8 py-4 text-white text-lg font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg"
+            style={{ backgroundColor: '#1877F2' }}
+          >
+            <Facebook className="w-6 h-6" />
+            {t.visitFacebook}
+          </a>
+          <div className="mt-12 bg-gray-50 rounded-xl p-8 shadow-inner">
+            <div className="text-gray-500 mb-4">
+              <p className="text-lg font-semibold mb-2">Connect with us:</p>
+              <p>@IVRITours</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+              <div className="bg-white rounded-lg p-4 shadow">
+                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>500+</div>
+                <div className="text-sm text-gray-600">Happy Travelers</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow">
+                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>50+</div>
+                <div className="text-sm text-gray-600">Tours This Year</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow">
+                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>7</div>
+                <div className="text-sm text-gray-600">Destinations</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow">
+                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>3</div>
+                <div className="text-sm text-gray-600">Languages</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
