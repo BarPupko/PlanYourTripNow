@@ -273,17 +273,17 @@ const TripViewModal = ({ tripId, onClose }) => {
                       onClick={handleCopyForWhatsApp}
                       style={{ backgroundColor: copiedWhatsApp ? colors.success : '#25D366' }}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
-                      title="Copy all participant details for WhatsApp"
+                      title={t.copyAllParticipantDetails}
                     >
                       {copiedWhatsApp ? (
                         <>
                           <Check className="w-5 h-5" />
-                          <span className="hidden sm:inline">Copied!</span>
+                          <span className="hidden sm:inline">{t.copied}</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-5 h-5" />
-                          <span className="hidden sm:inline">Copy</span>
+                          <span className="hidden sm:inline">{t.copyForWhatsApp}</span>
                         </>
                       )}
                     </button>
@@ -291,10 +291,10 @@ const TripViewModal = ({ tripId, onClose }) => {
                       onClick={handleSendToGroup}
                       style={{ backgroundColor: '#25D366' }}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
-                      title="Send to WhatsApp group"
+                      title={t.sendToWhatsAppGroup}
                     >
                       <MessageCircle className="w-5 h-5" />
-                      <span className="hidden sm:inline">Send to Group</span>
+                      <span className="hidden sm:inline">{t.sendToGroup}</span>
                     </button>
                   </div>
                 )}

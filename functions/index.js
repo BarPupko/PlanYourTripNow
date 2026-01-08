@@ -5,6 +5,9 @@ const nodemailer = require('nodemailer');
 
 admin.initializeApp();
 
+// Admin email configuration
+const ADMIN_EMAIL = 'barpupco@gmail.com';
+
 // Configure email transporter
 // IMPORTANT: Replace with your email service credentials
 const transporter = nodemailer.createTransport({
@@ -151,47 +154,74 @@ exports.onRegistrationCreated = functions.firestore
 
       // Send email to participant
       await transporter.sendMail({
-        from: '"Trip Management System" <noreply@tripsystem.com>',
+        from: '"IVRI Tours" <noreply@ivritours.com>',
         to: registration.email,
-        subject: `Registration Confirmed: ${trip.title}`,
+        subject: `✅ Registration Confirmed: ${trip.title}`,
         html: `
-          <h2>Registration Confirmed!</h2>
-          <p>Dear ${registration.firstName} ${registration.lastName},</p>
-          <p>Thank you for registering for <strong>${trip.title}</strong>.</p>
-          <p><strong>Trip Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
-          <p><strong>Your Seat:</strong> #${registration.seatNumber}</p>
-          <p>Your signed waiver is attached to this email for your records.</p>
-          <p>We look forward to seeing you on the trip!</p>
-          <br>
-          <p>Best regards,<br>Trip Management Team</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; font-size: 28px;">✅ Registration Confirmed!</h1>
+            </div>
+            <div style="background-color: white; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px;">
+              <p style="font-size: 16px;">Dear ${registration.firstName} ${registration.lastName},</p>
+              <p style="font-size: 16px;">Thank you for registering for <strong style="color: #00BCD4;">${trip.title}</strong>!</p>
+
+              <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #00BCD4; margin-top: 0;">📅 Trip Details</h3>
+                <p style="margin: 8px 0;"><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
+                <p style="margin: 8px 0;"><strong>Time:</strong> ${trip.date.toDate().toLocaleTimeString()}</p>
+                <p style="margin: 8px 0;"><strong>Your Seat:</strong> <span style="background-color: #00BCD4; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">#${registration.seatNumber}</span></p>
+              </div>
+
+              <div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #00BCD4; margin: 20px 0;">
+                <p style="margin: 0; font-size: 14px;"><strong>📎 Important:</strong> Your signed waiver is attached to this email for your records. Please keep it for reference.</p>
+              </div>
+
+              <p style="font-size: 16px; margin-top: 30px;">We look forward to seeing you on the trip! If you have any questions, feel free to reach out.</p>
+
+              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRI Tours Team</strong></p>
+              </div>
+            </div>
+          </div>
         `,
         attachments: [
           {
-            filename: 'waiver.pdf',
+            filename: 'trip-waiver.pdf',
             content: pdfBuffer
           }
         ]
       });
 
       // Send notification to admin
-      // Note: You'll need to configure the admin email
-      const adminEmail = functions.config().admin?.email || 'admin@example.com';
-
       await transporter.sendMail({
-        from: '"Trip Management System" <noreply@tripsystem.com>',
-        to: adminEmail,
-        subject: `New Registration: ${trip.title}`,
+        from: '"IVRI Tours" <noreply@ivritours.com>',
+        to: ADMIN_EMAIL,
+        subject: `🎫 New Registration: ${trip.title}`,
         html: `
-          <h2>New Registration Received</h2>
-          <p><strong>Trip:</strong> ${trip.title}</p>
-          <p><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
-          <p><strong>Participant:</strong> ${registration.firstName} ${registration.lastName}</p>
-          <p><strong>Email:</strong> ${registration.email}</p>
-          <p><strong>Phone:</strong> ${registration.phone}</p>
-          <p><strong>Seat:</strong> #${registration.seatNumber}</p>
-          <p><strong>Registration Time:</strong> ${registration.timestamp.toDate().toLocaleString()}</p>
-          <br>
-          <p><a href="${pdfUrl}">View Waiver PDF</a></p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #00BCD4;">🎫 New Registration Received</h2>
+            <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #333; margin-top: 0;">Trip Details</h3>
+              <p><strong>Trip:</strong> ${trip.title}</p>
+              <p><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
+              <p><strong>Time:</strong> ${trip.date.toDate().toLocaleTimeString()}</p>
+            </div>
+            <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #333; margin-top: 0;">Participant Information</h3>
+              <p><strong>Name:</strong> ${registration.firstName} ${registration.lastName}</p>
+              <p><strong>Email:</strong> <a href="mailto:${registration.email}">${registration.email}</a></p>
+              <p><strong>Phone:</strong> <a href="tel:${registration.phone}">${registration.phone}</a></p>
+              <p><strong>Seat Number:</strong> #${registration.seatNumber}</p>
+              <p><strong>Payment Method:</strong> ${registration.paymentMethod === 'card' ? 'Card Payment' : 'Pay on Trip'}</p>
+              <p><strong>Payment Status:</strong> ${registration.paid ? '✅ Paid' : '❌ Not Paid'}</p>
+              <p><strong>Registration Time:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${pdfUrl}" style="background-color: #00BCD4; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">View Signed Waiver PDF</a>
+            </div>
+            <p style="color: #666; font-size: 12px; text-align: center;">This is an automated notification from IVRI Tours Trip Management System</p>
+          </div>
         `
       });
 
@@ -203,6 +233,87 @@ exports.onRegistrationCreated = functions.firestore
       throw error;
     }
   });
+
+/**
+ * Cloud Function triggered when a new user is created (Admin sign up)
+ * Sends welcome email to the new admin user
+ */
+exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
+  try {
+    const email = user.email;
+    const displayName = user.displayName || email.split('@')[0];
+
+    // Send welcome email to new admin
+    await transporter.sendMail({
+      from: '"IVRI Tours" <noreply@ivritours.com>',
+      to: email,
+      subject: '🎉 Welcome to IVRI Tours Admin Portal!',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); color: white; padding: 40px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 32px;">🎉 Welcome to IVRI Tours!</h1>
+          </div>
+          <div style="background-color: white; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px;">
+            <p style="font-size: 16px;">Hello ${displayName},</p>
+            <p style="font-size: 16px;">Welcome to the <strong style="color: #00BCD4;">IVRI Tours Trip Management System</strong>!</p>
+
+            <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #00BCD4; margin-top: 0;">🚀 Getting Started</h3>
+              <p style="margin: 8px 0;">Your admin account has been successfully created. You can now:</p>
+              <ul style="margin: 10px 0; padding-left: 20px;">
+                <li style="margin: 8px 0;">Create and manage trips</li>
+                <li style="margin: 8px 0;">View and manage participant registrations</li>
+                <li style="margin: 8px 0;">Track payments and seat assignments</li>
+                <li style="margin: 8px 0;">Generate reports and communications</li>
+              </ul>
+            </div>
+
+            <div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #00BCD4; margin: 20px 0;">
+              <p style="margin: 0; font-size: 14px;"><strong>📧 Your Admin Email:</strong> ${email}</p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="https://planyourtrip-ed010.web.app" style="background-color: #00BCD4; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-size: 16px; font-weight: bold;">Access Admin Dashboard</a>
+            </div>
+
+            <p style="font-size: 14px; color: #666; margin-top: 30px;">If you have any questions or need assistance, please don't hesitate to reach out to our support team.</p>
+
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+              <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRI Tours Team</strong></p>
+            </div>
+          </div>
+        </div>
+      `
+    });
+
+    // Notify main admin about new user creation
+    await transporter.sendMail({
+      from: '"IVRI Tours" <noreply@ivritours.com>',
+      to: ADMIN_EMAIL,
+      subject: '👤 New Admin User Created',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #00BCD4;">👤 New Admin User Created</h2>
+          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Display Name:</strong> ${displayName}</p>
+            <p><strong>User ID:</strong> ${user.uid}</p>
+            <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
+          </div>
+          <p style="color: #666; font-size: 12px; text-align: center;">This is an automated notification from IVRI Tours Trip Management System</p>
+        </div>
+      `
+    });
+
+    console.log('Welcome email sent to new user:', email);
+    return null;
+
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+    // Don't throw error - we don't want to fail user creation if email fails
+    return null;
+  }
+});
 
 /**
  * Callable function to resend confirmation email

@@ -161,6 +161,42 @@ export const translations = {
     tripTitlePlaceholder: 'e.g., Beach Trip, Museum Visit',
     driverNamePlaceholder: 'e.g., John Smith',
     whatsappPlaceholder: 'https://chat.whatsapp.com/...',
+
+    // WhatsApp Features
+    copyForWhatsApp: 'Copy for WhatsApp',
+    sendToGroup: 'Send to Group',
+    copyAllParticipantDetails: 'Copy all participant details for WhatsApp',
+    sendToWhatsAppGroup: 'Send to WhatsApp group',
+
+    // Weather
+    viewWeather: 'View Weather',
+    weather: 'Weather',
+    loadingWeather: 'Loading weather...',
+    tryAgain: 'Try again',
+    popularLocations: 'Popular locations:',
+    enterCityName: 'Enter city name...',
+    goButton: 'Go',
+    wind: 'Wind',
+    humidity: 'Humidity',
+    forecastDays: '5-Day Forecast',
+    changeLocation: 'Change location',
+
+    // Trip View
+    loadingTrip: 'Loading trip...',
+    tripNotFoundTitle: 'Trip not found',
+    returnToDashboard: 'Return to Dashboard',
+    noRegistrationsYet: 'No registrations yet',
+    participantDetailsTitle: 'Participant Details',
+    cardPayment: 'Card Payment',
+    payOnTripMethod: 'Pay on Trip',
+    paymentMethodLabel: 'Payment Method',
+    seatNumberLabel: 'Seat Number',
+
+    // Status
+    status: 'Status',
+    planned: 'Planned',
+    scheduled: 'Scheduled',
+    done: 'Done',
   },
 
   ru: {
@@ -325,6 +361,42 @@ export const translations = {
     tripTitlePlaceholder: 'например, Поездка на пляж, Посещение музея',
     driverNamePlaceholder: 'например, Иван Иванов',
     whatsappPlaceholder: 'https://chat.whatsapp.com/...',
+
+    // WhatsApp Features
+    copyForWhatsApp: 'Копировать для WhatsApp',
+    sendToGroup: 'Отправить в группу',
+    copyAllParticipantDetails: 'Скопировать все данные участников для WhatsApp',
+    sendToWhatsAppGroup: 'Отправить в группу WhatsApp',
+
+    // Weather
+    viewWeather: 'Посмотреть погоду',
+    weather: 'Погода',
+    loadingWeather: 'Загрузка погоды...',
+    tryAgain: 'Попробовать снова',
+    popularLocations: 'Популярные места:',
+    enterCityName: 'Введите название города...',
+    goButton: 'Найти',
+    wind: 'Ветер',
+    humidity: 'Влажность',
+    forecastDays: '5-дневный прогноз',
+    changeLocation: 'Изменить местоположение',
+
+    // Trip View
+    loadingTrip: 'Загрузка поездки...',
+    tripNotFoundTitle: 'Поездка не найдена',
+    returnToDashboard: 'Вернуться к панели',
+    noRegistrationsYet: 'Пока нет регистраций',
+    participantDetailsTitle: 'Детали участника',
+    cardPayment: 'Оплата картой',
+    payOnTripMethod: 'Оплата в поездке',
+    paymentMethodLabel: 'Способ оплаты',
+    seatNumberLabel: 'Номер места',
+
+    // Status
+    status: 'Статус',
+    planned: 'Запланировано',
+    scheduled: 'Назначено',
+    done: 'Завершено',
   }
 };
 

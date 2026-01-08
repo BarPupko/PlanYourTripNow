@@ -4,6 +4,7 @@ import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import IVRILogo from './IrviLogo';
 import LanguageSelector from './LanguageSelector';
+import WeatherWidget from './WeatherWidget';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import colors from '../utils/colors';
@@ -24,11 +25,11 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
   };
 
   const handleBack = () => {
-    navigate('/');
+    navigate('/admin');
   };
 
   // Check if we're on admin dashboard
-  const isAdminDashboard = location.pathname === '/';
+  const isAdminDashboard = location.pathname === '/admin';
   const isGiftCardsPage = location.pathname === '/gift-cards';
   const isPublicPage = location.pathname.includes('/register/');
 
@@ -57,11 +58,10 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
             <div className="min-w-0 flex-1">
               {isAdminDashboard ? (
                 <>
-                  <h1 className="text-sm sm:text-2xl font-bold text-gray-900 truncate">
-                    <span className="hidden sm:inline">{t.dashboard}</span>
-                    <span className="sm:hidden">{t.dashboardShort}</span>
-                  </h1>
-                  <p className="hidden sm:block text-sm text-gray-500 mt-1">{t.IVRITours}</p>
+                  <div className="flex items-center gap-2">
+                    <WeatherWidget compact={true} />
+                    <p className="hidden sm:block text-sm text-gray-500">{t.IVRITours}</p>
+                  </div>
                 </>
               ) : title ? (
                 <>
@@ -98,7 +98,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
 
                 {isGiftCardsPage && (
                   <button
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/admin')}
                     className="flex items-center gap-2 px-3 sm:px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors"
                     style={{ color: colors.primary.teal }}
                     title="Dashboard"

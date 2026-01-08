@@ -6,7 +6,6 @@ import { getAllTrips, createTrip, deleteTrip, updateTrip } from '../utils/firest
 import CreateTripModal from '../components/CreateTripModal';
 import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
-import WeatherWidget from '../components/WeatherWidget';
 import Header from '../components/Header';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
@@ -160,10 +159,6 @@ const AdminDashboard = () => {
                        viewFilter === 'upcoming' ? t.currentTrips :
                        t.oldTrips}
                     </h2>
-                  </div>
-                  {/* Compact Weather - Mobile Only */}
-                  <div className="lg:hidden w-48 flex-shrink-0">
-                    <WeatherWidget compact={true} />
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
@@ -431,11 +426,6 @@ const AdminDashboard = () => {
                   value={selectedDate}
                   className="border-0 w-full"
                 />
-              </div>
-
-              {/* Weather Widget - Desktop Only */}
-              <div className="hidden lg:block">
-                <WeatherWidget />
               </div>
             </div>
           </div>

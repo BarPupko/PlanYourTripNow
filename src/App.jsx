@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
 import AdminDashboard from './pages/AdminDashboard';
 import RegistrationForm from './pages/RegistrationForm';
 import Login from './pages/Login';
@@ -12,11 +13,12 @@ function App() {
     <LanguageProvider>
       <Router basename="/PlanYourTripNow">
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register/:tripId" element={<RegistrationForm />} />
           <Route path="/gift/:giftCardId" element={<GiftCardReveal />} />
           <Route
-            path="/"
+            path="/admin"
             element={
               <PrivateRoute>
                 <AdminDashboard />

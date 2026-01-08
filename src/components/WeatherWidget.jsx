@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Cloud, CloudRain, Sun, CloudSnow, Wind, MapPin, Search } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../utils/translations';
 import colors from '../utils/colors';
 
 const WeatherWidget = ({ compact = false }) => {
+  const { language } = useLanguage();
+  const t = translations[language];
   const [location, setLocation] = useState('New York');
   const [locationInput, setLocationInput] = useState('');
   const [weather, setWeather] = useState(null);
@@ -113,7 +117,7 @@ const WeatherWidget = ({ compact = false }) => {
         <button
           onClick={() => setIsExpanded(true)}
           className="bg-white rounded-full shadow-lg p-3 hover:shadow-xl transition-all"
-          title="View Weather"
+          title={t.viewWeather}
         >
           {weather && !loading && !error ? (
             <div className="flex items-center gap-2">
@@ -141,7 +145,7 @@ const WeatherWidget = ({ compact = false }) => {
               <div className="flex justify-between items-center p-4 border-b">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <Cloud className="w-5 h-5" style={{ color: colors.primary.teal }} />
-                  Weather
+                  {t.weather}
                 </h3>
                 <button
                   onClick={() => setIsExpanded(false)}
@@ -155,7 +159,7 @@ const WeatherWidget = ({ compact = false }) => {
               <div className="p-4 max-h-[70vh] overflow-y-auto">
                 {loading && (
                   <div className="text-center py-8">
-                    <div className="text-gray-500 text-sm">Loading weather...</div>
+                    <div className="text-gray-500 text-sm">{t.loadingWeather}</div>
                   </div>
                 )}
 
@@ -166,7 +170,7 @@ const WeatherWidget = ({ compact = false }) => {
                       onClick={() => fetchWeather(location)}
                       className="mt-2 text-blue-600 hover:text-blue-700 text-sm"
                     >
-                      Try again
+                      {t.tryAgain}
                     </button>
                   </div>
                 )}

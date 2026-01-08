@@ -131,7 +131,7 @@ const TripView = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading trip...</div>
+        <div className="text-lg">{t.loadingTrip}</div>
       </div>
     );
   }
@@ -140,12 +140,12 @@ const TripView = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-lg text-gray-600 mb-4">Trip not found</p>
+          <p className="text-lg text-gray-600 mb-4">{t.tripNotFoundTitle}</p>
           <button
             onClick={() => navigate('/')}
             className="text-blue-600 hover:text-blue-700"
           >
-            Return to Dashboard
+            {t.returnToDashboard}
           </button>
         </div>
       </div>
@@ -214,17 +214,17 @@ const TripView = () => {
                     onClick={handleCopyForWhatsApp}
                     style={{ backgroundColor: copiedWhatsApp ? colors.success : '#25D366' }}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
-                    title="Copy all participant details for WhatsApp"
+                    title={t.copyAllParticipantDetails}
                   >
                     {copiedWhatsApp ? (
                       <>
                         <Check className="w-5 h-5" />
-                        <span className="hidden sm:inline">Copied!</span>
+                        <span className="hidden sm:inline">{t.copied}</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-5 h-5" />
-                        <span className="hidden sm:inline">Copy</span>
+                        <span className="hidden sm:inline">{t.copyForWhatsApp}</span>
                       </>
                     )}
                   </button>
@@ -232,17 +232,17 @@ const TripView = () => {
                     onClick={handleSendToGroup}
                     style={{ backgroundColor: '#25D366' }}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
-                    title="Send to WhatsApp group"
+                    title={t.sendToWhatsAppGroup}
                   >
                     <MessageCircle className="w-5 h-5" />
-                    <span className="hidden sm:inline">Send to Group</span>
+                    <span className="hidden sm:inline">{t.sendToGroup}</span>
                   </button>
                 </div>
               )}
 
               {registrations.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">
-                  No registrations yet
+                  {t.noRegistrationsYet}
                 </p>
               ) : (
                 <div className="space-y-2 max-h-[600px] overflow-y-auto">
@@ -302,53 +302,53 @@ const TripView = () => {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Participant Details
+                {t.participantDetailsTitle}
               </h2>
 
               <div className="space-y-4">
                 {/* Basic Info */}
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Name</label>
+                  <label className="text-sm font-medium text-gray-500">{t.name}</label>
                   <p className="text-lg font-semibold text-gray-900">
                     {selectedParticipant.firstName} {selectedParticipant.lastName}
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Email</label>
+                  <label className="text-sm font-medium text-gray-500">{t.email}</label>
                   <p className="text-gray-900">{selectedParticipant.email}</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Phone</label>
+                  <label className="text-sm font-medium text-gray-500">{t.phone}</label>
                   <p className="text-gray-900">{selectedParticipant.phone}</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Seat Number</label>
+                  <label className="text-sm font-medium text-gray-500">{t.seatNumberLabel}</label>
                   <p className="text-gray-900">#{selectedParticipant.seatNumber}</p>
                 </div>
 
                 {/* Payment Info */}
                 <div className="border-t pt-4">
-                  <label className="text-sm font-medium text-gray-500">Payment Method</label>
+                  <label className="text-sm font-medium text-gray-500">{t.paymentMethodLabel}</label>
                   <div className="flex items-center gap-2 mt-1">
                     {selectedParticipant.paymentMethod === 'card' ? (
                       <>
                         <CreditCard className="w-4 h-4 text-blue-600" />
-                        <span className="text-gray-900">Card Payment</span>
+                        <span className="text-gray-900">{t.cardPayment}</span>
                       </>
                     ) : (
                       <>
                         <Banknote className="w-4 h-4 text-green-600" />
-                        <span className="text-gray-900">Pay on Trip</span>
+                        <span className="text-gray-900">{t.payOnTripMethod}</span>
                       </>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Payment Status</label>
+                  <label className="text-sm font-medium text-gray-500">{t.paymentStatus}</label>
                   <div className="flex items-center gap-2 mt-1">
                     {selectedParticipant.paid ? (
                       <CheckCircle2 className="w-5 h-5 text-green-500" />
@@ -356,39 +356,39 @@ const TripView = () => {
                       <XCircle className="w-5 h-5 text-red-500" />
                     )}
                     <span className="text-gray-900 font-semibold">
-                      {selectedParticipant.paid ? 'Paid' : 'Not Paid'}
+                      {selectedParticipant.paid ? t.paid : t.notPaid}
                     </span>
                   </div>
                 </div>
 
                 {/* Registration Status */}
                 <div className="border-t pt-4">
-                  <label className="text-sm font-medium text-gray-500">Registration Status</label>
+                  <label className="text-sm font-medium text-gray-500">{t.registrationStatus}</label>
                   <div className="flex items-center gap-2 mt-1">
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    <span className="text-gray-900">Complete</span>
+                    <span className="text-gray-900">{t.complete}</span>
                   </div>
                   {selectedParticipant.registrationDate && (
                     <p className="text-sm text-gray-500 mt-1">
-                      Registered: {new Date(selectedParticipant.registrationDate).toLocaleDateString()}
+                      {t.registered}: {new Date(selectedParticipant.registrationDate).toLocaleDateString()}
                     </p>
                   )}
                 </div>
 
                 {/* Agreements */}
                 <div className="border-t pt-4">
-                  <label className="text-sm font-medium text-gray-500">Signed Agreements</label>
+                  <label className="text-sm font-medium text-gray-500">{t.signedAgreements}</label>
                   <div className="space-y-1 mt-2">
                     {selectedParticipant.agreedToCancellationPolicy && (
                       <div className="flex items-center gap-2 text-sm">
                         <CheckCircle2 className="w-4 h-4 text-green-500" />
-                        <span className="text-gray-700">Cancellation Policy</span>
+                        <span className="text-gray-700">{t.cancellationPolicy}</span>
                       </div>
                     )}
                     {selectedParticipant.agreedToWaiver && (
                       <div className="flex items-center gap-2 text-sm">
                         <CheckCircle2 className="w-4 h-4 text-green-500" />
-                        <span className="text-gray-700">Liability Waiver</span>
+                        <span className="text-gray-700">{t.liabilityWaiver}</span>
                       </div>
                     )}
                   </div>
@@ -402,13 +402,13 @@ const TripView = () => {
                   style={{ backgroundColor: selectedParticipant.paid ? colors.button.danger : colors.success }}
                   className="w-full px-4 py-3 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
                 >
-                  {selectedParticipant.paid ? 'Mark as Not Paid' : 'Mark as Paid'}
+                  {selectedParticipant.paid ? t.markAsNotPaid : t.markAsPaidBtn}
                 </button>
                 <button
                   onClick={() => setSelectedParticipant(null)}
                   className="w-full px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
-                  Close
+                  {t.close}
                 </button>
               </div>
             </div>
