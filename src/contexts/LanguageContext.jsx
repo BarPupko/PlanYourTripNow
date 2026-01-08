@@ -11,11 +11,16 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('en'); // 'en' or 'ru'
+  const [language, setLanguage] = useState('en'); // 'en', 'he', or 'ru'
+
+  const changeLanguage = (newLanguage) => {
+    setLanguage(newLanguage);
+  };
 
   const value = {
     language,
     setLanguage,
+    changeLanguage,
   };
 
   return (

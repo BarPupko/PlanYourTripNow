@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Facebook } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Clock, Users } from 'lucide-react';
 import colors from '../utils/colors';
 
 const LandingPage = () => {
@@ -29,14 +29,18 @@ const LandingPage = () => {
       welcome: "Welcome to IVRI Tours!",
       welcomeMsg: "Discover breathtaking destinations with expert tour guides in multiple languages. Your adventure begins here!",
       getStarted: "Get Started",
-      heroTitle: "Explore the World with IVRI Tours",
+      heroTitle: "Explore North America with IVRI Tours",
       heroSubtitle: "Professional guided tours in English, Hebrew, and Russian",
       destinationsTitle: "Our Amazing Destinations",
-      multiLang: "Multi-language Tours Available",
+      multiLang: "Multi-language Tours",
+      duration: "Duration",
+      groupSize: "Group Size",
+      highlights: "Highlights",
       testimonialsTitle: "What People Say About Us",
-      facebookTitle: "Follow Us on Facebook",
-      facebookDesc: "Stay connected with our latest tours, photos, and travel tips!",
-      visitFacebook: "Visit Our Facebook Page",
+      socialTitle: "Follow Our Adventures",
+      socialDesc: "Stay connected with our latest tours, photos, and travel tips on social media!",
+      visitFacebook: "Visit Facebook",
+      visitInstagram: "Visit Instagram",
       contactTitle: "Contact Us",
       nameLabel: "Name",
       emailLabel: "Email",
@@ -49,31 +53,52 @@ const LandingPage = () => {
       destinations: {
         toronto: {
           title: "Toronto Downtown",
-          desc: "Experience the vibrant heart of Canada's largest city. Explore the iconic CN Tower, bustling harbourfront, and diverse neighborhoods with our expert guides."
+          desc: "Explore Canada's largest and most diverse city! Experience the iconic CN Tower with breathtaking 360° views, stroll along the beautiful harbourfront, discover the historic Distillery District, visit the Royal Ontario Museum, and immerse yourself in vibrant multicultural neighborhoods like Kensington Market and Chinatown.",
+          duration: "8-10 hours",
+          groupSize: "12-20 people",
+          highlights: ["CN Tower & Views", "Harbourfront Walk", "Distillery District", "ROM Museum", "Kensington Market"]
         },
         niagara: {
           title: "Niagara Falls",
-          desc: "Witness the majestic power of one of the world's most famous waterfalls. Get up close with boat tours and enjoy breathtaking views from multiple vantage points."
+          desc: "Witness the raw power and beauty of one of the world's most spectacular natural wonders! Get up close with the Hornblower boat tour, walk behind the falls at Journey Behind the Falls, enjoy panoramic views from Skylon Tower, explore the charming town of Niagara-on-the-Lake, and taste world-class wines at local vineyards.",
+          duration: "Full Day (10-12 hours)",
+          groupSize: "15-25 people",
+          highlights: ["Hornblower Boat Tour", "Journey Behind Falls", "Skylon Tower", "Niagara-on-the-Lake", "Wine Tasting"]
         },
         tremblant: {
           title: "Mont Tremblant",
-          desc: "Discover the charm of Quebec's premier resort village. Enjoy stunning mountain scenery, outdoor activities year-round, and European-style village atmosphere."
+          desc: "Discover Quebec's premier four-season resort destination! Experience world-class skiing and snowboarding in winter, enjoy scenic gondola rides with stunning Laurentian views, explore the charming European-style pedestrian village, try exciting outdoor activities like hiking and zip-lining, and relax in the beautiful natural surroundings.",
+          duration: "2-3 Days",
+          groupSize: "10-18 people",
+          highlights: ["Skiing & Snowboarding", "Scenic Gondola", "Village Pedestrian", "Outdoor Activities", "Spa & Relaxation"]
         },
         quebec: {
           title: "Quebec City",
-          desc: "Step into a European fairytale in North America. Wander through cobblestone streets, visit historic fortifications, and immerse yourself in French Canadian culture."
+          desc: "Step into Europe without leaving North America! Wander through the UNESCO World Heritage Old Quebec with its cobblestone streets, visit the majestic Château Frontenac, explore the historic Citadelle fortification, discover the charming Quartier Petit Champlain, and savor authentic French-Canadian cuisine and culture.",
+          duration: "2-3 Days",
+          groupSize: "12-20 people",
+          highlights: ["Old Quebec UNESCO Site", "Château Frontenac", "Citadelle Tour", "Petit Champlain", "French Cuisine"]
         },
         barrie: {
-          title: "Barrie",
-          desc: "Explore this beautiful lakeside city on the shores of Lake Simcoe. Enjoy waterfront parks, beaches, and a charming downtown with rich local history."
+          title: "Barrie & Lake Simcoe",
+          desc: "Experience Ontario's beautiful lakeside gem! Enjoy stunning waterfront parks and beaches along Lake Simcoe, explore the historic downtown with unique shops and restaurants, visit Spirit Catcher sculpture and Centennial Park, experience seasonal activities like swimming in summer or ice fishing in winter.",
+          duration: "6-8 hours",
+          groupSize: "10-15 people",
+          highlights: ["Lake Simcoe Beach", "Waterfront Parks", "Downtown Shopping", "Spirit Catcher", "Seasonal Activities"]
         },
         detroit: {
           title: "Detroit",
-          desc: "Discover the Motor City's rich automotive heritage and vibrant cultural renaissance. Visit world-class museums, stunning architecture, and thriving arts districts."
+          desc: "Discover the Motor City's incredible transformation! Visit the Henry Ford Museum and Greenfield Village, explore the stunning Detroit Institute of Arts, walk along the beautiful RiverWalk, tour the historic Fox Theatre, experience the vibrant Eastern Market, and learn about Motown's musical legacy.",
+          duration: "Full Day (10-12 hours)",
+          groupSize: "15-20 people",
+          highlights: ["Henry Ford Museum", "DIA Art Museum", "Detroit RiverWalk", "Motown Museum", "Eastern Market"]
         },
         chicago: {
           title: "Chicago",
-          desc: "Experience the Windy City's iconic skyline, world-renowned architecture, deep-dish pizza, and vibrant cultural scene along beautiful Lake Michigan."
+          desc: "Experience the magnificent Windy City! Marvel at world-famous architecture on a river cruise, visit Millennium Park and the iconic Cloud Gate (Bean), explore Navy Pier and Lake Michigan shoreline, enjoy deep-dish pizza, discover Art Institute treasures, and take in breathtaking views from Willis Tower Skydeck.",
+          duration: "2-3 Days",
+          groupSize: "15-25 people",
+          highlights: ["Architecture River Cruise", "Cloud Gate (Bean)", "Navy Pier", "Willis Tower Skydeck", "Deep-Dish Pizza"]
         }
       },
       testimonials: [
@@ -87,14 +112,18 @@ const LandingPage = () => {
       welcome: "ברוכים הבאים ל-IVRI Tours!",
       welcomeMsg: "גלו יעדים עוצרי נשימה עם מדריכי טיולים מומחים במספר שפות. ההרפתקה שלכם מתחילה כאן!",
       getStarted: "בואו נתחיל",
-      heroTitle: "חקרו את העולם עם IVRI Tours",
+      heroTitle: "חקרו את צפון אמריקה עם IVRI Tours",
       heroSubtitle: "סיורים מודרכים מקצועיים באנגלית, עברית ורוסית",
       destinationsTitle: "היעדים המדהימים שלנו",
-      multiLang: "סיורים בריבוי שפות זמינים",
+      multiLang: "סיורים בריבוי שפות",
+      duration: "משך",
+      groupSize: "גודל קבוצה",
+      highlights: "דגשים",
       testimonialsTitle: "מה אומרים עלינו",
-      facebookTitle: "עקבו אחרינו בפייסבוק",
-      facebookDesc: "הישארו מחוברים עם הטיולים האחרונים שלנו, תמונות וטיפים לטיולים!",
-      visitFacebook: "בקרו בדף הפייסבוק שלנו",
+      socialTitle: "עקבו אחרי ההרפתקאות שלנו",
+      socialDesc: "הישארו מחוברים עם הטיולים האחרונים, תמונות וטיפים ברשתות החברתיות!",
+      visitFacebook: "בקרו בפייסבוק",
+      visitInstagram: "בקרו באינסטגרם",
       contactTitle: "צרו קשר",
       nameLabel: "שם",
       emailLabel: "אימייל",
@@ -107,35 +136,56 @@ const LandingPage = () => {
       destinations: {
         toronto: {
           title: "מרכז טורונטו",
-          desc: "חוו את הלב התוסס של העיר הגדולה ביותר בקנדה. חקרו את מגדל CN האיקוני, הנמל התוסס והשכונות המגוונות עם המדריכים המומחים שלנו."
+          desc: "חקרו את העיר הגדולה והמגוונת ביותר בקנדה! חוו את מגדל CN האיקוני עם נוף 360° עוצר נשימה, טיילו לאורך הנמל היפהפה, גלו את רובע הזיקוק ההיסטורי, בקרו במוזיאון המלכותי של אונטריו והיטמעו בשכונות רב-תרבותיות תוססות.",
+          duration: "8-10 שעות",
+          groupSize: "12-20 אנשים",
+          highlights: ["מגדל CN ונופים", "טיול בנמל", "רובע הזיקוק", "מוזיאון ROM", "שוק קנסינגטון"]
         },
         niagara: {
           title: "מפלי ניאגרה",
-          desc: "היו עדים לעוצמה המלכותית של אחד ממפלי המים המפורסמים בעולם. התקרבו עם סיורי סירה ותהנו מנופים עוצרי נשימה מנקודות תצפית מרובות."
+          desc: "היו עדים לעוצמה ויופי של אחד מפלאי הטבע המרהיבים בעולם! התקרבו עם סיור הסירה Hornblower, הליכה מאחורי המפלים, תהנו מנוף פנורמי ממגדל Skylon, חקרו את העיר המקסימה Niagara-on-the-Lake וטעמו יינות ברמה עולמית.",
+          duration: "יום מלא (10-12 שעות)",
+          groupSize: "15-25 אנשים",
+          highlights: ["סיור סירת Hornblower", "מסע מאחורי המפלים", "מגדל Skylon", "Niagara-on-the-Lake", "טעימות יין"]
         },
         tremblant: {
           title: "מון טרמבלן",
-          desc: "גלו את הקסם של כפר הנופש המוביל בקוויבק. תהנו מנוף הרים מדהים, פעילויות חוצות כל השנה ואווירה בסגנון אירופאי."
+          desc: "גלו את אתר הנופש המוביל בקוויבק לכל עונות השנה! חוו סקי וסנובורד ברמה עולמית בחורף, תהנו מנסיעות רכבל נופיות עם נופי הלורנשיינס המדהימים, חקרו את הכפר ההולכי רגל בסגנון אירופאי ונסו פעילויות חוצות מרגשות.",
+          duration: "2-3 ימים",
+          groupSize: "10-18 אנשים",
+          highlights: ["סקי וסנובורד", "רכבל נופי", "כפר הולכי רגל", "פעילויות חוצות", "ספא והרפיה"]
         },
         quebec: {
           title: "קוויבק סיטי",
-          desc: "היכנסו לאגדה אירופאית בצפון אמריקה. טיילו ברחובות מרוצפים, בקרו בביצורים היסטוריים והיטמעו בתרבות הקנדית-צרפתית."
+          desc: "היכנסו לאירופה מבלי לעזוב את צפון אמריקה! טיילו בעיר העתיקה של קוויבק המוכרת על ידי אונסק\"ו עם רחובות מרוצפים, בקרו בשאטו פרונטנק המלכותי, חקרו את הציטדל ההיסטורי וטעמו מטבח צרפתי-קנדי אותנטי.",
+          duration: "2-3 ימים",
+          groupSize: "12-20 אנשים",
+          highlights: ["העיר העתיקה אונסק״ו", "שאטו פרונטנק", "סיור בציטדל", "פטי שמפליין", "מטבח צרפתי"]
         },
         barrie: {
-          title: "בארי",
-          desc: "חקרו את העיר היפה הזו על שפת אגם סימקו. תהנו מפארקי חוף, חופים ומרכז עיר מקסים עם היסטוריה מקומית עשירה."
+          title: "בארי ואגם סימקו",
+          desc: "חוו את פנינת אונטריו שליד האגם! תהנו מפארקי חוף וחופים מדהימים לאורך אגם סימקו, חקרו את מרכז העיר ההיסטורי עם חנויות ומסעדות ייחודיות, בקרו בפסל Spirit Catcher ובפארק Centennial.",
+          duration: "6-8 שעות",
+          groupSize: "10-15 אנשים",
+          highlights: ["חוף אגם סימקו", "פארקי חוף", "קניות במרכז", "Spirit Catcher", "פעילויות עונתיות"]
         },
         detroit: {
           title: "דטרויט",
-          desc: "גלו את המורשת הרכבית העשירה של עיר המוטורים ואת הרנסנס התרבותי התוסס. בקרו במוזיאונים ברמה עולמית, אדריכלות מדהימה ורובעי אמנות משגשגים."
+          desc: "גלו את השינוי המדהים של עיר המוטורים! בקרו במוזיאון הנרי פורד, חקרו את מכון האמנות של דטרויט המדהים, טיילו לאורך ה-RiverWalk היפהפה, בקרו בתיאטרון Fox ההיסטורי ולמדו על מורשת המוטאון המוזיקלית.",
+          duration: "יום מלא (10-12 שעות)",
+          groupSize: "15-20 אנשים",
+          highlights: ["מוזיאון הנרי פורד", "מוזיאון DIA", "Detroit RiverWalk", "מוזיאון מוטאון", "Eastern Market"]
         },
         chicago: {
           title: "שיקגו",
-          desc: "חוו את קו הרקיע האיקוני של העיר הסוערת, אדריכלות בעלת שם עולמי, פיצה עמוקה וסצנה תרבותית תוססת לאורך אגם מישיגן היפהפה."
+          desc: "חוו את העיר הסוערת המרהיבה! התפעלו מהאדריכלות המפורסמת בשיט בנהר, בקרו בפארק המילניום וב-Cloud Gate האיקוני, חקרו את Navy Pier וחוף אגם מישיגן, תהנו מפיצה עמוקה וקחו נופים עוצרי נשימה ממגדל Willis.",
+          duration: "2-3 ימים",
+          groupSize: "15-25 אנשים",
+          highlights: ["שיט אדריכלות בנהר", "Cloud Gate (Bean)", "Navy Pier", "Willis Tower Skydeck", "פיצה עמוקה"]
         }
       },
       testimonials: [
-        { text: "חוויה מדהימה! המדריך היה בעל ידע ויוד ידידותי. לראות את מפלי ניאגרה היה חלום שהתגשם!", author: "שרה מ." },
+        { text: "חוויה מדהימה! המדריך היה בעל ידע וידידותי. לראות את מפלי ניאגרה היה חלום שהתגשם!", author: "שרה מ." },
         { text: "התמיכה הרב-לשונית הפכה הכל לנוח כל כך עבור המשפחה שלנו. ממליץ בחום על IVRI Tours!", author: "דוד ל." },
         { text: "סיור קוויבק סיטי היה קסום! המדריך שלנו שיתף סיפורים מרתקים וטיפים פנימיים. החופשה הכי טובה אי פעם!", author: "רחל כ." },
         { text: "מקצועי, מאורגן ומהנה! סיור האדריכלות בשיקגו עלה על כל הציפיות. תודה IVRI Tours!", author: "מיכאל ר." }
@@ -145,14 +195,18 @@ const LandingPage = () => {
       welcome: "Добро пожаловать в IVRI Tours!",
       welcomeMsg: "Откройте для себя захватывающие дух направления с опытными гидами на нескольких языках. Ваше приключение начинается здесь!",
       getStarted: "Начать",
-      heroTitle: "Исследуйте мир с IVRI Tours",
+      heroTitle: "Исследуйте Северную Америку с IVRI Tours",
       heroSubtitle: "Профессиональные экскурсии на английском, иврите и русском языках",
       destinationsTitle: "Наши удивительные направления",
-      multiLang: "Туры на нескольких языках доступны",
+      multiLang: "Многоязычные туры",
+      duration: "Продолжительность",
+      groupSize: "Размер группы",
+      highlights: "Основные моменты",
       testimonialsTitle: "Что говорят о нас",
-      facebookTitle: "Следите за нами в Facebook",
-      facebookDesc: "Будьте в курсе наших последних туров, фотографий и советов путешественникам!",
-      visitFacebook: "Посетите нашу страницу в Facebook",
+      socialTitle: "Следите за нашими приключениями",
+      socialDesc: "Будьте в курсе наших последних туров, фотографий и советов в социальных сетях!",
+      visitFacebook: "Посетите Facebook",
+      visitInstagram: "Посетите Instagram",
       contactTitle: "Связаться с нами",
       nameLabel: "Имя",
       emailLabel: "Электронная почта",
@@ -165,31 +219,52 @@ const LandingPage = () => {
       destinations: {
         toronto: {
           title: "Центр Торонто",
-          desc: "Испытайте живое сердце крупнейшего города Канады. Исследуйте культовую башню CN, оживленную набережную и разнообразные районы с нашими опытными гидами."
+          desc: "Исследуйте самый большой и разнообразный город Канады! Посетите культовую башню CN с захватывающим видом на 360°, прогуляйтесь по красивой набережной, откройте для себя исторический район Distillery, посетите Королевский музей Онтарио и погрузитесь в яркие мультикультурные районы.",
+          duration: "8-10 часов",
+          groupSize: "12-20 человек",
+          highlights: ["Башня CN и виды", "Прогулка по набережной", "Район Distillery", "Музей ROM", "Рынок Кенсингтон"]
         },
         niagara: {
           title: "Ниагарский водопад",
-          desc: "Станьте свидетелем величественной мощи одного из самых известных водопадов в мире. Приблизьтесь на лодочных турах и насладитесь захватывающими видами с нескольких точек обзора."
+          desc: "Станьте свидетелем мощи и красоты одного из самых впечатляющих чудес природы! Приблизьтесь на лодочном туре Hornblower, пройдите за водопадами в Journey Behind the Falls, насладитесь панорамным видом с башни Skylon, исследуйте очаровательный город Ниагара-он-те-Лейк и попробуйте вина мирового класса.",
+          duration: "Полный день (10-12 часов)",
+          groupSize: "15-25 человек",
+          highlights: ["Лодочный тур Hornblower", "За водопадами", "Башня Skylon", "Ниагара-он-те-Лейк", "Дегустация вин"]
         },
         tremblant: {
           title: "Мон-Трамблан",
-          desc: "Откройте для себя очарование главного курортного поселка Квебека. Наслаждайтесь потрясающими горными пейзажами, круглогодичными мероприятиями на свежем воздухе и атмосферой европейского стиля."
+          desc: "Откройте для себя главный всесезонный курорт Квебека! Попробуйте лыжи и сноуборд мирового класса зимой, насладитесь живописными поездками на гондоле с потрясающими видами на Лаврентиды, исследуйте очаровательную пешеходную деревню в европейском стиле и попробуйте увлекательные мероприятия на свежем воздухе.",
+          duration: "2-3 дня",
+          groupSize: "10-18 человек",
+          highlights: ["Лыжи и сноуборд", "Живописная гондола", "Пешеходная деревня", "Активный отдых", "Спа и релаксация"]
         },
         quebec: {
           title: "Квебек-Сити",
-          desc: "Войдите в европейскую сказку в Северной Америке. Прогуляйтесь по мощеным улицам, посетите исторические укрепления и погрузитесь во франко-канадскую культуру."
+          desc: "Шагните в Европу, не покидая Северную Америку! Прогуляйтесь по Старому Квебеку, внесенному в список ЮНЕСКО, с его мощеными улицами, посетите величественный Шато Фронтенак, исследуйте историческую Цитадель, откройте для себя очаровательный квартал Пети-Шамплен и насладитесь аутентичной франко-канадской кухней.",
+          duration: "2-3 дня",
+          groupSize: "12-20 человек",
+          highlights: ["Старый Квебек ЮНЕСКО", "Шато Фронтенак", "Тур по Цитадели", "Пети-Шамплен", "Французская кухня"]
         },
         barrie: {
-          title: "Барри",
-          desc: "Исследуйте этот красивый прибрежный город на берегу озера Симко. Наслаждайтесь набережными парками, пляжами и очаровательным центром города с богатой местной историей."
+          title: "Барри и озеро Симко",
+          desc: "Познакомьтесь с прекрасной жемчужиной Онтарио у озера! Наслаждайтесь потрясающими прибрежными парками и пляжами вдоль озера Симко, исследуйте исторический центр города с уникальными магазинами и ресторанами, посетите скульптуру Spirit Catcher и парк Centennial.",
+          duration: "6-8 часов",
+          groupSize: "10-15 человек",
+          highlights: ["Пляж озера Симко", "Прибрежные парки", "Шопинг в центре", "Spirit Catcher", "Сезонные мероприятия"]
         },
         detroit: {
           title: "Детройт",
-          desc: "Откройте для себя богатое автомобильное наследие Мотор-Сити и яркий культурный ренессанс. Посетите музеи мирового класса, потрясающую архитектуру и процветающие художественные районы."
+          desc: "Откройте для себя невероятную трансформацию Мотор-Сити! Посетите музей Генри Форда и Гринфилд-Виллидж, исследуйте потрясающий Детройтский институт искусств, прогуляйтесь по красивой набережной RiverWalk, совершите экскурсию по историческому театру Fox и узнайте о музыкальном наследии Motown.",
+          duration: "Полный день (10-12 часов)",
+          groupSize: "15-20 человек",
+          highlights: ["Музей Генри Форда", "Художественный музей DIA", "Detroit RiverWalk", "Музей Motown", "Eastern Market"]
         },
         chicago: {
           title: "Чикаго",
-          desc: "Испытайте культовый горизонт Города ветров, всемирно известную архитектуру, глубокую пиццу и яркую культурную сцену вдоль красивого озера Мичиган."
+          desc: "Испытайте великолепный Город ветров! Полюбуйтесь всемирно известной архитектурой во время речного круиза, посетите Миллениум-парк и культовый Cloud Gate (Bean), исследуйте Navy Pier и береговую линию озера Мичиган, попробуйте глубокую пиццу и насладитесь захватывающими видами с Willis Tower Skydeck.",
+          duration: "2-3 дня",
+          groupSize: "15-25 человек",
+          highlights: ["Архитектурный круиз", "Cloud Gate (Bean)", "Navy Pier", "Willis Tower Skydeck", "Глубокая пицца"]
         }
       },
       testimonials: [
@@ -203,14 +278,15 @@ const LandingPage = () => {
 
   const t = translations[language];
 
+  // Real sightseeing photos of the actual landmarks
   const destinations = [
     { key: 'toronto', image: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80' }, // CN Tower
-    { key: 'niagara', image: 'https://images.unsplash.com/photo-1489447068241-b3490214e879?w=800&q=80' }, // Niagara Falls close-up
-    { key: 'tremblant', image: 'https://images.unsplash.com/photo-1551524164-687a55dd1126?w=800&q=80' }, // Mont Tremblant skiing
-    { key: 'quebec', image: 'https://images.unsplash.com/photo-1608211838603-5c511cfaefd9?w=800&q=80' }, // Quebec City Old Town
-    { key: 'barrie', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=800&q=80' }, // Lake Simcoe waterfront
+    { key: 'niagara', image: 'https://images.unsplash.com/photo-1489447068241-b3490214e879?w=800&q=80' }, // Niagara Falls
+    { key: 'tremblant', image: 'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=800&q=80' }, // Mont Tremblant village
+    { key: 'quebec', image: 'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=800&q=80' }, // Quebec City
+    { key: 'barrie', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80' }, // Lake waterfront
     { key: 'detroit', image: 'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=800&q=80' }, // Detroit skyline
-    { key: 'chicago', image: 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80' } // Chicago Bean/Cloud Gate
+    { key: 'chicago', image: 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80' } // Chicago Cloud Gate
   ];
 
   const testimonialImages = [
@@ -272,8 +348,31 @@ const LandingPage = () => {
               <div className="h-64 bg-cover bg-center" style={{ backgroundImage: `url(${dest.image})` }} />
               <div className="p-6">
                 <h3 className="text-2xl font-bold mb-3" style={{ color: colors.primary.teal }}>{t.destinations[dest.key].title}</h3>
-                <p className="text-gray-600 leading-relaxed mb-4">{t.destinations[dest.key].desc}</p>
-                <span className="inline-block px-4 py-2 rounded-full text-white text-sm font-medium" style={{ backgroundColor: colors.primary.teal }}>🗣️ {t.multiLang}</span>
+                <p className="text-gray-600 leading-relaxed mb-4 text-sm">{t.destinations[dest.key].desc}</p>
+
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <Clock className="w-4 h-4" style={{ color: colors.primary.teal }} />
+                    <span className="font-semibold">{t.duration}:</span> {t.destinations[dest.key].duration}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <Users className="w-4 h-4" style={{ color: colors.primary.teal }} />
+                    <span className="font-semibold">{t.groupSize}:</span> {t.destinations[dest.key].groupSize}
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-gray-700 mb-2">{t.highlights}:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {t.destinations[dest.key].highlights.map((highlight, idx) => (
+                      <span key={idx} className="inline-block px-2 py-1 rounded-full text-white text-xs" style={{ backgroundColor: colors.primary.teal }}>
+                        {highlight}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <span className="inline-block px-4 py-2 rounded-full text-white text-sm font-medium mt-2" style={{ backgroundColor: colors.primary.teal }}>🗣️ {t.multiLang}</span>
               </div>
             </div>
           ))}
@@ -297,32 +396,46 @@ const LandingPage = () => {
 
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          <Facebook className="w-16 h-16 mx-auto mb-6" style={{ color: colors.primary.teal }} />
-          <h2 className="text-4xl font-bold mb-4" style={{ color: colors.primary.teal }}>{t.facebookTitle}</h2>
-          <p className="text-xl text-gray-600 mb-8">{t.facebookDesc}</p>
-          <a
-            href="https://www.facebook.com/ivritours"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-4 text-white text-lg font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg"
-            style={{ backgroundColor: '#1877F2' }}
-          >
-            <Facebook className="w-6 h-6" />
-            {t.visitFacebook}
-          </a>
-          <div className="mt-12 bg-gray-50 rounded-xl p-8 shadow-inner">
-            <div className="text-gray-500 mb-4">
+          <h2 className="text-4xl font-bold mb-4" style={{ color: colors.primary.teal }}>{t.socialTitle}</h2>
+          <p className="text-xl text-gray-600 mb-8">{t.socialDesc}</p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <a
+              href="https://www.facebook.com/Ivritours/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 text-white text-lg font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg"
+              style={{ backgroundColor: '#1877F2' }}
+            >
+              <Facebook className="w-6 h-6" />
+              {t.visitFacebook}
+            </a>
+            <a
+              href="https://www.instagram.com/ivritours_ca/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 text-white text-lg font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg"
+              style={{ background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)' }}
+            >
+              <Instagram className="w-6 h-6" />
+              {t.visitInstagram}
+            </a>
+          </div>
+
+          <div className="bg-gray-50 rounded-xl p-8 shadow-inner">
+            <div className="text-gray-500 mb-6">
               <p className="text-lg font-semibold mb-2">Connect with us:</p>
-              <p>@IVRITours</p>
+              <p className="mb-1">Facebook: @Ivritours</p>
+              <p>Instagram: @ivritours_ca</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
               <div className="bg-white rounded-lg p-4 shadow">
-                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>500+</div>
+                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>1000+</div>
                 <div className="text-sm text-gray-600">Happy Travelers</div>
               </div>
               <div className="bg-white rounded-lg p-4 shadow">
-                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>50+</div>
-                <div className="text-sm text-gray-600">Tours This Year</div>
+                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>100+</div>
+                <div className="text-sm text-gray-600">Tours Completed</div>
               </div>
               <div className="bg-white rounded-lg p-4 shadow">
                 <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>7</div>
