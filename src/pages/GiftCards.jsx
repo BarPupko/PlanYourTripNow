@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Plus, Copy, Check, ExternalLink, Trash2, Gift, Calendar, DollarSign, User } from 'lucide-react';
+import { Plus, Copy, Check, ExternalLink, Trash2, Gift, Calendar, DollarSign, User, CreditCard } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 import CreateGiftCardModal from '../components/CreateGiftCardModal';
+import UseGiftCardModal from '../components/UseGiftCardModal';
 import Header from '../components/Header';
 import colors from '../utils/colors';
 
 const GiftCards = () => {
   const [giftCards, setGiftCards] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showUseModal, setShowUseModal] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'redeemed', 'expired'
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'redeemed', 'expired', 'used'
 
   useEffect(() => {
     // Subscribe to real-time gift cards updates
@@ -59,10 +62,14 @@ const GiftCards = () => {
 
     return giftCards.filter(card => {
       const expiryDate = card.expiryDate?.toDate?.() || new Date(card.expiryDate);
+      const remainingBalance = card.remainingBalance !== undefined ? card.remainingBalance : card.amount;
+      const isFullyRedeemed = card.redeemed || remainingBalance === 0;
+      const hasBeenUsed = card.usageHistory && card.usageHistory.length > 0;
 
-      if (statusFilter === 'redeemed') return card.redeemed;
-      if (statusFilter === 'expired') return !card.redeemed && expiryDate < now;
-      if (statusFilter === 'active') return !card.redeemed && expiryDate >= now;
+      if (statusFilter === 'redeemed') return isFullyRedeemed;
+      if (statusFilter === 'used') return hasBeenUsed && !isFullyRedeemed;
+      if (statusFilter === 'expired') return !isFullyRedeemed && expiryDate < now;
+      if (statusFilter === 'active') return !isFullyRedeemed && expiryDate >= now && !hasBeenUsed;
 
       return true;
     });
@@ -71,8 +78,16 @@ const GiftCards = () => {
   const filteredCards = getFilteredGiftCards();
 
   const getStatusBadge = (card) => {
-    if (card.redeemed) {
-      return { bg: '#D1FAE5', text: '#065F46', label: 'Redeemed' };
+    const remainingBalance = card.remainingBalance !== undefined ? card.remainingBalance : card.amount;
+    const isFullyRedeemed = card.redeemed || remainingBalance === 0;
+    const hasBeenUsed = card.usageHistory && card.usageHistory.length > 0;
+
+    if (isFullyRedeemed) {
+      return { bg: '#D1FAE5', text: '#065F46', label: 'Fully Used' };
+    }
+
+    if (hasBeenUsed) {
+      return { bg: '#FEF3C7', text: '#92400E', label: 'Partially Used' };
     }
 
     const expiryDate = card.expiryDate?.toDate?.() || new Date(card.expiryDate);
@@ -83,6 +98,11 @@ const GiftCards = () => {
     }
 
     return { bg: '#DBEAFE', text: '#1E40AF', label: 'Active' };
+  };
+
+  const handleUseCard = (card) => {
+    setSelectedCard(card);
+    setShowUseModal(true);
   };
 
   return (
@@ -110,7 +130,7 @@ const GiftCards = () => {
 
         {/* Status Filter */}
         <div className="mb-6 flex gap-2 flex-wrap">
-          {['all', 'active', 'redeemed', 'expired'].map(status => (
+          {['all', 'active', 'used', 'redeemed', 'expired'].map(status => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -181,7 +201,17 @@ const GiftCards = () => {
                     <div className="flex items-center gap-2 text-sm">
                       <DollarSign className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-700">
-                        <span className="font-semibold">${card.amount}</span> value
+                        {card.remainingBalance !== undefined && card.remainingBalance !== card.amount ? (
+                          <>
+                            <span className="font-semibold" style={{ color: colors.primary.teal }}>${card.remainingBalance.toFixed(2)}</span>
+                            <span className="text-gray-500"> / ${card.amount}</span>
+                            <span className="text-xs ml-1">(remaining)</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-semibold">${card.amount}</span> value
+                          </>
+                        )}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
@@ -201,13 +231,32 @@ const GiftCards = () => {
                   {card.redeemed && (
                     <div className="mb-4 p-2 bg-green-50 rounded-lg">
                       <p className="text-xs text-green-700">
-                        Redeemed on {new Date(card.redeemedAt).toLocaleDateString()}
+                        Fully used on {card.redeemedAt?.toDate?.().toLocaleDateString() || new Date(card.redeemedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+
+                  {card.usageHistory && card.usageHistory.length > 0 && (
+                    <div className="mb-4 p-2 bg-yellow-50 rounded-lg">
+                      <p className="text-xs text-yellow-800 font-medium">
+                        Used {card.usageHistory.length} time{card.usageHistory.length > 1 ? 's' : ''}
                       </p>
                     </div>
                   )}
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
+                    {!card.redeemed && (card.remainingBalance === undefined || card.remainingBalance > 0) && (
+                      <button
+                        onClick={() => handleUseCard(card)}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                        style={{ backgroundColor: colors.primary.teal }}
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>Use</span>
+                      </button>
+                    )}
+
                     <button
                       onClick={() => handleCopyLink(card.id)}
                       className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
@@ -257,6 +306,20 @@ const GiftCards = () => {
       {showCreateModal && (
         <CreateGiftCardModal
           onClose={() => setShowCreateModal(false)}
+        />
+      )}
+
+      {/* Use Gift Card Modal */}
+      {showUseModal && selectedCard && (
+        <UseGiftCardModal
+          giftCard={selectedCard}
+          onClose={() => {
+            setShowUseModal(false);
+            setSelectedCard(null);
+          }}
+          onUpdate={() => {
+            // Modal will close automatically, data will update via onSnapshot
+          }}
         />
       )}
     </div>
