@@ -250,16 +250,20 @@ const GiftCardReveal = () => {
                 </div>
               </div>
 
-              {/* IVRI Tours Promotional Image */}
-              <div className="bg-white border-4 rounded-2xl p-4 mb-6" style={{ borderColor: colors.primary.teal }}>
-                <img
-                  src="https://imgur.com/a/sKV03aE.png"
-                  alt="IVRI Tours - Best Tours in Canada"
-                  className="w-full rounded-lg shadow-lg"
-                />
-              </div>
+              /* IVRI Tours Promotional Image */
+                      <div className="bg-white border-4 rounded-2xl p-4 mb-6" style={{ borderColor: colors.primary.teal }}>
+                      <blockquote 
+                        className="imgur-embed-pub" 
+                        lang="en" 
+                        data-id="a/sKV03aE" 
+                        data-context="false"
+                      >
+                        <a href="//imgur.com/a/sKV03aE"></a>
+                      </blockquote>
+                      <script async src="//s.imgur.com/min/embed.js" charSet="utf-8"></script>
+                      </div>
 
-              {/* Gift Card Code */}
+                      {/* Gift Card Code */}
               <div className="bg-gradient-to-r from-teal-50 to-cyan-50 border-2 rounded-2xl p-6 text-center" style={{ borderColor: colors.primary.teal }}>
                 <p className="text-sm font-medium text-gray-700 mb-2">{t.giftCardCode}</p>
                 <p className="text-3xl font-bold tracking-wider mb-3" style={{ color: colors.primary.teal }}>
