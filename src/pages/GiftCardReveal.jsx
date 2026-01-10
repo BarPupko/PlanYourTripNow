@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Gift, DollarSign, Calendar, User, PartyPopper, Sparkles, Globe } from 'lucide-react';
 import colors from '../utils/colors';
+import giftCardImage from '../assets/giftcardimage.png';
 import './GiftCardReveal.css';
 
 const GiftCardReveal = () => {
@@ -253,14 +254,9 @@ const GiftCardReveal = () => {
               {/* IVRI Tours Promotional Image */}
               <div className="bg-white border-4 rounded-2xl p-4 mb-6" style={{ borderColor: colors.primary.teal }}>
                 <img
-                  src="https://i.imgur.com/qsvezNF.png"
+                  src={giftCardImage}
                   alt="IVRI Tours - Best Tours in Canada"
                   className="w-full rounded-lg shadow-lg"
-                  crossOrigin="anonymous"
-                  onError={(e) => { 
-                    console.error('Image failed to load:', e.target.src);
-                    e.target.src = 'https://via.placeholder.com/800x400/14B8A6/ffffff?text=IVRI+Tours+-+Plan+Your+Dream+Trip';
-                  }}
                 />
               </div>
 
