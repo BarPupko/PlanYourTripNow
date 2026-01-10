@@ -5,6 +5,7 @@ import RegistrationForm from './pages/RegistrationForm';
 import Login from './pages/Login';
 import GiftCards from './pages/GiftCards';
 import GiftCardReveal from './pages/GiftCardReveal';
+import GiftCardPurchase from './pages/GiftCardPurchase';
 import PrivateRoute from './components/PrivateRoute';
 import { LanguageProvider } from './contexts/LanguageContext';
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register/:tripId" element={<RegistrationForm />} />
           <Route path="/gift/:giftCardId" element={<GiftCardReveal />} />
+          <Route path="/gift-card-purchase" element={<GiftCardPurchase />} />
           <Route
             path="/gift-cards"
             element={
