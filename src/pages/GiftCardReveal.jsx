@@ -253,7 +253,7 @@ const GiftCardReveal = () => {
               {/* IVRI Tours Promotional Image */}
               <div className="bg-white border-4 rounded-2xl p-4 mb-6" style={{ borderColor: colors.primary.teal }}>
                 <img
-                  src="https://i.imgur.com/sKV03aE.jpg"
+                  src="https://imgur.com/a/sKV03aE.png"
                   alt="IVRI Tours - Best Tours in Canada"
                   className="w-full rounded-lg shadow-lg"
                 />

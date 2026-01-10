@@ -199,6 +199,7 @@ const GiftCardPurchase = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   {t.amount}
                 </label>
+                <p className="text-sm text-gray-600 mb-3">{t.presetAmounts}</p>
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-4">
                   {presetAmounts.map((amount) => (
                     <button
@@ -216,6 +217,9 @@ const GiftCardPurchase = () => {
                     </button>
                   ))}
                 </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t.customAmount}
+                </label>
                 <div className="relative">
                   <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -223,8 +227,9 @@ const GiftCardPurchase = () => {
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     min="10"
-                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-                    placeholder={t.customAmount}
+                    step="1"
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-lg font-semibold"
+                    placeholder="Enter amount..."
                     required
                   />
                 </div>

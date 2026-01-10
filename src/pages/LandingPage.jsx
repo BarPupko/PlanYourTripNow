@@ -42,6 +42,12 @@ const LandingPage = () => {
       visitFacebook: "Visit Facebook",
       visitInstagram: "Visit Instagram",
       contactTitle: "Contact Us",
+      stats: {
+        travelers: "Happy Travelers",
+        tours: "Tours Completed",
+        destinations: "Destinations",
+        languages: "Languages"
+      },
       nameLabel: "Name",
       emailLabel: "Email",
       phoneLabel: "Phone",
@@ -125,6 +131,12 @@ const LandingPage = () => {
       visitFacebook: "בקרו בפייסבוק",
       visitInstagram: "בקרו באינסטגרם",
       contactTitle: "צרו קשר",
+      stats: {
+        travelers: "מטיילים מרוצים",
+        tours: "טיולים שהושלמו",
+        destinations: "יעדים",
+        languages: "שפות"
+      },
       nameLabel: "שם",
       emailLabel: "אימייל",
       phoneLabel: "טלפון",
@@ -208,6 +220,12 @@ const LandingPage = () => {
       visitFacebook: "Посетите Facebook",
       visitInstagram: "Посетите Instagram",
       contactTitle: "Связаться с нами",
+      stats: {
+        travelers: "Довольных путешественников",
+        tours: "Завершенных туров",
+        destinations: "Направлений",
+        languages: "Языков"
+      },
       nameLabel: "Имя",
       emailLabel: "Электронная почта",
       phoneLabel: "Телефон",
@@ -345,6 +363,15 @@ const LandingPage = () => {
           <div className="flex justify-between items-center">
             <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>IVRI Tours</div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/gift-card-purchase')}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: colors.primary.teal }}
+              >
+                <Gift className="w-4 h-4" />
+                <span className="hidden sm:inline">{tGift.purchaseGiftCard}</span>
+                <span className="sm:hidden">Gift</span>
+              </button>
               <button onClick={() => changeLanguage('en')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${language === 'en' ? 'text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`} style={language === 'en' ? { backgroundColor: colors.primary.teal } : {}}>English</button>
               <button onClick={() => changeLanguage('he')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${language === 'he' ? 'text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`} style={language === 'he' ? { backgroundColor: colors.primary.teal } : {}}>עברית</button>
               <button onClick={() => changeLanguage('ru')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${language === 'ru' ? 'text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`} style={language === 'ru' ? { backgroundColor: colors.primary.teal } : {}}>Русский</button>
@@ -356,21 +383,7 @@ const LandingPage = () => {
       <section className="py-20 px-4 text-center text-white" style={{ background: `linear-gradient(135deg, ${colors.primary.teal} 0%, #0097A7 100%)` }}>
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">{t.heroTitle}</h1>
-          <p className="text-xl sm:text-2xl opacity-95 mb-8">{t.heroSubtitle}</p>
-
-          {/* Gift Card CTA */}
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 max-w-md mx-auto">
-            <Gift className="w-12 h-12 mx-auto mb-3" />
-            <h3 className="text-2xl font-bold mb-2">{tGift.giftCardTitle}</h3>
-            <p className="text-lg opacity-90 mb-4">{tGift.giftCardDesc}</p>
-            <button
-              onClick={() => navigate('/gift-card-purchase')}
-              className="bg-white px-8 py-3 rounded-lg font-bold text-lg hover:shadow-xl transition-all"
-              style={{ color: colors.primary.teal }}
-            >
-              {tGift.purchaseGiftCard}
-            </button>
-          </div>
+          <p className="text-xl sm:text-2xl opacity-95">{t.heroSubtitle}</p>
         </div>
       </section>
 
@@ -465,19 +478,19 @@ const LandingPage = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
               <div className="bg-white rounded-lg p-4 shadow">
                 <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>1000+</div>
-                <div className="text-sm text-gray-600">Happy Travelers</div>
+                <div className="text-sm text-gray-600">{t.stats.travelers}</div>
               </div>
               <div className="bg-white rounded-lg p-4 shadow">
                 <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>100+</div>
-                <div className="text-sm text-gray-600">Tours Completed</div>
+                <div className="text-sm text-gray-600">{t.stats.tours}</div>
               </div>
               <div className="bg-white rounded-lg p-4 shadow">
                 <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>7</div>
-                <div className="text-sm text-gray-600">Destinations</div>
+                <div className="text-sm text-gray-600">{t.stats.destinations}</div>
               </div>
               <div className="bg-white rounded-lg p-4 shadow">
                 <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>3</div>
-                <div className="text-sm text-gray-600">Languages</div>
+                <div className="text-sm text-gray-600">{t.stats.languages}</div>
               </div>
             </div>
           </div>
