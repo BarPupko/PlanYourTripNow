@@ -11,6 +11,7 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
     email: '',
     phone: '',
     seatNumber: preselectedSeat,
+    seatCount: 1, // NEW: number of seats to book
     paymentMethod: 'on-trip',
     paid: false
   });
@@ -31,18 +32,55 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
       return;
     }
 
+    // Check if enough consecutive seats are available
+    if (formData.seatCount > 1) {
+      const startSeat = formData.seatNumber;
+      const seatsNeeded = [];
+      for (let i = 0; i < formData.seatCount; i++) {
+        seatsNeeded.push(startSeat + i);
+      }
+
+      const unavailableSeats = seatsNeeded.filter(seat =>
+        occupiedSeats.includes(seat) || seat > vehicleLayout.totalSeats
+      );
+
+      if (unavailableSeats.length > 0) {
+        setError(`Not enough consecutive seats available starting from seat ${startSeat}. Please select a different seat.`);
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
-      await createRegistration({
-        tripId: trip.id,
-        ...formData,
-        signatureUrl: '', // Admin-added participants don't have signatures
-        pdfUrl: '',
-        agreedToCancellationPolicy: true,
-        agreedToWaiver: true,
-        addedByAdmin: true
-      });
+      // Create registrations for all seats
+      const startSeat = formData.seatNumber;
+      const registrationPromises = [];
+
+      for (let i = 0; i < formData.seatCount; i++) {
+        const seatNumber = startSeat + i;
+        registrationPromises.push(
+          createRegistration({
+            tripId: trip.id,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            seatNumber: seatNumber,
+            paymentMethod: formData.paymentMethod,
+            paid: formData.paid,
+            signatureUrl: '', // Admin-added participants don't have signatures
+            pdfUrl: '',
+            agreedToCancellationPolicy: true,
+            agreedToWaiver: true,
+            addedByAdmin: true,
+            isMultiSeat: formData.seatCount > 1, // Flag to indicate multi-seat booking
+            seatCount: formData.seatCount // Store total seats booked
+          })
+        );
+      }
+
+      await Promise.all(registrationPromises);
 
       onSuccess();
       onClose();
@@ -128,7 +166,25 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Seat Number *
+              Number of Seats *
+            </label>
+            <select
+              value={formData.seatCount}
+              onChange={(e) => setFormData({ ...formData, seatCount: parseInt(e.target.value) })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(count => (
+                <option key={count} value={count}>{count} {count === 1 ? 'Seat' : 'Seats'}</option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Select how many seats this person needs (consecutive seats starting from the selected seat)
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Starting Seat Number *
             </label>
             <select
               value={formData.seatNumber || ''}
@@ -136,13 +192,18 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
               required
             >
-              <option value="">Select a seat</option>
+              <option value="">Select starting seat</option>
               {availableSeats.map(seat => (
                 <option key={seat} value={seat}>Seat {seat}</option>
               ))}
             </select>
             {availableSeats.length === 0 && (
               <p className="text-sm text-red-600 mt-1">No available seats</p>
+            )}
+            {formData.seatNumber && formData.seatCount > 1 && (
+              <p className="text-xs text-blue-600 mt-1">
+                Will book seats {formData.seatNumber} - {formData.seatNumber + formData.seatCount - 1}
+              </p>
             )}
           </div>
 

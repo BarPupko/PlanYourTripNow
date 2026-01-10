@@ -17,7 +17,7 @@ const WeatherWidget = ({ compact = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Popular locations
-  const popularLocations = ['Toronto', 'Ottawa', 'Barrie','Montreal','Mont Tremblant ','Chicago','New York', 'Miami',  'Boston'];
+  const popularLocations = ['Toronto', 'Ottawa', 'Barrie','Montreal','mont-tremblant','Chicago','New York', 'Miami',  'Boston'];
 
   useEffect(() => { 
     fetchWeather(location);

@@ -66,7 +66,7 @@ const LandingPage = () => {
           highlights: ["Hornblower Boat Tour", "Journey Behind Falls", "Skylon Tower", "Niagara-on-the-Lake", "Wine Tasting"]
         },
         tremblant: {
-          title: "Mont Tremblant",
+          title: "mont-tremblant",
           desc: "Discover Quebec's premier four-season resort destination! Experience world-class skiing and snowboarding in winter, enjoy scenic gondola rides with stunning Laurentian views, explore the charming European-style pedestrian village, try exciting outdoor activities like hiking and zip-lining, and relax in the beautiful natural surroundings.",
           duration: "2-3 Days",
           groupSize: "10-18 people",
@@ -282,7 +282,7 @@ const LandingPage = () => {
   const destinations = [
     { key: 'toronto', image: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80' }, // CN Tower
     { key: 'niagara', image: 'https://images.unsplash.com/photo-1489447068241-b3490214e879?w=800&q=80' }, // Niagara Falls
-    { key: 'tremblant', image: 'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=800&q=80' }, // Mont Tremblant village
+    { key: 'mont-tremblant', image: 'https://images.unsplash.com/photo-1729477458908-0a59d8026ed8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' }, // Mont Tremblant village
     { key: 'quebec', image: 'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=800&q=80' }, // Quebec City
     { key: 'barrie', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80' }, // Lake waterfront
     { key: 'detroit', image: 'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=800&q=80' }, // Detroit skyline

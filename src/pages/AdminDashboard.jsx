@@ -93,7 +93,16 @@ const AdminDashboard = () => {
     let filtered = allTrips;
 
     // Apply date/time filter
-    if (viewFilter === 'upcoming') {
+    if (viewFilter === 'date') {
+      // Filter by specific selected date
+      filtered = allTrips.filter(trip => {
+        const tripDate = trip.date?.toDate?.() || new Date(trip.date);
+        tripDate.setHours(0, 0, 0, 0);
+        const selected = new Date(selectedDate);
+        selected.setHours(0, 0, 0, 0);
+        return tripDate.getTime() === selected.getTime();
+      });
+    } else if (viewFilter === 'upcoming') {
       filtered = allTrips.filter(trip => {
         const tripDate = trip.date?.toDate?.() || new Date(trip.date);
         tripDate.setHours(0, 0, 0, 0);
@@ -155,7 +164,8 @@ const AdminDashboard = () => {
                       {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
                     <h2 className="text-xl font-semibold text-gray-900">
-                      {viewFilter === 'all' ? t.allTrips :
+                      {viewFilter === 'date' ? `${t.tripsOn || 'Trips on'} ${selectedDate.toLocaleDateString()}` :
+                       viewFilter === 'all' ? t.allTrips :
                        viewFilter === 'upcoming' ? t.currentTrips :
                        t.oldTrips}
                     </h2>

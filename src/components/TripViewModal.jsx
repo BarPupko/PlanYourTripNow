@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import { getTrip, updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
 import VehicleSeatingMap from './VehicleSeatingMap';
 import AddParticipantModal from './AddParticipantModal';
+import ParticipantDetailsModal from './ParticipantDetailsModal';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import colors from '../utils/colors';
@@ -22,6 +23,7 @@ const TripViewModal = ({ tripId, onClose }) => {
   const [editFormData, setEditFormData] = useState({});
   const [deletingId, setDeletingId] = useState(null);
   const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
+  const [viewingParticipant, setViewingParticipant] = useState(null);
 
   useEffect(() => {
     loadTrip();
@@ -236,7 +238,7 @@ const TripViewModal = ({ tripId, onClose }) => {
                 driverName={trip.driverName}
                 onSeatClick={(seatNumber, occupant) => {
                   if (occupant) {
-                    setExpandedParticipant(occupant.id);
+                    setViewingParticipant(occupant);
                   } else {
                     setPreselectedSeat(seatNumber);
                     setShowAddModal(true);
@@ -537,6 +539,18 @@ const TripViewModal = ({ tripId, onClose }) => {
           onSuccess={() => {
             setShowAddModal(false);
             setPreselectedSeat(null);
+          }}
+        />
+      )}
+
+      {/* Participant Details Modal */}
+      {viewingParticipant && (
+        <ParticipantDetailsModal
+          participant={viewingParticipant}
+          onClose={() => setViewingParticipant(null)}
+          onUpdate={() => {
+            // Refresh is handled by the real-time listener
+            setViewingParticipant(null);
           }}
         />
       )}
