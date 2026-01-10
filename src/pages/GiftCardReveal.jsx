@@ -81,17 +81,17 @@ const GiftCardReveal = () => {
     setIsRevealed(true);
     setShowConfetti(true);
 
-    // Mark as redeemed if not already
-    if (giftCard && !giftCard.redeemed) {
+    // Mark as viewed (NOT redeemed - viewing is different from using)
+    if (giftCard && !giftCard.viewed) {
       try {
         const giftCardRef = doc(db, 'giftCards', giftCardId);
         await updateDoc(giftCardRef, {
-          redeemed: true,
-          redeemedAt: Timestamp.now()
+          viewed: true,
+          viewedAt: Timestamp.now()
         });
-        setGiftCard(prev => ({ ...prev, redeemed: true, redeemedAt: new Date() }));
+        setGiftCard(prev => ({ ...prev, viewed: true, viewedAt: new Date() }));
       } catch (err) {
-        console.error('Error marking gift card as redeemed:', err);
+        console.error('Error marking gift card as viewed:', err);
       }
     }
 

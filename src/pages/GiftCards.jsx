@@ -15,7 +15,7 @@ const GiftCards = () => {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'redeemed', 'expired', 'used'
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'used', 'redeemed', 'expired', 'viewed'
 
   useEffect(() => {
     // Subscribe to real-time gift cards updates
@@ -63,13 +63,15 @@ const GiftCards = () => {
     return giftCards.filter(card => {
       const expiryDate = card.expiryDate?.toDate?.() || new Date(card.expiryDate);
       const remainingBalance = card.remainingBalance !== undefined ? card.remainingBalance : card.amount;
-      const isFullyRedeemed = card.redeemed || remainingBalance === 0;
+      const isFullyUsed = remainingBalance === 0;
       const hasBeenUsed = card.usageHistory && card.usageHistory.length > 0;
+      const isExpired = expiryDate < now;
 
-      if (statusFilter === 'redeemed') return isFullyRedeemed;
-      if (statusFilter === 'used') return hasBeenUsed && !isFullyRedeemed;
-      if (statusFilter === 'expired') return !isFullyRedeemed && expiryDate < now;
-      if (statusFilter === 'active') return !isFullyRedeemed && expiryDate >= now && !hasBeenUsed;
+      if (statusFilter === 'redeemed') return isFullyUsed;
+      if (statusFilter === 'used') return hasBeenUsed && !isFullyUsed;
+      if (statusFilter === 'expired') return !isFullyUsed && isExpired;
+      if (statusFilter === 'active') return !isFullyUsed && !isExpired && !hasBeenUsed;
+      if (statusFilter === 'viewed') return card.viewed && !hasBeenUsed && !isFullyUsed;
 
       return true;
     });
@@ -79,24 +81,33 @@ const GiftCards = () => {
 
   const getStatusBadge = (card) => {
     const remainingBalance = card.remainingBalance !== undefined ? card.remainingBalance : card.amount;
-    const isFullyRedeemed = card.redeemed || remainingBalance === 0;
+    const isFullyUsed = remainingBalance === 0;
     const hasBeenUsed = card.usageHistory && card.usageHistory.length > 0;
+    const expiryDate = card.expiryDate?.toDate?.() || new Date(card.expiryDate);
+    const now = new Date();
+    const isExpired = expiryDate < now;
 
-    if (isFullyRedeemed) {
+    // Fully used (balance is $0)
+    if (isFullyUsed) {
       return { bg: '#D1FAE5', text: '#065F46', label: 'Fully Used' };
     }
 
+    // Partially used (has usage history but still has balance)
     if (hasBeenUsed) {
       return { bg: '#FEF3C7', text: '#92400E', label: 'Partially Used' };
     }
 
-    const expiryDate = card.expiryDate?.toDate?.() || new Date(card.expiryDate);
-    const now = new Date();
-
-    if (expiryDate < now) {
+    // Expired (past expiry date and not used)
+    if (isExpired) {
       return { bg: '#FEE2E2', text: '#991B1B', label: 'Expired' };
     }
 
+    // Viewed but not used
+    if (card.viewed) {
+      return { bg: '#E0E7FF', text: '#4338CA', label: 'Viewed' };
+    }
+
+    // Active (not viewed, not used, not expired)
     return { bg: '#DBEAFE', text: '#1E40AF', label: 'Active' };
   };
 
@@ -130,7 +141,7 @@ const GiftCards = () => {
 
         {/* Status Filter */}
         <div className="mb-6 flex gap-2 flex-wrap">
-          {['all', 'active', 'used', 'redeemed', 'expired'].map(status => (
+          {['all', 'active', 'viewed', 'used', 'redeemed', 'expired'].map(status => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -228,15 +239,17 @@ const GiftCards = () => {
                     </div>
                   </div>
 
-                  {card.redeemed && (
+                  {card.remainingBalance === 0 && (
                     <div className="mb-4 p-2 bg-green-50 rounded-lg">
                       <p className="text-xs text-green-700">
-                        Fully used on {card.redeemedAt?.toDate?.().toLocaleDateString() || new Date(card.redeemedAt).toLocaleDateString()}
+                        Fully used {card.usageHistory && card.usageHistory.length > 0 && card.usageHistory[card.usageHistory.length - 1].usedAt
+                          ? `on ${card.usageHistory[card.usageHistory.length - 1].usedAt.toDate?.().toLocaleDateString() || new Date(card.usageHistory[card.usageHistory.length - 1].usedAt).toLocaleDateString()}`
+                          : ''}
                       </p>
                     </div>
                   )}
 
-                  {card.usageHistory && card.usageHistory.length > 0 && (
+                  {card.usageHistory && card.usageHistory.length > 0 && card.remainingBalance !== 0 && (
                     <div className="mb-4 p-2 bg-yellow-50 rounded-lg">
                       <p className="text-xs text-yellow-800 font-medium">
                         Used {card.usageHistory.length} time{card.usageHistory.length > 1 ? 's' : ''}
@@ -244,9 +257,17 @@ const GiftCards = () => {
                     </div>
                   )}
 
+                  {card.viewed && (!card.usageHistory || card.usageHistory.length === 0) && card.remainingBalance !== 0 && (
+                    <div className="mb-4 p-2 bg-indigo-50 rounded-lg">
+                      <p className="text-xs text-indigo-700">
+                        Viewed on {card.viewedAt?.toDate?.().toLocaleDateString() || new Date(card.viewedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Action Buttons */}
                   <div className="flex gap-2 flex-wrap">
-                    {!card.redeemed && (card.remainingBalance === undefined || card.remainingBalance > 0) && (
+                    {(card.remainingBalance === undefined || card.remainingBalance > 0) && (
                       <button
                         onClick={() => handleUseCard(card)}
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"

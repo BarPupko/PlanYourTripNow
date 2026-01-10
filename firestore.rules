@@ -32,10 +32,10 @@ service cloud.firestore {
       // Only authenticated users (admins) can delete gift cards
       allow delete: if request.auth != null;
 
-      // Allow anyone to update the redeemed status (when user opens the gift)
-      // Only authenticated users can update other fields
+      // Allow anyone to update viewed status (when user opens the gift card reveal page)
+      // Only authenticated users (admins) can update other fields like remainingBalance and usageHistory
       allow update: if request.auth != null ||
-                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['redeemed', 'redeemedAt']));
+                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewed', 'viewedAt']));
     }
   }
 }
