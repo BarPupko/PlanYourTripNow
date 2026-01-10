@@ -9,7 +9,8 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     vehicleLayout: 'sprinter_15',
     driverName: '',
     whatsappGroupLink: '',
-    status: 'planned'
+    status: 'planned',
+    date: selectedDate
   });
   const [loading, setLoading] = useState(false);
 
@@ -20,13 +21,25 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     try {
       await onCreate({
         ...formData,
-        date: Timestamp.fromDate(selectedDate)
+        date: Timestamp.fromDate(formData.date)
       });
     } catch (error) {
       console.error('Error creating trip:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDateChange = (e) => {
+    const newDate = new Date(e.target.value);
+    setFormData({ ...formData, date: newDate });
+  };
+
+  const formatDateForInput = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   return (
@@ -64,10 +77,12 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
               Date
             </label>
             <input
-              type="text"
-              value={selectedDate.toLocaleDateString()}
-              disabled
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+              type="date"
+              value={formatDateForInput(formData.date)}
+              onChange={handleDateChange}
+              className="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors cursor-pointer"
+              style={{ borderColor: colors.primary.teal }}
+              required
             />
           </div>
 

@@ -425,7 +425,58 @@ const AdminDashboard = () => {
                   }}
                   value={selectedDate}
                   className="border-0 w-full"
+                  tileClassName={({ date, view }) => {
+                    if (view === 'month') {
+                      // Count trips on this date
+                      const tripsOnDate = allTrips.filter(trip => {
+                        const tripDate = trip.date?.toDate?.() || new Date(trip.date);
+                        return (
+                          tripDate.getFullYear() === date.getFullYear() &&
+                          tripDate.getMonth() === date.getMonth() &&
+                          tripDate.getDate() === date.getDate()
+                        );
+                      });
+
+                      if (tripsOnDate.length > 0) {
+                        // Return different classes based on number of trips
+                        if (tripsOnDate.length === 1) {
+                          return 'has-one-trip';
+                        } else if (tripsOnDate.length === 2) {
+                          return 'has-two-trips';
+                        } else {
+                          return 'has-many-trips';
+                        }
+                      }
+                    }
+                    return null;
+                  }}
                 />
+                <style>{`
+                  .has-one-trip {
+                    background-color: #b2ebf2 !important;
+                    color: #006064 !important;
+                    font-weight: 600;
+                  }
+                  .has-one-trip:hover {
+                    background-color: #80deea !important;
+                  }
+                  .has-two-trips {
+                    background-color: #4dd0e1 !important;
+                    color: #004d56 !important;
+                    font-weight: 700;
+                  }
+                  .has-two-trips:hover {
+                    background-color: #26c6da !important;
+                  }
+                  .has-many-trips {
+                    background-color: #00bcd4 !important;
+                    color: white !important;
+                    font-weight: 800;
+                  }
+                  .has-many-trips:hover {
+                    background-color: #00acc1 !important;
+                  }
+                `}</style>
               </div>
             </div>
           </div>
