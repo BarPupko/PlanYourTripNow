@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Facebook, Instagram, MapPin, Clock, Users } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Clock, Users, Gift } from 'lucide-react';
 import colors from '../utils/colors';
 
 const LandingPage = () => {
@@ -278,6 +278,26 @@ const LandingPage = () => {
 
   const t = translations[language];
 
+  const giftCardTranslations = {
+    en: {
+      giftCardTitle: "Give the Gift of Travel",
+      giftCardDesc: "Share unforgettable experiences with IVRI Tours gift cards",
+      purchaseGiftCard: "Purchase Gift Card"
+    },
+    he: {
+      giftCardTitle: "תנו את המתנה של טיול",
+      giftCardDesc: "שתפו חוויות בלתי נשכחות עם כרטיסי מתנה של IVRI Tours",
+      purchaseGiftCard: "קנה כרטיס מתנה"
+    },
+    ru: {
+      giftCardTitle: "Подарите путешествие",
+      giftCardDesc: "Поделитесь незабываемыми впечатлениями с подарочными картами IVRI Tours",
+      purchaseGiftCard: "Купить подарочную карту"
+    }
+  };
+
+  const tGift = giftCardTranslations[language];
+
   // Real sightseeing photos of the actual landmarks
   const destinations = [
     { key: 'toronto', image: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80' }, // CN Tower
@@ -336,7 +356,21 @@ const LandingPage = () => {
       <section className="py-20 px-4 text-center text-white" style={{ background: `linear-gradient(135deg, ${colors.primary.teal} 0%, #0097A7 100%)` }}>
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">{t.heroTitle}</h1>
-          <p className="text-xl sm:text-2xl opacity-95">{t.heroSubtitle}</p>
+          <p className="text-xl sm:text-2xl opacity-95 mb-8">{t.heroSubtitle}</p>
+
+          {/* Gift Card CTA */}
+          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 max-w-md mx-auto">
+            <Gift className="w-12 h-12 mx-auto mb-3" />
+            <h3 className="text-2xl font-bold mb-2">{tGift.giftCardTitle}</h3>
+            <p className="text-lg opacity-90 mb-4">{tGift.giftCardDesc}</p>
+            <button
+              onClick={() => navigate('/gift-card-purchase')}
+              className="bg-white px-8 py-3 rounded-lg font-bold text-lg hover:shadow-xl transition-all"
+              style={{ color: colors.primary.teal }}
+            >
+              {tGift.purchaseGiftCard}
+            </button>
+          </div>
         </div>
       </section>
 
