@@ -374,3 +374,263 @@ exports.resendConfirmationEmail = functions.https.onCall(async (data, context) =
     throw new functions.https.HttpsError('internal', 'Failed to resend email');
   }
 });
+
+// ==========================================
+// WHATSAPP BOT FUNCTIONS
+// ==========================================
+
+const MessagingResponse = require('twilio').twiml.MessagingResponse;
+
+/**
+ * WhatsApp Bot - Main webhook handler
+ * This function receives messages from WhatsApp via Twilio and responds with appropriate information
+ */
+exports.whatsappBot = functions.https.onRequest(async (req, res) => {
+  try {
+    const incomingMessage = req.body.Body?.trim().toLowerCase() || '';
+    const fromNumber = req.body.From || '';
+
+    console.log('Received WhatsApp message:', { from: fromNumber, message: incomingMessage });
+
+    const twiml = new MessagingResponse();
+    let responseMessage = '';
+
+    // Command routing
+    if (incomingMessage.includes('help') || incomingMessage === 'hi' || incomingMessage === 'hello') {
+      responseMessage = await handleHelpCommand();
+    } else if (incomingMessage.includes('book') || incomingMessage.includes('register')) {
+      responseMessage = await handleBookCommand(incomingMessage);
+    } else if (incomingMessage.includes('trips') || incomingMessage.includes('list')) {
+      responseMessage = await handleListTripsCommand();
+    } else if (incomingMessage.includes('who') || incomingMessage.includes('participants') || incomingMessage.includes('registered')) {
+      responseMessage = await handleWhoIsGoingCommand(incomingMessage);
+    } else if (incomingMessage.includes('gift') || incomingMessage.includes('card')) {
+      responseMessage = await handleGiftCardCommand(incomingMessage);
+    } else if (incomingMessage.includes('cancel')) {
+      responseMessage = await handleCancelCommand(incomingMessage);
+    } else {
+      responseMessage = await handleUnknownCommand();
+    }
+
+    twiml.message(responseMessage);
+
+    res.writeHead(200, { 'Content-Type': 'text/xml' });
+    res.end(twiml.toString());
+
+  } catch (error) {
+    console.error('WhatsApp bot error:', error);
+    const twiml = new MessagingResponse();
+    twiml.message('Sorry, I encountered an error processing your request. Please try again later.');
+    res.writeHead(200, { 'Content-Type': 'text/xml' });
+    res.end(twiml.toString());
+  }
+});
+
+/**
+ * Help command - Shows available commands
+ */
+async function handleHelpCommand() {
+  return `🤖 *IVRI Tours WhatsApp Assistant*\n\n` +
+    `Here's what I can help you with:\n\n` +
+    `📋 *TRIPS* - View upcoming trips\n` +
+    `👥 *WHO [trip name]* - See who's registered for a trip\n` +
+    `🎫 *BOOK [name] [trip] [seats]* - Book someone for a trip\n` +
+    `🎁 *GIFT [code]* - Check gift card balance\n` +
+    `❌ *CANCEL [registration]* - Cancel a registration\n` +
+    `❓ *HELP* - Show this message\n\n` +
+    `Example: "who is going to Masada on Jan 15?"`;
+}
+
+/**
+ * Unknown command handler
+ */
+async function handleUnknownCommand() {
+  return `I didn't understand that command. Type *HELP* to see what I can do!`;
+}
+
+/**
+ * List all upcoming trips
+ */
+async function handleListTripsCommand() {
+  try {
+    const now = new Date();
+    const tripsSnapshot = await admin.firestore()
+      .collection('trips')
+      .where('date', '>=', admin.firestore.Timestamp.fromDate(now))
+      .orderBy('date', 'asc')
+      .limit(10)
+      .get();
+
+    if (tripsSnapshot.empty) {
+      return '📅 No upcoming trips scheduled at the moment.';
+    }
+
+    let response = '🗓️ *Upcoming Trips:*\n\n';
+
+    tripsSnapshot.forEach((doc) => {
+      const trip = doc.data();
+      const tripDate = trip.date.toDate();
+      const availableSeats = trip.totalSeats - (trip.occupiedSeats || 0);
+
+      response += `📍 *${trip.title}*\n`;
+      response += `   Date: ${tripDate.toLocaleDateString()}\n`;
+      response += `   Price: $${trip.price}\n`;
+      response += `   Available: ${availableSeats}/${trip.totalSeats} seats\n\n`;
+    });
+
+    return response;
+  } catch (error) {
+    console.error('Error listing trips:', error);
+    return 'Sorry, I couldn\'t retrieve the trips list. Please try again.';
+  }
+}
+
+/**
+ * Check who is registered for a specific trip
+ */
+async function handleWhoIsGoingCommand(message) {
+  try {
+    // Try to extract trip name or date from message
+    // This is a simple implementation - you can make it more sophisticated
+
+    const tripsSnapshot = await admin.firestore()
+      .collection('trips')
+      .where('date', '>=', admin.firestore.Timestamp.fromDate(new Date()))
+      .orderBy('date', 'asc')
+      .limit(5)
+      .get();
+
+    if (tripsSnapshot.empty) {
+      return '📅 No upcoming trips found.';
+    }
+
+    // For simplicity, if multiple trips, show the nearest one
+    // You can enhance this to parse the trip name from the message
+    const tripDoc = tripsSnapshot.docs[0];
+    const trip = tripDoc.data();
+    const tripId = tripDoc.id;
+
+    // Get registrations for this trip
+    const registrationsSnapshot = await admin.firestore()
+      .collection('registrations')
+      .where('tripId', '==', tripId)
+      .get();
+
+    if (registrationsSnapshot.empty) {
+      return `📍 *${trip.title}*\n` +
+        `Date: ${trip.date.toDate().toLocaleDateString()}\n\n` +
+        `No registrations yet.`;
+    }
+
+    let response = `📍 *${trip.title}*\n`;
+    response += `Date: ${trip.date.toDate().toLocaleDateString()}\n`;
+    response += `Registered: ${registrationsSnapshot.size} people\n\n`;
+    response += `👥 *Participants:*\n`;
+
+    registrationsSnapshot.forEach((doc) => {
+      const reg = doc.data();
+      const paidStatus = reg.paid ? '✅' : '⏳';
+      response += `${paidStatus} ${reg.firstName} ${reg.lastName} - Seat #${reg.seatNumber}\n`;
+    });
+
+    return response;
+  } catch (error) {
+    console.error('Error getting participants:', error);
+    return 'Sorry, I couldn\'t retrieve the participants list. Please try again.';
+  }
+}
+
+/**
+ * Book someone for a trip
+ * Example: "book John Smith for Masada 2 seats"
+ */
+async function handleBookCommand(message) {
+  return `🎫 *Booking Feature*\n\n` +
+    `To book someone for a trip, please use the web dashboard:\n` +
+    `https://planyourtrip-ed010.web.app\n\n` +
+    `This ensures all details are captured correctly including:\n` +
+    `• Full contact information\n` +
+    `• Seat selection\n` +
+    `• Payment details\n` +
+    `• Waiver signature\n\n` +
+    `You can view participant lists here anytime!`;
+}
+
+/**
+ * Check gift card balance
+ * Example: "gift card ABC123"
+ */
+async function handleGiftCardCommand(message) {
+  try {
+    // Try to extract code from message
+    const codeMatch = message.match(/[A-Z0-9]{6,}/i);
+
+    if (!codeMatch) {
+      return `🎁 *Gift Card Lookup*\n\n` +
+        `Please provide the gift card code.\n` +
+        `Example: "gift card ABC123"`;
+    }
+
+    const code = codeMatch[0].toUpperCase();
+
+    // Search for gift card
+    const giftCardsSnapshot = await admin.firestore()
+      .collection('giftCards')
+      .where('code', '==', code)
+      .limit(1)
+      .get();
+
+    if (giftCardsSnapshot.empty) {
+      return `❌ Gift card code "${code}" not found.`;
+    }
+
+    const giftCard = giftCardsSnapshot.docs[0].data();
+    const remainingBalance = giftCard.remainingBalance !== undefined
+      ? giftCard.remainingBalance
+      : giftCard.amount;
+
+    const expiryDate = giftCard.expiryDate.toDate();
+    const isExpired = expiryDate < new Date();
+    const isFullyUsed = remainingBalance === 0;
+
+    let response = `🎁 *Gift Card: ${code}*\n\n`;
+    response += `Original Amount: $${giftCard.amount}\n`;
+    response += `Remaining Balance: $${remainingBalance}\n`;
+    response += `Expires: ${expiryDate.toLocaleDateString()}\n`;
+
+    if (isExpired) {
+      response += `\n❌ *Status: EXPIRED*`;
+    } else if (isFullyUsed) {
+      response += `\n✅ *Status: FULLY USED*`;
+    } else if (giftCard.usageHistory && giftCard.usageHistory.length > 0) {
+      response += `\n⚠️ *Status: PARTIALLY USED*`;
+    } else if (giftCard.viewed) {
+      response += `\n👀 *Status: VIEWED*`;
+    } else {
+      response += `\n✅ *Status: ACTIVE*`;
+    }
+
+    // Show usage history if any
+    if (giftCard.usageHistory && giftCard.usageHistory.length > 0) {
+      response += `\n\n📋 *Usage History:*\n`;
+      giftCard.usageHistory.forEach((usage, index) => {
+        response += `${index + 1}. $${usage.amountUsed} - ${usage.tripName} (${usage.date.toDate().toLocaleDateString()})\n`;
+      });
+    }
+
+    return response;
+  } catch (error) {
+    console.error('Error checking gift card:', error);
+    return 'Sorry, I couldn\'t check the gift card. Please try again.';
+  }
+}
+
+/**
+ * Cancel a registration
+ */
+async function handleCancelCommand(message) {
+  return `❌ *Cancellation*\n\n` +
+    `To cancel a registration, please use the web dashboard:\n` +
+    `https://planyourtrip-ed010.web.app\n\n` +
+    `This ensures proper refund processing according to our cancellation policy.`;
+}
