@@ -382,34 +382,57 @@ exports.resendConfirmationEmail = functions.https.onCall(async (data, context) =
 const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 /**
+ * Detect language from message (simple detection)
+ */
+function detectLanguage(message) {
+  const russianChars = /[а-яА-ЯёЁ]/;
+  return russianChars.test(message) ? 'ru' : 'en';
+}
+
+/**
  * WhatsApp Bot - Main webhook handler
  * This function receives messages from WhatsApp via Twilio and responds with appropriate information
  */
 exports.whatsappBot = functions.https.onRequest(async (req, res) => {
   try {
-    const incomingMessage = req.body.Body?.trim().toLowerCase() || '';
+    const incomingMessage = req.body.Body?.trim() || '';
+    const incomingLower = incomingMessage.toLowerCase();
     const fromNumber = req.body.From || '';
+    const language = detectLanguage(incomingMessage);
 
-    console.log('Received WhatsApp message:', { from: fromNumber, message: incomingMessage });
+    console.log('Received WhatsApp message:', { from: fromNumber, message: incomingMessage, language });
 
     const twiml = new MessagingResponse();
     let responseMessage = '';
 
-    // Command routing
-    if (incomingMessage.includes('help') || incomingMessage === 'hi' || incomingMessage === 'hello') {
-      responseMessage = await handleHelpCommand();
-    } else if (incomingMessage.includes('book') || incomingMessage.includes('register')) {
-      responseMessage = await handleBookCommand(incomingMessage);
-    } else if (incomingMessage.includes('trips') || incomingMessage.includes('list')) {
-      responseMessage = await handleListTripsCommand();
-    } else if (incomingMessage.includes('who') || incomingMessage.includes('participants') || incomingMessage.includes('registered')) {
-      responseMessage = await handleWhoIsGoingCommand(incomingMessage);
-    } else if (incomingMessage.includes('gift') || incomingMessage.includes('card')) {
-      responseMessage = await handleGiftCardCommand(incomingMessage);
-    } else if (incomingMessage.includes('cancel')) {
-      responseMessage = await handleCancelCommand(incomingMessage);
+    // Command routing (support both English and Russian)
+    if (incomingLower.includes('help') || incomingLower.includes('помощь') ||
+        incomingLower === 'hi' || incomingLower === 'hello' ||
+        incomingLower === 'привет' || incomingLower === 'здравствуйте') {
+      responseMessage = await handleHelpCommand(language);
+    } else if (incomingLower.includes('book') || incomingLower.includes('register') ||
+               incomingLower.includes('забронировать') || incomingLower.includes('регистрация')) {
+      responseMessage = await handleBookCommand(incomingMessage, language);
+    } else if (incomingLower.includes('trips') || incomingLower.includes('list') ||
+               incomingLower.includes('поездки') || incomingLower.includes('туры') ||
+               incomingLower.includes('список')) {
+      responseMessage = await handleListTripsCommand(language);
+    } else if (incomingLower.includes('who') || incomingLower.includes('participants') ||
+               incomingLower.includes('registered') || incomingLower.includes('кто') ||
+               incomingLower.includes('участники') || incomingLower.includes('зарегистрированы')) {
+      responseMessage = await handleWhoIsGoingCommand(incomingMessage, language);
+    } else if (incomingLower.includes('gift') || incomingLower.includes('card') ||
+               incomingLower.includes('подарочная') || incomingLower.includes('карта')) {
+      responseMessage = await handleGiftCardCommand(incomingMessage, language);
+    } else if (incomingLower.includes('cancel') || incomingLower.includes('отменить')) {
+      responseMessage = await handleCancelCommand(incomingMessage, language);
+    } else if (incomingLower.includes('info') || incomingLower.includes('details') ||
+               incomingLower.includes('информация') || incomingLower.includes('детали')) {
+      responseMessage = await handleTripDetailsCommand(incomingMessage, language);
+    } else if (incomingLower.includes('stats') || incomingLower.includes('статистика')) {
+      responseMessage = await handleStatsCommand(language);
     } else {
-      responseMessage = await handleUnknownCommand();
+      responseMessage = await handleUnknownCommand(language);
     }
 
     twiml.message(responseMessage);
@@ -420,7 +443,10 @@ exports.whatsappBot = functions.https.onRequest(async (req, res) => {
   } catch (error) {
     console.error('WhatsApp bot error:', error);
     const twiml = new MessagingResponse();
-    twiml.message('Sorry, I encountered an error processing your request. Please try again later.');
+    const errorMsg = detectLanguage(req.body.Body || '') === 'ru'
+      ? 'Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже.'
+      : 'Sorry, I encountered an error processing your request. Please try again later.';
+    twiml.message(errorMsg);
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
   }
@@ -429,29 +455,48 @@ exports.whatsappBot = functions.https.onRequest(async (req, res) => {
 /**
  * Help command - Shows available commands
  */
-async function handleHelpCommand() {
+async function handleHelpCommand(language = 'en') {
+  if (language === 'ru') {
+    return `🤖 *IVRI Tours WhatsApp Ассистент*\n\n` +
+      `Вот чем я могу помочь:\n\n` +
+      `📋 *ПОЕЗДКИ* - Просмотр предстоящих туров\n` +
+      `👥 *КТО [название]* - Кто зарегистрирован на поездку\n` +
+      `🎫 *ЗАБРОНИРОВАТЬ* - Забронировать тур\n` +
+      `🎁 *КАРТА [код]* - Проверить подарочную карту\n` +
+      `ℹ️ *ИНФО [название]* - Детали о поездке\n` +
+      `📊 *СТАТИСТИКА* - Общая статистика по турам\n` +
+      `❌ *ОТМЕНИТЬ* - Отменить регистрацию\n` +
+      `❓ *ПОМОЩЬ* - Показать это сообщение\n\n` +
+      `Пример: "кто едет в Масаду?"`;
+  }
+
   return `🤖 *IVRI Tours WhatsApp Assistant*\n\n` +
     `Here's what I can help you with:\n\n` +
     `📋 *TRIPS* - View upcoming trips\n` +
     `👥 *WHO [trip name]* - See who's registered for a trip\n` +
-    `🎫 *BOOK [name] [trip] [seats]* - Book someone for a trip\n` +
+    `🎫 *BOOK* - Book someone for a trip\n` +
     `🎁 *GIFT [code]* - Check gift card balance\n` +
-    `❌ *CANCEL [registration]* - Cancel a registration\n` +
+    `ℹ️ *INFO [trip name]* - Get detailed trip information\n` +
+    `📊 *STATS* - Get overall tour statistics\n` +
+    `❌ *CANCEL* - Cancel a registration\n` +
     `❓ *HELP* - Show this message\n\n` +
-    `Example: "who is going to Masada on Jan 15?"`;
+    `Example: "who is going to Masada?"`;
 }
 
 /**
  * Unknown command handler
  */
-async function handleUnknownCommand() {
+async function handleUnknownCommand(language = 'en') {
+  if (language === 'ru') {
+    return `Я не понял эту команду. Напишите *ПОМОЩЬ* чтобы увидеть что я могу!`;
+  }
   return `I didn't understand that command. Type *HELP* to see what I can do!`;
 }
 
 /**
  * List all upcoming trips
  */
-async function handleListTripsCommand() {
+async function handleListTripsCommand(language = 'en') {
   try {
     const now = new Date();
     const tripsSnapshot = await admin.firestore()
@@ -462,37 +507,60 @@ async function handleListTripsCommand() {
       .get();
 
     if (tripsSnapshot.empty) {
-      return '📅 No upcoming trips scheduled at the moment.';
+      return language === 'ru'
+        ? '📅 На данный момент нет запланированных поездок.'
+        : '📅 No upcoming trips scheduled at the moment.';
     }
 
-    let response = '🗓️ *Upcoming Trips:*\n\n';
+    let response = language === 'ru'
+      ? '🗓️ *Предстоящие поездки:*\n\n'
+      : '🗓️ *Upcoming Trips:*\n\n';
 
     tripsSnapshot.forEach((doc) => {
       const trip = doc.data();
       const tripDate = trip.date.toDate();
       const availableSeats = trip.totalSeats - (trip.occupiedSeats || 0);
+      const pricePerPerson = trip.pricePerPerson || trip.price;
 
       response += `📍 *${trip.title}*\n`;
-      response += `   Date: ${tripDate.toLocaleDateString()}\n`;
-      response += `   Price: $${trip.price}\n`;
-      response += `   Available: ${availableSeats}/${trip.totalSeats} seats\n\n`;
+      if (language === 'ru') {
+        response += `   Дата: ${tripDate.toLocaleDateString('ru-RU')}\n`;
+        response += `   Цена за человека: ₪${pricePerPerson}\n`;
+        if (trip.price && trip.price !== pricePerPerson) {
+          response += `   Общая цена: ₪${trip.price}\n`;
+        }
+        response += `   Доступно: ${availableSeats}/${trip.totalSeats} мест\n`;
+        if (trip.description) {
+          response += `   📝 ${trip.description}\n`;
+        }
+      } else {
+        response += `   Date: ${tripDate.toLocaleDateString()}\n`;
+        response += `   Price per person: ₪${pricePerPerson}\n`;
+        if (trip.price && trip.price !== pricePerPerson) {
+          response += `   Total price: ₪${trip.price}\n`;
+        }
+        response += `   Available: ${availableSeats}/${trip.totalSeats} seats\n`;
+        if (trip.description) {
+          response += `   📝 ${trip.description}\n`;
+        }
+      }
+      response += '\n';
     });
 
     return response;
   } catch (error) {
     console.error('Error listing trips:', error);
-    return 'Sorry, I couldn\'t retrieve the trips list. Please try again.';
+    return language === 'ru'
+      ? 'Извините, не удалось получить список поездок. Пожалуйста, попробуйте снова.'
+      : 'Sorry, I couldn\'t retrieve the trips list. Please try again.';
   }
 }
 
 /**
  * Check who is registered for a specific trip
  */
-async function handleWhoIsGoingCommand(message) {
+async function handleWhoIsGoingCommand(message, language = 'en') {
   try {
-    // Try to extract trip name or date from message
-    // This is a simple implementation - you can make it more sophisticated
-
     const tripsSnapshot = await admin.firestore()
       .collection('trips')
       .where('date', '>=', admin.firestore.Timestamp.fromDate(new Date()))
@@ -501,11 +569,12 @@ async function handleWhoIsGoingCommand(message) {
       .get();
 
     if (tripsSnapshot.empty) {
-      return '📅 No upcoming trips found.';
+      return language === 'ru'
+        ? '📅 Предстоящие поездки не найдены.'
+        : '📅 No upcoming trips found.';
     }
 
-    // For simplicity, if multiple trips, show the nearest one
-    // You can enhance this to parse the trip name from the message
+    // For simplicity, show the nearest one
     const tripDoc = tripsSnapshot.docs[0];
     const trip = tripDoc.data();
     const tripId = tripDoc.id;
@@ -517,34 +586,67 @@ async function handleWhoIsGoingCommand(message) {
       .get();
 
     if (registrationsSnapshot.empty) {
+      if (language === 'ru') {
+        return `📍 *${trip.title}*\n` +
+          `Дата: ${trip.date.toDate().toLocaleDateString('ru-RU')}\n\n` +
+          `Пока нет регистраций.`;
+      }
       return `📍 *${trip.title}*\n` +
         `Date: ${trip.date.toDate().toLocaleDateString()}\n\n` +
         `No registrations yet.`;
     }
 
+    let paidCount = 0;
+    let unpaidCount = 0;
+    registrationsSnapshot.forEach(doc => {
+      if (doc.data().paid) paidCount++;
+      else unpaidCount++;
+    });
+
     let response = `📍 *${trip.title}*\n`;
-    response += `Date: ${trip.date.toDate().toLocaleDateString()}\n`;
-    response += `Registered: ${registrationsSnapshot.size} people\n\n`;
-    response += `👥 *Participants:*\n`;
+    if (language === 'ru') {
+      response += `Дата: ${trip.date.toDate().toLocaleDateString('ru-RU')}\n`;
+      response += `Зарегистрировано: ${registrationsSnapshot.size} человек\n`;
+      response += `✅ Оплачено: ${paidCount} | ⏳ Не оплачено: ${unpaidCount}\n\n`;
+      response += `👥 *Участники:*\n`;
+    } else {
+      response += `Date: ${trip.date.toDate().toLocaleDateString()}\n`;
+      response += `Registered: ${registrationsSnapshot.size} people\n`;
+      response += `✅ Paid: ${paidCount} | ⏳ Unpaid: ${unpaidCount}\n\n`;
+      response += `👥 *Participants:*\n`;
+    }
 
     registrationsSnapshot.forEach((doc) => {
       const reg = doc.data();
       const paidStatus = reg.paid ? '✅' : '⏳';
-      response += `${paidStatus} ${reg.firstName} ${reg.lastName} - Seat #${reg.seatNumber}\n`;
+      response += `${paidStatus} ${reg.firstName} ${reg.lastName} - ${language === 'ru' ? 'Место' : 'Seat'} #${reg.seatNumber}\n`;
     });
 
     return response;
   } catch (error) {
     console.error('Error getting participants:', error);
-    return 'Sorry, I couldn\'t retrieve the participants list. Please try again.';
+    return language === 'ru'
+      ? 'Извините, не удалось получить список участников. Пожалуйста, попробуйте снова.'
+      : 'Sorry, I couldn\'t retrieve the participants list. Please try again.';
   }
 }
 
 /**
  * Book someone for a trip
- * Example: "book John Smith for Masada 2 seats"
  */
-async function handleBookCommand(message) {
+async function handleBookCommand(message, language = 'en') {
+  if (language === 'ru') {
+    return `🎫 *Функция бронирования*\n\n` +
+      `Для бронирования тура, пожалуйста, используйте веб-панель:\n` +
+      `https://planyourtrip-ed010.web.app\n\n` +
+      `Это гарантирует правильное оформление всех деталей:\n` +
+      `• Полная контактная информация\n` +
+      `• Выбор места\n` +
+      `• Детали оплаты\n` +
+      `• Подпись соглашения\n\n` +
+      `Вы можете просматривать списки участников в любое время!`;
+  }
+
   return `🎫 *Booking Feature*\n\n` +
     `To book someone for a trip, please use the web dashboard:\n` +
     `https://planyourtrip-ed010.web.app\n\n` +
@@ -558,22 +660,23 @@ async function handleBookCommand(message) {
 
 /**
  * Check gift card balance
- * Example: "gift card ABC123"
  */
-async function handleGiftCardCommand(message) {
+async function handleGiftCardCommand(message, language = 'en') {
   try {
-    // Try to extract code from message
     const codeMatch = message.match(/[A-Z0-9]{6,}/i);
 
     if (!codeMatch) {
+      if (language === 'ru') {
+        return `🎁 *Поиск подарочной карты*\n\n` +
+          `Пожалуйста, укажите код подарочной карты.\n` +
+          `Пример: "карта ABC123"`;
+      }
       return `🎁 *Gift Card Lookup*\n\n` +
         `Please provide the gift card code.\n` +
         `Example: "gift card ABC123"`;
     }
 
     const code = codeMatch[0].toUpperCase();
-
-    // Search for gift card
     const giftCardsSnapshot = await admin.firestore()
       .collection('giftCards')
       .where('code', '==', code)
@@ -581,56 +684,266 @@ async function handleGiftCardCommand(message) {
       .get();
 
     if (giftCardsSnapshot.empty) {
-      return `❌ Gift card code "${code}" not found.`;
+      return language === 'ru'
+        ? `❌ Подарочная карта "${code}" не найдена.`
+        : `❌ Gift card code "${code}" not found.`;
     }
 
     const giftCard = giftCardsSnapshot.docs[0].data();
     const remainingBalance = giftCard.remainingBalance !== undefined
       ? giftCard.remainingBalance
       : giftCard.amount;
-
     const expiryDate = giftCard.expiryDate.toDate();
     const isExpired = expiryDate < new Date();
     const isFullyUsed = remainingBalance === 0;
 
-    let response = `🎁 *Gift Card: ${code}*\n\n`;
-    response += `Original Amount: $${giftCard.amount}\n`;
-    response += `Remaining Balance: $${remainingBalance}\n`;
-    response += `Expires: ${expiryDate.toLocaleDateString()}\n`;
+    let response = language === 'ru'
+      ? `🎁 *Подарочная карта: ${code}*\n\n`
+      : `🎁 *Gift Card: ${code}*\n\n`;
 
-    if (isExpired) {
-      response += `\n❌ *Status: EXPIRED*`;
-    } else if (isFullyUsed) {
-      response += `\n✅ *Status: FULLY USED*`;
-    } else if (giftCard.usageHistory && giftCard.usageHistory.length > 0) {
-      response += `\n⚠️ *Status: PARTIALLY USED*`;
-    } else if (giftCard.viewed) {
-      response += `\n👀 *Status: VIEWED*`;
+    if (language === 'ru') {
+      response += `Первоначальная сумма: ₪${giftCard.amount}\n`;
+      response += `Остаток: ₪${remainingBalance}\n`;
+      response += `Срок действия: ${expiryDate.toLocaleDateString('ru-RU')}\n`;
+
+      if (isExpired) {
+        response += `\n❌ *Статус: ПРОСРОЧЕНА*`;
+      } else if (isFullyUsed) {
+        response += `\n✅ *Статус: ИСПОЛЬЗОВАНА*`;
+      } else if (giftCard.usageHistory && giftCard.usageHistory.length > 0) {
+        response += `\n⚠️ *Статус: ЧАСТИЧНО ИСПОЛЬЗОВАНА*`;
+      } else if (giftCard.viewed) {
+        response += `\n👀 *Статус: ПРОСМОТРЕНА*`;
+      } else {
+        response += `\n✅ *Статус: АКТИВНА*`;
+      }
+
+      if (giftCard.usageHistory && giftCard.usageHistory.length > 0) {
+        response += `\n\n📋 *История использования:*\n`;
+        giftCard.usageHistory.forEach((usage, index) => {
+          response += `${index + 1}. ₪${usage.amountUsed} - ${usage.tripName} (${usage.date.toDate().toLocaleDateString('ru-RU')})\n`;
+        });
+      }
     } else {
-      response += `\n✅ *Status: ACTIVE*`;
-    }
+      response += `Original Amount: ₪${giftCard.amount}\n`;
+      response += `Remaining Balance: ₪${remainingBalance}\n`;
+      response += `Expires: ${expiryDate.toLocaleDateString()}\n`;
 
-    // Show usage history if any
-    if (giftCard.usageHistory && giftCard.usageHistory.length > 0) {
-      response += `\n\n📋 *Usage History:*\n`;
-      giftCard.usageHistory.forEach((usage, index) => {
-        response += `${index + 1}. $${usage.amountUsed} - ${usage.tripName} (${usage.date.toDate().toLocaleDateString()})\n`;
-      });
+      if (isExpired) {
+        response += `\n❌ *Status: EXPIRED*`;
+      } else if (isFullyUsed) {
+        response += `\n✅ *Status: FULLY USED*`;
+      } else if (giftCard.usageHistory && giftCard.usageHistory.length > 0) {
+        response += `\n⚠️ *Status: PARTIALLY USED*`;
+      } else if (giftCard.viewed) {
+        response += `\n👀 *Status: VIEWED*`;
+      } else {
+        response += `\n✅ *Status: ACTIVE*`;
+      }
+
+      if (giftCard.usageHistory && giftCard.usageHistory.length > 0) {
+        response += `\n\n📋 *Usage History:*\n`;
+        giftCard.usageHistory.forEach((usage, index) => {
+          response += `${index + 1}. ₪${usage.amountUsed} - ${usage.tripName} (${usage.date.toDate().toLocaleDateString()})\n`;
+        });
+      }
     }
 
     return response;
   } catch (error) {
     console.error('Error checking gift card:', error);
-    return 'Sorry, I couldn\'t check the gift card. Please try again.';
+    return language === 'ru'
+      ? 'Извините, не удалось проверить подарочную карту. Пожалуйста, попробуйте снова.'
+      : 'Sorry, I couldn\'t check the gift card. Please try again.';
   }
 }
 
 /**
  * Cancel a registration
  */
-async function handleCancelCommand(message) {
+async function handleCancelCommand(message, language = 'en') {
+  if (language === 'ru') {
+    return `❌ *Отмена регистрации*\n\n` +
+      `Для отмены регистрации, пожалуйста, используйте веб-панель:\n` +
+      `https://planyourtrip-ed010.web.app\n\n` +
+      `Это гарантирует правильную обработку возврата согласно нашей политике отмены.`;
+  }
+
   return `❌ *Cancellation*\n\n` +
     `To cancel a registration, please use the web dashboard:\n` +
     `https://planyourtrip-ed010.web.app\n\n` +
     `This ensures proper refund processing according to our cancellation policy.`;
+}
+
+/**
+ * Get detailed trip information
+ */
+async function handleTripDetailsCommand(message, language = 'en') {
+  try {
+    const tripsSnapshot = await admin.firestore()
+      .collection('trips')
+      .where('date', '>=', admin.firestore.Timestamp.fromDate(new Date()))
+      .orderBy('date', 'asc')
+      .limit(1)
+      .get();
+
+    if (tripsSnapshot.empty) {
+      return language === 'ru'
+        ? '📅 Предстоящие поездки не найдены.'
+        : '📅 No upcoming trips found.';
+    }
+
+    const trip = tripsSnapshot.docs[0].data();
+    const tripId = tripsSnapshot.docs[0].id;
+    const tripDate = trip.date.toDate();
+    const availableSeats = trip.totalSeats - (trip.occupiedSeats || 0);
+    const pricePerPerson = trip.pricePerPerson || trip.price;
+
+    // Get registrations
+    const registrationsSnapshot = await admin.firestore()
+      .collection('registrations')
+      .where('tripId', '==', tripId)
+      .get();
+
+    let paidCount = 0;
+    let totalRevenue = 0;
+    registrationsSnapshot.forEach(doc => {
+      const reg = doc.data();
+      if (reg.paid) {
+        paidCount++;
+        totalRevenue += pricePerPerson;
+      }
+    });
+
+    let response = language === 'ru' ? 'ℹ️ *Детали поездки*\n\n' : 'ℹ️ *Trip Details*\n\n';
+    response += `📍 *${trip.title}*\n\n`;
+
+    if (language === 'ru') {
+      response += `📅 *Дата:* ${tripDate.toLocaleDateString('ru-RU')} в ${tripDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}\n`;
+      response += `💰 *Цена за человека:* ₪${pricePerPerson}\n`;
+      if (trip.price && trip.price !== pricePerPerson) {
+        response += `💰 *Общая цена:* ₪${trip.price}\n`;
+      }
+      response += `🚌 *Всего мест:* ${trip.totalSeats}\n`;
+      response += `✅ *Доступно мест:* ${availableSeats}\n`;
+      response += `👥 *Зарегистрировано:* ${registrationsSnapshot.size}\n`;
+      response += `💳 *Оплачено:* ${paidCount}\n`;
+      response += `💵 *Общий доход:* ₪${totalRevenue}\n`;
+
+      if (trip.description) {
+        response += `\n📝 *Описание:*\n${trip.description}\n`;
+      }
+
+      if (trip.meetingPoint) {
+        response += `\n📍 *Место встречи:* ${trip.meetingPoint}\n`;
+      }
+    } else {
+      response += `📅 *Date:* ${tripDate.toLocaleDateString()} at ${tripDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n`;
+      response += `💰 *Price per person:* ₪${pricePerPerson}\n`;
+      if (trip.price && trip.price !== pricePerPerson) {
+        response += `💰 *Total price:* ₪${trip.price}\n`;
+      }
+      response += `🚌 *Total seats:* ${trip.totalSeats}\n`;
+      response += `✅ *Available seats:* ${availableSeats}\n`;
+      response += `👥 *Registered:* ${registrationsSnapshot.size}\n`;
+      response += `💳 *Paid:* ${paidCount}\n`;
+      response += `💵 *Total revenue:* ₪${totalRevenue}\n`;
+
+      if (trip.description) {
+        response += `\n📝 *Description:*\n${trip.description}\n`;
+      }
+
+      if (trip.meetingPoint) {
+        response += `\n📍 *Meeting point:* ${trip.meetingPoint}\n`;
+      }
+    }
+
+    return response;
+  } catch (error) {
+    console.error('Error getting trip details:', error);
+    return language === 'ru'
+      ? 'Извините, не удалось получить детали поездки. Пожалуйста, попробуйте снова.'
+      : 'Sorry, I couldn\'t retrieve trip details. Please try again.';
+  }
+}
+
+/**
+ * Get overall statistics
+ */
+async function handleStatsCommand(language = 'en') {
+  try {
+    const now = new Date();
+
+    // Get upcoming trips
+    const upcomingTripsSnapshot = await admin.firestore()
+      .collection('trips')
+      .where('date', '>=', admin.firestore.Timestamp.fromDate(now))
+      .get();
+
+    // Get all registrations
+    const registrationsSnapshot = await admin.firestore()
+      .collection('registrations')
+      .get();
+
+    // Get gift cards
+    const giftCardsSnapshot = await admin.firestore()
+      .collection('giftCards')
+      .get();
+
+    let totalRevenue = 0;
+    let paidRegistrations = 0;
+    let unpaidRegistrations = 0;
+
+    registrationsSnapshot.forEach(doc => {
+      const reg = doc.data();
+      if (reg.paid) {
+        paidRegistrations++;
+        // Estimate revenue - you might want to store actual amounts
+        totalRevenue += 100; // placeholder
+      } else {
+        unpaidRegistrations++;
+      }
+    });
+
+    let activeGiftCards = 0;
+    let giftCardTotalValue = 0;
+
+    giftCardsSnapshot.forEach(doc => {
+      const card = doc.data();
+      const balance = card.remainingBalance !== undefined ? card.remainingBalance : card.amount;
+      const isExpired = card.expiryDate.toDate() < now;
+
+      if (balance > 0 && !isExpired) {
+        activeGiftCards++;
+        giftCardTotalValue += balance;
+      }
+    });
+
+    let response = language === 'ru' ? '📊 *Общая статистика*\n\n' : '📊 *Overall Statistics*\n\n';
+
+    if (language === 'ru') {
+      response += `🗓️ *Предстоящие поездки:* ${upcomingTripsSnapshot.size}\n`;
+      response += `👥 *Всего регистраций:* ${registrationsSnapshot.size}\n`;
+      response += `✅ *Оплаченные:* ${paidRegistrations}\n`;
+      response += `⏳ *Неоплаченные:* ${unpaidRegistrations}\n`;
+      response += `💰 *Ориентировочный доход:* ₪${totalRevenue}\n`;
+      response += `🎁 *Активные подарочные карты:* ${activeGiftCards}\n`;
+      response += `💳 *Общая стоимость карт:* ₪${giftCardTotalValue}\n`;
+    } else {
+      response += `🗓️ *Upcoming trips:* ${upcomingTripsSnapshot.size}\n`;
+      response += `👥 *Total registrations:* ${registrationsSnapshot.size}\n`;
+      response += `✅ *Paid:* ${paidRegistrations}\n`;
+      response += `⏳ *Unpaid:* ${unpaidRegistrations}\n`;
+      response += `💰 *Estimated revenue:* ₪${totalRevenue}\n`;
+      response += `🎁 *Active gift cards:* ${activeGiftCards}\n`;
+      response += `💳 *Total card value:* ₪${giftCardTotalValue}\n`;
+    }
+
+    return response;
+  } catch (error) {
+    console.error('Error getting stats:', error);
+    return language === 'ru'
+      ? 'Извините, не удалось получить статистику. Пожалуйста, попробуйте снова.'
+      : 'Sorry, I couldn\'t retrieve statistics. Please try again.';
+  }
 }
