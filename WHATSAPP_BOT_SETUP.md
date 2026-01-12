@@ -98,17 +98,35 @@ You have two options:
 
 ## Available Bot Commands
 
-Your WhatsApp assistant can handle these commands:
+Your WhatsApp assistant can handle these commands in **both English and Russian**:
+
+### English Commands
 
 | Command | Example | What It Does |
 |---------|---------|--------------|
 | `hi` or `hello` | `hi` | Shows the help menu |
 | `help` | `help` | Shows available commands |
-| `trips` or `list` | `trips` | Lists all upcoming trips with dates, prices, and availability |
-| `who is going` | `who is going to Masada?` | Shows participants for the next upcoming trip (shows names, seat numbers, payment status) |
+| `trips` or `list` | `trips` | Lists all upcoming trips with dates, prices per person, and availability |
+| `who is going` | `who is going to Masada?` | Shows participants for the next upcoming trip (names, seats, payment status) |
+| `info` or `details` | `info` | Shows detailed information about the next trip including revenue |
+| `stats` | `stats` | Shows overall business statistics (registrations, revenue, gift cards) |
 | `gift card` | `gift card ABC123` | Checks gift card balance, status, and usage history |
 | `book` | `book` | Shows instructions for booking via web dashboard |
 | `cancel` | `cancel` | Shows instructions for cancellation |
+
+### Russian Commands (Русские команды)
+
+| Команда | Пример | Описание |
+|---------|--------|----------|
+| `привет` или `здравствуйте` | `привет` | Показывает меню помощи |
+| `помощь` | `помощь` | Показывает доступные команды |
+| `поездки` или `туры` | `поездки` | Список предстоящих поездок с ценами за человека |
+| `кто` | `кто едет в Масаду?` | Показывает участников следующей поездки |
+| `инфо` или `детали` | `инфо` | Подробная информация о следующей поездке |
+| `статистика` | `статистика` | Общая статистика бизнеса |
+| `карта` | `карта ABC123` | Проверка подарочной карты |
+| `забронировать` | `забронировать` | Инструкции для бронирования |
+| `отменить` | `отменить` | Инструкции для отмены |
 
 ---
 
@@ -116,24 +134,47 @@ Your WhatsApp assistant can handle these commands:
 
 Your bot integrates directly with your Firestore database and can:
 
+✅ **Bilingual Support**
+- Automatic language detection (English/Russian)
+- All responses in user's language
+- Russian Cyrillic character recognition
+
 ✅ **View Trips**
 - Shows next 10 upcoming trips
-- Displays date, price, available seats
+- Displays date, **price per person**, total price
+- Available seats and descriptions
 - Sorted by date
+- Meeting point information (if available)
 
 ✅ **Check Participants**
 - Shows who's registered for trips
 - Displays seat numbers
 - Shows payment status (✅ paid, ⏳ pending)
+- **Paid/unpaid breakdown**
+
+✅ **Detailed Trip Information (NEW)**
+- Complete trip details
+- Revenue calculations
+- Payment statistics
+- Meeting points and descriptions
+- Available seats tracking
+
+✅ **Business Statistics (NEW)**
+- Total upcoming trips
+- Registration counts
+- Payment tracking
+- Revenue estimates
+- Active gift card value
 
 ✅ **Gift Card Lookup**
 - Checks balance and expiry date
 - Shows usage history
 - Displays status (Active, Viewed, Partially Used, Fully Used, Expired)
+- **Amounts in Israeli Shekels (₪)**
 
 ✅ **Smart Responses**
 - Natural language processing for commands
-- Helpful error messages
+- Bilingual error messages
 - Links to web dashboard for complex actions
 
 ---
@@ -212,7 +253,9 @@ Your bot integrates directly with your Firestore database and can:
 
 ---
 
-## Example Conversation
+## Example Conversations
+
+### English Example
 
 ```
 You: hi
@@ -222,12 +265,14 @@ Here's what I can help you with:
 
 📋 TRIPS - View upcoming trips
 👥 WHO [trip name] - See who's registered for a trip
-🎫 BOOK [name] [trip] [seats] - Book someone for a trip
+🎫 BOOK - Book someone for a trip
 🎁 GIFT [code] - Check gift card balance
-❌ CANCEL [registration] - Cancel a registration
+ℹ️ INFO [trip name] - Get detailed trip information
+📊 STATS - Get overall tour statistics
+❌ CANCEL - Cancel a registration
 ❓ HELP - Show this message
 
-Example: "who is going to Masada on Jan 15?"
+Example: "who is going to Masada?"
 
 ---
 
@@ -236,12 +281,13 @@ Bot: 🗓️ Upcoming Trips:
 
 📍 Masada Sunrise Hike
    Date: 1/15/2026
-   Price: $105
+   Price per person: ₪105
    Available: 34/40 seats
+   📝 Experience the breathtaking sunrise from Masada fortress
 
 📍 Jerusalem Old City Tour
    Date: 1/22/2026
-   Price: $75
+   Price per person: ₪75
    Available: 28/30 seats
 
 ---
@@ -250,12 +296,109 @@ You: who is going
 Bot: 📍 Masada Sunrise Hike
 Date: 1/15/2026
 Registered: 6 people
+✅ Paid: 4 | ⏳ Unpaid: 2
 
 👥 Participants:
 ✅ John Doe - Seat #5
 ✅ Jane Smith - Seat #12
 ⏳ David Cohen - Seat #23
 ...
+
+---
+
+You: info
+Bot: ℹ️ Trip Details
+
+📍 Masada Sunrise Hike
+
+📅 Date: 1/15/2026 at 04:00
+💰 Price per person: ₪105
+🚌 Total seats: 40
+✅ Available seats: 34
+👥 Registered: 6
+💳 Paid: 4
+💵 Total revenue: ₪420
+
+📝 Description:
+Experience the breathtaking sunrise from Masada fortress
+
+📍 Meeting point: Jerusalem Central Bus Station
+
+---
+
+You: stats
+Bot: 📊 Overall Statistics
+
+🗓️ Upcoming trips: 5
+👥 Total registrations: 23
+✅ Paid: 18
+⏳ Unpaid: 5
+💰 Estimated revenue: ₪1,800
+🎁 Active gift cards: 12
+💳 Total card value: ₪3,450
+```
+
+### Russian Example (Пример на русском)
+
+```
+Вы: привет
+Бот: 🤖 IVRI Tours WhatsApp Ассистент
+
+Вот чем я могу помочь:
+
+📋 ПОЕЗДКИ - Просмотр предстоящих туров
+👥 КТО [название] - Кто зарегистрирован на поездку
+🎫 ЗАБРОНИРОВАТЬ - Забронировать тур
+🎁 КАРТА [код] - Проверить подарочную карту
+ℹ️ ИНФО [название] - Детали о поездке
+📊 СТАТИСТИКА - Общая статистика по турам
+❌ ОТМЕНИТЬ - Отменить регистрацию
+❓ ПОМОЩЬ - Показать это сообщение
+
+Пример: "кто едет в Масаду?"
+
+---
+
+Вы: поездки
+Бот: 🗓️ Предстоящие поездки:
+
+📍 Masada Sunrise Hike
+   Дата: 15.01.2026
+   Цена за человека: ₪105
+   Доступно: 34/40 мест
+   📝 Experience the breathtaking sunrise from Masada fortress
+
+📍 Jerusalem Old City Tour
+   Дата: 22.01.2026
+   Цена за человека: ₪75
+   Доступно: 28/30 мест
+
+---
+
+Вы: кто
+Бот: 📍 Masada Sunrise Hike
+Дата: 15.01.2026
+Зарегистрировано: 6 человек
+✅ Оплачено: 4 | ⏳ Не оплачено: 2
+
+👥 Участники:
+✅ John Doe - Место #5
+✅ Jane Smith - Место #12
+⏳ David Cohen - Место #23
+...
+
+---
+
+Вы: статистика
+Бот: 📊 Общая статистика
+
+🗓️ Предстоящие поездки: 5
+👥 Всего регистраций: 23
+✅ Оплаченные: 18
+⏳ Неоплаченные: 5
+💰 Ориентировочный доход: ₪1,800
+🎁 Активные подарочные карты: 12
+💳 Общая стоимость карт: ₪3,450
 ```
 
 Happy chatting! 🎉
