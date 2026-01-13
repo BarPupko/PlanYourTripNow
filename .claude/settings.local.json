@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(dir:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(node:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(npm run build:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(npm run deploy:*)",
+      "Bash(firebase projects:list:*)",
+      "Bash(firebase use:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(npm run deploy:rules:*)",
+      "Bash(firebase functions:config:get:*)",
+      "Bash(firebase functions:config:set:*)",
+      "Bash(firebase functions:log:*)",
+      "Bash(firebase functions:artifacts:setpolicy:*)",
+      "Bash(firebase functions:list:*)",
+      "Bash(if exist NUL del /F /Q NUL)",
+      "Bash(git fetch:*)",
+      "Bash(npm run deploy:firebase:*)"
+    ]
+  }
+}
