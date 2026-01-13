@@ -48,12 +48,21 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
               </button>
             )}
 
-            <div className="hidden sm:block">
+            {/* Make logo clickable to return to admin dashboard */}
+            <button
+              onClick={() => navigate('/admin')}
+              className="hidden sm:block hover:opacity-80 transition-opacity"
+              title="Go to Admin Dashboard"
+            >
               <IVRILogo size="md" />
-            </div>
-            <div className="sm:hidden">
+            </button>
+            <button
+              onClick={() => navigate('/admin')}
+              className="sm:hidden hover:opacity-80 transition-opacity"
+              title="Go to Admin Dashboard"
+            >
               <IVRILogo size="xs" />
-            </div>
+            </button>
 
             <div className="min-w-0 flex-1">
               {isAdminDashboard ? (
