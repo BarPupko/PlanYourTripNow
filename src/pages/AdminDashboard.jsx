@@ -3,6 +3,8 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { Plus, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { getAllTrips, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 import CreateTripModal from '../components/CreateTripModal';
 import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
@@ -33,11 +35,60 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const tripsData = await getAllTrips();
+      // Auto-update statuses for each trip
+      await autoUpdateTripStatuses(tripsData);
       setAllTrips(tripsData);
     } catch (error) {
       console.error('Error loading trips:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Automatically update trip statuses based on participants and date
+  const autoUpdateTripStatuses = async (trips) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (const trip of trips) {
+      let needsUpdate = false;
+      let newStatus = trip.status || 'planned';
+
+      // Get the end date (or use start date if no end date exists)
+      const tripEndDate = trip.endDate?.toDate?.() || trip.date?.toDate?.() || new Date(trip.date);
+      tripEndDate.setHours(0, 0, 0, 0);
+
+      // Check if trip date has passed (check end date)
+      if (tripEndDate < today && newStatus !== 'done') {
+        newStatus = 'done';
+        needsUpdate = true;
+      }
+      // Check if trip has 3+ participants and should be scheduled
+      else if (tripEndDate >= today) {
+        try {
+          const registrationsRef = collection(db, 'registrations');
+          const q = query(registrationsRef, where('tripId', '==', trip.id));
+          const snapshot = await getDocs(q);
+          const participantCount = snapshot.size;
+
+          if (participantCount >= 3 && newStatus === 'planned') {
+            newStatus = 'scheduled';
+            needsUpdate = true;
+          }
+        } catch (error) {
+          console.error('Error checking participants for trip:', trip.id, error);
+        }
+      }
+
+      // Update the status if needed
+      if (needsUpdate) {
+        try {
+          await updateTrip(trip.id, { status: newStatus });
+          trip.status = newStatus; // Update local copy
+        } catch (error) {
+          console.error('Error updating trip status:', trip.id, error);
+        }
+      }
     }
   };
 
@@ -94,13 +145,21 @@ const AdminDashboard = () => {
 
     // Apply date/time filter
     if (viewFilter === 'date') {
-      // Filter by specific selected date
+      // Filter by specific selected date - includes trips within date range
       filtered = allTrips.filter(trip => {
-        const tripDate = trip.date?.toDate?.() || new Date(trip.date);
-        tripDate.setHours(0, 0, 0, 0);
+        const tripStartDate = trip.date?.toDate?.() || new Date(trip.date);
+        tripStartDate.setHours(0, 0, 0, 0);
+
+        const tripEndDate = trip.endDate?.toDate?.()
+          ? new Date(trip.endDate.toDate())
+          : new Date(tripStartDate);
+        tripEndDate.setHours(0, 0, 0, 0);
+
         const selected = new Date(selectedDate);
         selected.setHours(0, 0, 0, 0);
-        return tripDate.getTime() === selected.getTime();
+
+        // Check if selected date falls within the trip's date range (inclusive)
+        return selected >= tripStartDate && selected <= tripEndDate;
       });
     } else if (viewFilter === 'upcoming') {
       filtered = allTrips.filter(trip => {
@@ -343,7 +402,14 @@ const AdminDashboard = () => {
                           </span>
                         </div>
                         <p className="text-[10px] sm:text-sm text-gray-600 mt-1">
-                          {trip.date?.toDate?.().toLocaleDateString() || new Date(trip.date).toLocaleDateString()} - {trip.vehicleLayout === 'sprinter_15'
+                          {(() => {
+                            const startDate = trip.date?.toDate?.() || new Date(trip.date);
+                            const endDate = trip.endDate?.toDate?.();
+                            const dateStr = endDate && endDate.getTime() !== startDate.getTime()
+                              ? `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`
+                              : startDate.toLocaleDateString();
+                            return dateStr;
+                          })()} - {trip.vehicleLayout === 'sprinter_15'
                             ? t.mercedesSprinterBlack
                             : trip.vehicleLayout === 'bus_30'
                             ? t.mercedesSprinterWhite
@@ -437,14 +503,22 @@ const AdminDashboard = () => {
                   className="border-0 w-full"
                   tileClassName={({ date, view }) => {
                     if (view === 'month') {
-                      // Count trips on this date
+                      // Normalize the calendar date for comparison
+                      const checkDate = new Date(date);
+                      checkDate.setHours(0, 0, 0, 0);
+
+                      // Count trips that include this date (either single day or within date range)
                       const tripsOnDate = allTrips.filter(trip => {
-                        const tripDate = trip.date?.toDate?.() || new Date(trip.date);
-                        return (
-                          tripDate.getFullYear() === date.getFullYear() &&
-                          tripDate.getMonth() === date.getMonth() &&
-                          tripDate.getDate() === date.getDate()
-                        );
+                        const tripStartDate = trip.date?.toDate?.() || new Date(trip.date);
+                        tripStartDate.setHours(0, 0, 0, 0);
+
+                        const tripEndDate = trip.endDate?.toDate?.()
+                          ? new Date(trip.endDate.toDate())
+                          : new Date(tripStartDate);
+                        tripEndDate.setHours(0, 0, 0, 0);
+
+                        // Check if checkDate falls within the trip's date range (inclusive)
+                        return checkDate >= tripStartDate && checkDate <= tripEndDate;
                       });
 
                       if (tripsOnDate.length > 0) {
