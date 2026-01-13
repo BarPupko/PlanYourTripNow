@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, ArrowLeft, Gift } from 'lucide-react';
+import { LogOut, ArrowLeft, Gift, MessageCircle } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import IVRILogo from './IrviLogo';
@@ -60,6 +60,19 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                 <>
                   <div className="flex items-center gap-2">
                     <WeatherWidget compact={true} />
+
+                    {/* WhatsApp Bot Assistant */}
+                    <a
+                      href="https://wa.me/14155238886"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white rounded-full shadow-lg p-3 hover:shadow-xl transition-all hover:scale-105"
+                      title="WhatsApp Assistant - Get trip info, check participants, and more!"
+                      style={{ backgroundColor: '#25D366' }}
+                    >
+                      <MessageCircle className="w-6 h-6 text-white" />
+                    </a>
+
                     <p className="hidden sm:block text-sm text-gray-500">{t.IVRITours}</p>
                   </div>
                 </>
