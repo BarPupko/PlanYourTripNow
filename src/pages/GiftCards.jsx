@@ -5,9 +5,13 @@ import { db } from '../firebase';
 import CreateGiftCardModal from '../components/CreateGiftCardModal';
 import UseGiftCardModal from '../components/UseGiftCardModal';
 import Header from '../components/Header';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../utils/translations';
 import colors from '../utils/colors';
 
 const GiftCards = () => {
+  const { language } = useLanguage();
+  const t = translations[language];
   const [giftCards, setGiftCards] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUseModal, setShowUseModal] = useState(false);
@@ -40,7 +44,7 @@ const GiftCards = () => {
   };
 
   const handleDeleteGiftCard = async (giftCardId) => {
-    if (!confirm('Are you sure you want to delete this gift card? This action cannot be undone.')) {
+    if (!confirm(t.deleteConfirmGiftCard)) {
       return;
     }
 
@@ -49,7 +53,7 @@ const GiftCards = () => {
       await deleteDoc(doc(db, 'giftCards', giftCardId));
     } catch (error) {
       console.error('Error deleting gift card:', error);
-      alert('Failed to delete gift card. Please try again.');
+      alert(t.failedToDeleteGiftCard);
     } finally {
       setDeletingId(null);
     }
@@ -89,26 +93,26 @@ const GiftCards = () => {
 
     // Fully used (balance is $0)
     if (isFullyUsed) {
-      return { bg: '#D1FAE5', text: '#065F46', label: 'Fully Used' };
+      return { bg: '#D1FAE5', text: '#065F46', label: t.statusFullyUsed };
     }
 
     // Partially used (has usage history but still has balance)
     if (hasBeenUsed) {
-      return { bg: '#FEF3C7', text: '#92400E', label: 'Partially Used' };
+      return { bg: '#FEF3C7', text: '#92400E', label: t.statusPartiallyUsed };
     }
 
     // Expired (past expiry date and not used)
     if (isExpired) {
-      return { bg: '#FEE2E2', text: '#991B1B', label: 'Expired' };
+      return { bg: '#FEE2E2', text: '#991B1B', label: t.statusExpired };
     }
 
     // Viewed but not used
     if (card.viewed) {
-      return { bg: '#E0E7FF', text: '#4338CA', label: 'Viewed' };
+      return { bg: '#E0E7FF', text: '#4338CA', label: t.statusViewed };
     }
 
     // Active (not viewed, not used, not expired)
-    return { bg: '#DBEAFE', text: '#1E40AF', label: 'Active' };
+    return { bg: '#DBEAFE', text: '#1E40AF', label: t.statusActive };
   };
 
   const handleUseCard = (card) => {
@@ -125,55 +129,58 @@ const GiftCards = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
               <Gift className="w-8 h-8" style={{ color: colors.primary.teal }} />
-              Gift Cards
+              {t.giftCards}
             </h1>
-            <p className="text-gray-600 mt-1">Create and manage gift cards for your trips</p>
+            <p className="text-gray-600 mt-1">{t.giftCardsDesc}</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
             style={{ backgroundColor: colors.primary.teal }}
-            className="flex items-center gap-2 px-6 py-3 text-white rounded-lg hover:opacity-90 transition-opacity shadow-lg"
+            className="flex items-center gap-1.5 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity shadow-lg"
           >
-            <Plus className="w-5 h-5" />
-            <span>Create Gift Card</span>
+            <Plus className="w-4 h-4" />
+            <span>{t.createGiftCard}</span>
           </button>
         </div>
 
         {/* Status Filter */}
         <div className="mb-6 flex gap-2 flex-wrap">
-          {['all', 'active', 'viewed', 'used', 'redeemed', 'expired'].map(status => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                statusFilter === status
-                  ? 'text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-              style={statusFilter === status ? { backgroundColor: colors.primary.teal } : {}}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </button>
-          ))}
+          {['all', 'active', 'viewed', 'used', 'redeemed', 'expired'].map(status => {
+            const filterKey = `filter${status.charAt(0).toUpperCase() + status.slice(1)}`;
+            return (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  statusFilter === status
+                    ? 'text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+                style={statusFilter === status ? { backgroundColor: colors.primary.teal } : {}}
+              >
+                {t[filterKey]}
+              </button>
+            );
+          })}
         </div>
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="text-gray-500">Loading gift cards...</div>
+            <div className="text-gray-500">{t.loadingGiftCards}</div>
           </div>
         ) : filteredCards.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <Gift className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <p className="text-gray-500 text-lg mb-4">
               {statusFilter === 'all'
-                ? 'No gift cards created yet'
-                : `No ${statusFilter} gift cards found`}
+                ? t.noGiftCardsYet
+                : `${t[`filter${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}`]} ${t.noFilteredGiftCards}`}
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
               className="text-blue-600 hover:text-blue-700 font-medium"
             >
-              Create your first gift card
+              {t.createFirstGiftCard}
             </button>
           </div>
         ) : (
@@ -216,11 +223,11 @@ const GiftCards = () => {
                           <>
                             <span className="font-semibold" style={{ color: colors.primary.teal }}>${card.remainingBalance.toFixed(2)}</span>
                             <span className="text-gray-500"> / ${card.amount}</span>
-                            <span className="text-xs ml-1">(remaining)</span>
+                            <span className="text-xs ml-1">({t.remaining})</span>
                           </>
                         ) : (
                           <>
-                            <span className="font-semibold">${card.amount}</span> value
+                            <span className="font-semibold">${card.amount}</span> {t.value}
                           </>
                         )}
                       </span>
@@ -228,13 +235,13 @@ const GiftCards = () => {
                     <div className="flex items-center gap-2 text-sm">
                       <Calendar className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-700">
-                        Expires: {card.expiryDate?.toDate?.().toLocaleDateString() || new Date(card.expiryDate).toLocaleDateString()}
+                        {t.expires}: {card.expiryDate?.toDate?.().toLocaleDateString() || new Date(card.expiryDate).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <User className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-700">
-                        From: {card.senderName}
+                        {t.from}: {card.senderName}
                       </span>
                     </div>
                   </div>
@@ -242,8 +249,8 @@ const GiftCards = () => {
                   {card.remainingBalance === 0 && (
                     <div className="mb-4 p-2 bg-green-50 rounded-lg">
                       <p className="text-xs text-green-700">
-                        Fully used {card.usageHistory && card.usageHistory.length > 0 && card.usageHistory[card.usageHistory.length - 1].usedAt
-                          ? `on ${card.usageHistory[card.usageHistory.length - 1].usedAt.toDate?.().toLocaleDateString() || new Date(card.usageHistory[card.usageHistory.length - 1].usedAt).toLocaleDateString()}`
+                        {t.fullyUsedOn} {card.usageHistory && card.usageHistory.length > 0 && card.usageHistory[card.usageHistory.length - 1].usedAt
+                          ? `${t.on} ${card.usageHistory[card.usageHistory.length - 1].usedAt.toDate?.().toLocaleDateString() || new Date(card.usageHistory[card.usageHistory.length - 1].usedAt).toLocaleDateString()}`.trim()
                           : ''}
                       </p>
                     </div>
@@ -252,7 +259,7 @@ const GiftCards = () => {
                   {card.usageHistory && card.usageHistory.length > 0 && card.remainingBalance !== 0 && (
                     <div className="mb-4 p-2 bg-yellow-50 rounded-lg">
                       <p className="text-xs text-yellow-800 font-medium">
-                        Used {card.usageHistory.length} time{card.usageHistory.length > 1 ? 's' : ''}
+                        {t.usedTimes} {card.usageHistory.length} {card.usageHistory.length > 1 ? t.times : t.time}
                       </p>
                     </div>
                   )}
@@ -260,7 +267,7 @@ const GiftCards = () => {
                   {card.viewed && (!card.usageHistory || card.usageHistory.length === 0) && card.remainingBalance !== 0 && (
                     <div className="mb-4 p-2 bg-indigo-50 rounded-lg">
                       <p className="text-xs text-indigo-700">
-                        Viewed on {card.viewedAt?.toDate?.().toLocaleDateString() || new Date(card.viewedAt).toLocaleDateString()}
+                        {t.viewedOn} {card.viewedAt?.toDate?.().toLocaleDateString() || new Date(card.viewedAt).toLocaleDateString()}
                       </p>
                     </div>
                   )}
@@ -274,7 +281,7 @@ const GiftCards = () => {
                         style={{ backgroundColor: colors.primary.teal }}
                       >
                         <CreditCard className="w-4 h-4" />
-                        <span>Use</span>
+                        <span>{t.use}</span>
                       </button>
                     )}
 
@@ -286,12 +293,12 @@ const GiftCards = () => {
                       {copiedId === card.id ? (
                         <>
                           <Check className="w-4 h-4" />
-                          <span>Copied!</span>
+                          <span>{t.copied}</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-4 h-4" />
-                          <span>Share</span>
+                          <span>{t.share}</span>
                         </>
                       )}
                     </button>
@@ -304,7 +311,7 @@ const GiftCards = () => {
                       className="flex items-center justify-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
                     >
                       <ExternalLink className="w-4 h-4" />
-                      <span>View</span>
+                      <span>{t.viewCard}</span>
                     </a>
 
                     <button
@@ -312,6 +319,7 @@ const GiftCards = () => {
                       disabled={deletingId === card.id}
                       style={{ backgroundColor: colors.button.danger }}
                       className="flex items-center justify-center px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={t.deleteGiftCard}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
