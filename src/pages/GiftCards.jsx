@@ -145,13 +145,13 @@ const GiftCards = () => {
 
         {/* Status Filter */}
         <div className="mb-6 flex gap-2 flex-wrap">
-          {['all', 'active', 'viewed', 'used', 'redeemed', 'expired'].map(status => {
+          {['all', 'active', 'viewed', 'used', 'expired'].map(status => {
             const filterKey = `filter${status.charAt(0).toUpperCase() + status.slice(1)}`;
             return (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   statusFilter === status
                     ? 'text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-50'

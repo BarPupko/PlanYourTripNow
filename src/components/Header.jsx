@@ -75,11 +75,11 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                       href="https://wa.me/14155238886"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-white rounded-full shadow-lg p-3 hover:shadow-xl transition-all hover:scale-105"
+                      className="bg-white rounded-full shadow-lg p-2 hover:shadow-xl transition-all hover:scale-105 ml-2"
                       title="WhatsApp Assistant - Get trip info, check participants, and more!"
                       style={{ backgroundColor: '#25D366' }}
                     >
-                      <MessageCircle className="w-6 h-6 text-white" />
+                      <MessageCircle className="w-5 h-5 text-white" />
                     </a>
 
                     <p className="hidden sm:block text-sm text-gray-500">{t.IVRITours}</p>

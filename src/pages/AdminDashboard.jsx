@@ -157,7 +157,7 @@ const AdminDashboard = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div className="flex-1">
-                <div className="flex justify-between items-start gap-4">
+                <div className="flex justify-between items-center gap-4">
                   <div className="flex-1">
                     {/* Date Display */}
                     <div className="text-sm text-gray-600 mb-2">
@@ -170,6 +170,16 @@ const AdminDashboard = () => {
                        t.oldTrips}
                     </h2>
                   </div>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    style={{ backgroundColor: colors.primary.teal }}
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm sm:text-base whitespace-nowrap"
+                    title={t.createNewTrip}
+                  >
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">{t.createTrip}</span>
+                    <span className="sm:hidden">New</span>
+                  </button>
                 </div>
                 <div className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
                   <button
@@ -288,16 +298,6 @@ const AdminDashboard = () => {
                   </button>
                 </div>
               </div>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                style={{ backgroundColor: colors.primary.teal }}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm sm:text-base whitespace-nowrap"
-                title={t.createNewTrip}
-              >
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">{t.createTrip}</span>
-                <span className="sm:hidden">New</span>
-              </button>
             </div>
 
             {loading ? (
