@@ -116,18 +116,18 @@ const WeatherWidget = ({ compact = false }) => {
         {/* Compact Icon */}
         <button
           onClick={() => setIsExpanded(true)}
-          className="bg-white rounded-full shadow-lg p-3 hover:shadow-xl transition-all"
+          className="bg-white rounded-full shadow-lg p-1.5 sm:p-2 hover:shadow-xl transition-all"
           title={t.viewWeather}
         >
           {weather && !loading && !error ? (
-            <div className="flex items-center gap-2">
-              <div className="scale-75">
+            <div className="flex items-center gap-1">
+              <div className="scale-50 sm:scale-75">
                 {getWeatherIcon(weather.weatherCode)}
               </div>
-              <div className="text-sm font-bold text-gray-900">{weather.temperature}°C</div>
+              <div className="text-xs sm:text-sm font-bold text-gray-900">{weather.temperature}°C</div>
             </div>
           ) : (
-            <Cloud className="w-6 h-6" style={{ color: colors.primary.teal }} />
+            <Cloud className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: colors.primary.teal }} />
           )}
         </button>
 

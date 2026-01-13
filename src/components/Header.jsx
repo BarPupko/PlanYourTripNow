@@ -67,7 +67,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
             <div className="min-w-0 flex-1">
               {isAdminDashboard ? (
                 <>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     <WeatherWidget compact={true} />
 
                     {/* WhatsApp Bot Assistant */}
@@ -75,11 +75,11 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                       href="https://wa.me/14155238886"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-white rounded-full shadow-lg p-2 hover:shadow-xl transition-all hover:scale-105 ml-2"
+                      className="bg-white rounded-full shadow-lg p-1.5 sm:p-2 hover:shadow-xl transition-all hover:scale-105"
                       title="WhatsApp Assistant - Get trip info, check participants, and more!"
                       style={{ backgroundColor: '#25D366' }}
                     >
-                      <MessageCircle className="w-5 h-5 text-white" />
+                      <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </a>
 
                     <p className="hidden sm:block text-sm text-gray-500">{t.IVRITours}</p>
