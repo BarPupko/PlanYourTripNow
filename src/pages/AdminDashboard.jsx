@@ -507,8 +507,8 @@ const AdminDashboard = () => {
                       const checkDate = new Date(date);
                       checkDate.setHours(0, 0, 0, 0);
 
-                      // Count trips that include this date (either single day or within date range)
-                      const tripsOnDate = allTrips.filter(trip => {
+                      // Find the first trip that includes this date (in order of the trips array)
+                      const tripOnDate = allTrips.find(trip => {
                         const tripStartDate = trip.date?.toDate?.() || new Date(trip.date);
                         tripStartDate.setHours(0, 0, 0, 0);
 
@@ -521,14 +521,16 @@ const AdminDashboard = () => {
                         return checkDate >= tripStartDate && checkDate <= tripEndDate;
                       });
 
-                      if (tripsOnDate.length > 0) {
-                        // Return different classes based on number of trips
-                        if (tripsOnDate.length === 1) {
-                          return 'has-one-trip';
-                        } else if (tripsOnDate.length === 2) {
-                          return 'has-two-trips';
-                        } else {
-                          return 'has-many-trips';
+                      if (tripOnDate) {
+                        // Show the exact status color of this trip
+                        const status = tripOnDate.status || 'planned';
+
+                        if (status === 'done') {
+                          return 'has-trip-done';
+                        } else if (status === 'scheduled') {
+                          return 'has-trip-scheduled';
+                        } else if (status === 'planned') {
+                          return 'has-trip-planned';
                         }
                       }
                     }
@@ -536,29 +538,34 @@ const AdminDashboard = () => {
                   }}
                 />
                 <style>{`
-                  .has-one-trip {
-                    background-color: #b2ebf2 !important;
-                    color: #006064 !important;
+                  /* Planned trips - Yellow/Orange */
+                  .has-trip-planned {
+                    background-color: #FEF3C7 !important;
+                    color: #92400E !important;
                     font-weight: 600;
                   }
-                  .has-one-trip:hover {
-                    background-color: #80deea !important;
+                  .has-trip-planned:hover {
+                    background-color: #FDE68A !important;
                   }
-                  .has-two-trips {
-                    background-color: #4dd0e1 !important;
-                    color: #004d56 !important;
+
+                  /* Scheduled trips - Purple */
+                  .has-trip-scheduled {
+                    background-color: #E9D5FF !important;
+                    color: #6B21A8 !important;
                     font-weight: 700;
                   }
-                  .has-two-trips:hover {
-                    background-color: #26c6da !important;
+                  .has-trip-scheduled:hover {
+                    background-color: #DDD6FE !important;
                   }
-                  .has-many-trips {
-                    background-color: #00bcd4 !important;
-                    color: white !important;
+
+                  /* Done trips - Green */
+                  .has-trip-done {
+                    background-color: #D1FAE5 !important;
+                    color: #065F46 !important;
                     font-weight: 800;
                   }
-                  .has-many-trips:hover {
-                    background-color: #00acc1 !important;
+                  .has-trip-done:hover {
+                    background-color: #A7F3D0 !important;
                   }
                 `}</style>
               </div>
