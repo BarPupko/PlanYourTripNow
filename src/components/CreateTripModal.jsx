@@ -11,6 +11,7 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     whatsappGroupLink: '',
     status: 'planned',
     date: selectedDate,
+    endDate: selectedDate, // Add end date
     customSeats: []
   });
   const [loading, setLoading] = useState(false);
@@ -26,7 +27,8 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     try {
       const tripData = {
         ...formData,
-        date: Timestamp.fromDate(formData.date)
+        date: Timestamp.fromDate(formData.date),
+        endDate: Timestamp.fromDate(formData.endDate)
       };
 
       // If custom layout is selected, use customSeats
@@ -43,9 +45,26 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     }
   };
 
-  const handleDateChange = (e) => {
+  const handleStartDateChange = (e) => {
     const newDate = new Date(e.target.value);
-    setFormData({ ...formData, date: newDate });
+    // If new start date is after end date, set end date to start date
+    const endDate = newDate > formData.endDate ? newDate : formData.endDate;
+    setFormData({ ...formData, date: newDate, endDate });
+  };
+
+  const handleEndDateChange = (e) => {
+    const newEndDate = new Date(e.target.value);
+    setFormData({ ...formData, endDate: newEndDate });
+  };
+
+  const getTripDuration = () => {
+    const start = new Date(formData.date);
+    const end = new Date(formData.endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
   };
 
   const formatDateForInput = (date) => {
@@ -115,18 +134,49 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date
-            </label>
-            <input
-              type="date"
-              value={formatDateForInput(formData.date)}
-              onChange={handleDateChange}
-              className="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors cursor-pointer"
-              style={{ borderColor: colors.primary.teal }}
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={formatDateForInput(formData.date)}
+                onChange={handleStartDateChange}
+                className="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors cursor-pointer"
+                style={{ borderColor: colors.primary.teal }}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={formatDateForInput(formData.endDate)}
+                onChange={handleEndDateChange}
+                min={formatDateForInput(formData.date)}
+                className="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors cursor-pointer"
+                style={{ borderColor: colors.primary.teal }}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Trip Duration Display */}
+          <div className="bg-teal-50 border-2 border-teal-200 rounded-lg p-3">
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold" style={{ color: colors.primary.teal }}>
+                Trip Duration:
+              </span>{' '}
+              <span className="font-medium">
+                {getTripDuration()} {getTripDuration() === 1 ? 'day' : 'days'}
+              </span>
+              {getTripDuration() === 1 && (
+                <span className="text-xs text-gray-600 ml-2">(Single-day trip)</span>
+              )}
+            </p>
           </div>
 
           <div>
