@@ -26,6 +26,7 @@ const AdminDashboard = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [editingTrip, setEditingTrip] = useState(null);
   const [viewingTripId, setViewingTripId] = useState(null);
+  const [registrationCounts, setRegistrationCounts] = useState({}); // Map of tripId -> count
 
   useEffect(() => {
     loadTrips();
@@ -49,6 +50,7 @@ const AdminDashboard = () => {
   const autoUpdateTripStatuses = async (trips) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const counts = {};
 
     for (const trip of trips) {
       let needsUpdate = false;
@@ -58,26 +60,29 @@ const AdminDashboard = () => {
       const tripEndDate = trip.endDate?.toDate?.() || trip.date?.toDate?.() || new Date(trip.date);
       tripEndDate.setHours(0, 0, 0, 0);
 
-      // Check if trip date has passed (check end date)
-      if (tripEndDate < today && newStatus !== 'done') {
-        newStatus = 'done';
-        needsUpdate = true;
-      }
-      // Check if trip has 3+ participants and should be scheduled
-      else if (tripEndDate >= today) {
-        try {
-          const registrationsRef = collection(db, 'registrations');
-          const q = query(registrationsRef, where('tripId', '==', trip.id));
-          const snapshot = await getDocs(q);
-          const participantCount = snapshot.size;
+      // Fetch registration count for this trip
+      try {
+        const registrationsRef = collection(db, 'registrations');
+        const q = query(registrationsRef, where('tripId', '==', trip.id));
+        const snapshot = await getDocs(q);
+        const participantCount = snapshot.size;
+        counts[trip.id] = participantCount;
 
+        // Check if trip date has passed (check end date)
+        if (tripEndDate < today && newStatus !== 'done') {
+          newStatus = 'done';
+          needsUpdate = true;
+        }
+        // Check if trip has 3+ participants and should be scheduled
+        else if (tripEndDate >= today) {
           if (participantCount >= 3 && newStatus === 'planned') {
             newStatus = 'scheduled';
             needsUpdate = true;
           }
-        } catch (error) {
-          console.error('Error checking participants for trip:', trip.id, error);
         }
+      } catch (error) {
+        console.error('Error checking participants for trip:', trip.id, error);
+        counts[trip.id] = 0;
       }
 
       // Update the status if needed
@@ -90,6 +95,9 @@ const AdminDashboard = () => {
         }
       }
     }
+
+    // Update registration counts state
+    setRegistrationCounts(counts);
   };
 
   const handleCreateTrip = async (tripData) => {
@@ -135,6 +143,18 @@ const AdminDashboard = () => {
       console.error('Error updating trip:', error);
       alert(t.failedToUpdate);
     }
+  };
+
+  // Get vehicle capacity from layout
+  const getVehicleCapacity = (vehicleLayout) => {
+    if (vehicleLayout === 'sprinter_15') return 13;
+    if (vehicleLayout === 'bus_30') return 11;
+    if (vehicleLayout === 'highlander_7') return 7;
+    if (vehicleLayout?.startsWith('custom_')) {
+      const capacity = parseInt(vehicleLayout.split('_')[1]);
+      return isNaN(capacity) ? 0 : capacity;
+    }
+    return 0;
   };
 
   const getFilteredTrips = () => {
@@ -408,14 +428,25 @@ const AdminDashboard = () => {
                             const dateStr = endDate && endDate.getTime() !== startDate.getTime()
                               ? `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`
                               : startDate.toLocaleDateString();
-                            return dateStr;
-                          })()} - {trip.vehicleLayout === 'sprinter_15'
-                            ? t.mercedesSprinterBlack
-                            : trip.vehicleLayout === 'bus_30'
-                            ? t.mercedesSprinterWhite
-                            : trip.vehicleLayout === 'highlander_7'
-                            ? t.toyotaHighlander
-                            : trip.vehicleLayout}
+
+                            // Get vehicle name without seat count
+                            let vehicleName = '';
+                            if (trip.vehicleLayout === 'sprinter_15') {
+                              vehicleName = 'Mercedes Sprinter Black';
+                            } else if (trip.vehicleLayout === 'bus_30') {
+                              vehicleName = 'Mercedes Sprinter White';
+                            } else if (trip.vehicleLayout === 'highlander_7') {
+                              vehicleName = 'Toyota Highlander';
+                            } else {
+                              vehicleName = trip.vehicleLayout;
+                            }
+
+                            // Get registration count and capacity
+                            const registeredCount = registrationCounts[trip.id] || 0;
+                            const capacity = getVehicleCapacity(trip.vehicleLayout);
+
+                            return `${dateStr} - ${vehicleName} (${registeredCount}/${capacity} Seats)`;
+                          })()}
                         </p>
                         {trip.driverName && (
                           <p className="text-[10px] sm:text-sm mt-1" style={{ color: '#00BCD4' }}>

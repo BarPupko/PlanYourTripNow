@@ -10,6 +10,7 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
     lastName: '',
     email: '',
     phone: '',
+    preferredPickupPlace: '',
     seatNumber: preselectedSeat,
     seatCount: 1, // NEW: number of seats to book
     paymentMethod: 'on-trip',
@@ -66,6 +67,7 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
             lastName: formData.lastName,
             email: formData.email,
             phone: formData.phone,
+            preferredPickupPlace: formData.preferredPickupPlace,
             seatNumber: seatNumber,
             paymentMethod: formData.paymentMethod,
             paid: formData.paid,
@@ -161,6 +163,19 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Preferred Pickup Place
+            </label>
+            <input
+              type="text"
+              value={formData.preferredPickupPlace}
+              onChange={(e) => setFormData({ ...formData, preferredPickupPlace: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+              placeholder="e.g., Central Station, Hotel Name"
             />
           </div>
 
