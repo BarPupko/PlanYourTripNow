@@ -8,6 +8,7 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     title: '',
     vehicleLayout: 'sprinter_15',
     driverName: '',
+    pickupPlace: '',
     whatsappGroupLink: '',
     status: 'planned',
     date: selectedDate,
@@ -192,6 +193,21 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
               placeholder="e.g., John Smith"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Pickup Place
+            </label>
+            <input
+              type="text"
+              value={formData.pickupPlace}
+              onChange={(e) =>
+                setFormData({ ...formData, pickupPlace: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+              placeholder="e.g., Central Station, Hotel Lobby"
             />
           </div>
 

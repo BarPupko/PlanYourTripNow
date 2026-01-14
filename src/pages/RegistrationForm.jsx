@@ -53,6 +53,7 @@ const RegistrationForm = () => {
     lastName: '',
     email: '',
     phone: '',
+    preferredPickupPlace: '',
     seatNumber: null
   }]);
   const [paymentMethod, setPaymentMethod] = useState('on-trip');
@@ -77,6 +78,7 @@ const RegistrationForm = () => {
         lastName: '',
         email: '',
         phone: '',
+        preferredPickupPlace: '',
         seatNumber: null
       }
     );
@@ -407,6 +409,23 @@ const RegistrationForm = () => {
                   {errors[`passenger${index}Phone`] && (
                     <p className="text-red-500 text-sm mt-1">{errors[`passenger${index}Phone`]}</p>
                   )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Preferred Pickup Place
+                  </label>
+                  <input
+                    type="text"
+                    value={passenger.preferredPickupPlace}
+                    onChange={(e) => {
+                      const newPassengers = [...passengers];
+                      newPassengers[index].preferredPickupPlace = e.target.value;
+                      setPassengers(newPassengers);
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., Central Station, Hotel Name"
+                  />
                 </div>
               </div>
             </div>
