@@ -108,6 +108,7 @@ Your WhatsApp assistant can handle these commands in **both English and Russian*
 | `help` | `help` | Shows available commands |
 | `trips` or `list` | `trips` | Lists all upcoming trips with dates, prices per person, and availability |
 | `who is going` | `who is going to Masada?` | Shows participants for the next upcoming trip (names, seats, payment status) |
+| `summary` or `pickup` | `summary` | Shows complete trip summary with participants grouped by pickup locations |
 | `info` or `details` | `info` | Shows detailed information about the next trip including revenue |
 | `stats` | `stats` | Shows overall business statistics (registrations, revenue, gift cards) |
 | `gift card` | `gift card ABC123` | Checks gift card balance, status, and usage history |
@@ -122,6 +123,7 @@ Your WhatsApp assistant can handle these commands in **both English and Russian*
 | `помощь` | `помощь` | Показывает доступные команды |
 | `поездки` или `туры` | `поездки` | Список предстоящих поездок с ценами за человека |
 | `кто` | `кто едет в Масаду?` | Показывает участников следующей поездки |
+| `сводка` или `места сбора` | `сводка` | Полная сводка поездки с участниками по местам сбора |
 | `инфо` или `детали` | `инфо` | Подробная информация о следующей поездке |
 | `статистика` | `статистика` | Общая статистика бизнеса |
 | `карта` | `карта ABC123` | Проверка подарочной карты |
@@ -152,7 +154,15 @@ Your bot integrates directly with your Firestore database and can:
 - Shows payment status (✅ paid, ⏳ pending)
 - **Paid/unpaid breakdown**
 
-✅ **Detailed Trip Information (NEW)**
+✅ **Trip Summary with Pickup Locations (NEW)**
+- Complete trip summary for drivers and organizers
+- Participants grouped by preferred pickup location
+- Shows seat numbers and contact phone numbers
+- Payment status for each participant
+- Total count of pickup locations
+- **Perfect for driver route planning**
+
+✅ **Detailed Trip Information**
 - Complete trip details
 - Revenue calculations
 - Payment statistics
@@ -265,6 +275,7 @@ Here's what I can help you with:
 
 📋 TRIPS - View upcoming trips
 👥 WHO [trip name] - See who's registered for a trip
+📍 SUMMARY - Trip summary with pickup locations
 🎫 BOOK - Book someone for a trip
 🎁 GIFT [code] - Check gift card balance
 ℹ️ INFO [trip name] - Get detailed trip information
@@ -272,7 +283,7 @@ Here's what I can help you with:
 ❌ CANCEL - Cancel a registration
 ❓ HELP - Show this message
 
-Example: "who is going to Masada?"
+Example: "summary" or "who is going to Masada?"
 
 ---
 
@@ -303,6 +314,38 @@ Registered: 6 people
 ✅ Jane Smith - Seat #12
 ⏳ David Cohen - Seat #23
 ...
+
+---
+
+You: summary
+Bot: 📋 TRIP SUMMARY
+
+📍 Masada Sunrise Hike
+
+📅 Date: 1/15/2026 at 04:00
+🚗 Driver: Yefim
+📍 Meeting Point: Jerusalem Central Bus Station
+💰 Price per person: ₪105
+👥 Registered: 6 people
+✅ Paid: 4 | ⏳ Unpaid: 2
+💵 Revenue: ₪420
+
+👥 PARTICIPANTS & PICKUP LOCATIONS:
+
+📍 Jerusalem Central Bus Station (3)
+  ✅ John Doe - Seat #5 | 📞 +972-50-123-4567
+  ✅ Jane Smith - Seat #12 | 📞 +972-52-987-6543
+  ⏳ David Cohen - Seat #23 | 📞 +972-54-111-2222
+
+📍 Tel Aviv Central (2)
+  ✅ Sarah Levi - Seat #8 | 📞 +972-50-555-6666
+  ✅ Michael Green - Seat #15 | 📞 +972-52-777-8888
+
+📍 Not specified (1)
+  ⏳ Rachel Brown - Seat #30 | 📞 +972-54-999-0000
+
+━━━━━━━━━━━━━━━━━━
+💡 Total 6 participants from 3 pickup locations
 
 ---
 
@@ -348,6 +391,7 @@ Bot: 📊 Overall Statistics
 
 📋 ПОЕЗДКИ - Просмотр предстоящих туров
 👥 КТО [название] - Кто зарегистрирован на поездку
+📍 СВОДКА - Сводка поездки с местами сбора
 🎫 ЗАБРОНИРОВАТЬ - Забронировать тур
 🎁 КАРТА [код] - Проверить подарочную карту
 ℹ️ ИНФО [название] - Детали о поездке
@@ -355,7 +399,7 @@ Bot: 📊 Overall Statistics
 ❌ ОТМЕНИТЬ - Отменить регистрацию
 ❓ ПОМОЩЬ - Показать это сообщение
 
-Пример: "кто едет в Масаду?"
+Пример: "сводка" или "кто едет в Масаду?"
 
 ---
 
@@ -386,6 +430,38 @@ Bot: 📊 Overall Statistics
 ✅ Jane Smith - Место #12
 ⏳ David Cohen - Место #23
 ...
+
+---
+
+Вы: сводка
+Бот: 📋 СВОДКА ПОЕЗДКИ
+
+📍 Masada Sunrise Hike
+
+📅 Дата: 15.01.2026 в 04:00
+🚗 Водитель: Ефим
+📍 Место сбора: Центральная автостанция Иерусалима
+💰 Цена за человека: ₪105
+👥 Зарегистрировано: 6 человек
+✅ Оплачено: 4 | ⏳ Не оплачено: 2
+💵 Доход: ₪420
+
+👥 УЧАСТНИКИ И МЕСТА СБОРА:
+
+📍 Центральная автостанция Иерусалима (3)
+  ✅ John Doe - Место #5 | 📞 +972-50-123-4567
+  ✅ Jane Smith - Место #12 | 📞 +972-52-987-6543
+  ⏳ David Cohen - Место #23 | 📞 +972-54-111-2222
+
+📍 Центр Тель-Авива (2)
+  ✅ Sarah Levi - Место #8 | 📞 +972-50-555-6666
+  ✅ Michael Green - Место #15 | 📞 +972-52-777-8888
+
+📍 Не указано (1)
+  ⏳ Rachel Brown - Место #30 | 📞 +972-54-999-0000
+
+━━━━━━━━━━━━━━━━━━
+💡 Всего 6 участников из 3 мест сбора
 
 ---
 

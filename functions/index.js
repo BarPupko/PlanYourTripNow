@@ -410,6 +410,9 @@ exports.whatsappBot = functions.https.onRequest(async (req, res) => {
         incomingLower === 'hi' || incomingLower === 'hello' ||
         incomingLower === 'привет' || incomingLower === 'здравствуйте') {
       responseMessage = await handleHelpCommand(language);
+    } else if (incomingLower.includes('summary') || incomingLower.includes('pickup') ||
+               incomingLower.includes('сводка') || incomingLower.includes('места сбора')) {
+      responseMessage = await handleSummaryCommand(incomingMessage, language);
     } else if (incomingLower.includes('book') || incomingLower.includes('register') ||
                incomingLower.includes('забронировать') || incomingLower.includes('регистрация')) {
       responseMessage = await handleBookCommand(incomingMessage, language);
@@ -461,26 +464,28 @@ async function handleHelpCommand(language = 'en') {
       `Вот чем я могу помочь:\n\n` +
       `📋 *ПОЕЗДКИ* - Просмотр предстоящих туров\n` +
       `👥 *КТО [название]* - Кто зарегистрирован на поездку\n` +
+      `📍 *СВОДКА* - Сводка поездки с местами сбора\n` +
       `🎫 *ЗАБРОНИРОВАТЬ* - Забронировать тур\n` +
       `🎁 *КАРТА [код]* - Проверить подарочную карту\n` +
       `ℹ️ *ИНФО [название]* - Детали о поездке\n` +
       `📊 *СТАТИСТИКА* - Общая статистика по турам\n` +
       `❌ *ОТМЕНИТЬ* - Отменить регистрацию\n` +
       `❓ *ПОМОЩЬ* - Показать это сообщение\n\n` +
-      `Пример: "кто едет в Масаду?"`;
+      `Пример: "сводка" или "кто едет в Масаду?"`;
   }
 
   return `🤖 *IVRI Tours WhatsApp Assistant*\n\n` +
     `Here's what I can help you with:\n\n` +
     `📋 *TRIPS* - View upcoming trips\n` +
     `👥 *WHO [trip name]* - See who's registered for a trip\n` +
+    `📍 *SUMMARY* - Trip summary with pickup locations\n` +
     `🎫 *BOOK* - Book someone for a trip\n` +
     `🎁 *GIFT [code]* - Check gift card balance\n` +
     `ℹ️ *INFO [trip name]* - Get detailed trip information\n` +
     `📊 *STATS* - Get overall tour statistics\n` +
     `❌ *CANCEL* - Cancel a registration\n` +
     `❓ *HELP* - Show this message\n\n` +
-    `Example: "who is going to Masada?"`;
+    `Example: "summary" or "who is going to Masada?"`;
 }
 
 /**
@@ -947,3 +952,225 @@ async function handleStatsCommand(language = 'en') {
       : 'Sorry, I couldn\'t retrieve statistics. Please try again.';
   }
 }
+
+/**
+ * Get trip summary with pickup places
+ */
+async function handleSummaryCommand(message, language = 'en') {
+  try {
+    const tripsSnapshot = await admin.firestore()
+      .collection('trips')
+      .where('date', '>=', admin.firestore.Timestamp.fromDate(new Date()))
+      .orderBy('date', 'asc')
+      .limit(1)
+      .get();
+
+    if (tripsSnapshot.empty) {
+      return language === 'ru'
+        ? '📅 Предстоящие поездки не найдены.'
+        : '📅 No upcoming trips found.';
+    }
+
+    const trip = tripsSnapshot.docs[0].data();
+    const tripId = tripsSnapshot.docs[0].id;
+    const tripDate = trip.date.toDate();
+    const pricePerPerson = trip.pricePerPerson || trip.price;
+
+    // Get registrations for this trip
+    const registrationsSnapshot = await admin.firestore()
+      .collection('registrations')
+      .where('tripId', '==', tripId)
+      .get();
+
+    if (registrationsSnapshot.empty) {
+      if (language === 'ru') {
+        return `📍 *${trip.title}*\n` +
+          `Дата: ${tripDate.toLocaleDateString('ru-RU')}\n\n` +
+          `Пока нет регистраций.`;
+      }
+      return `📍 *${trip.title}*\n` +
+        `Date: ${tripDate.toLocaleDateString()}\n\n` +
+        `No registrations yet.`;
+    }
+
+    // Count paid/unpaid
+    let paidCount = 0;
+    let unpaidCount = 0;
+    registrationsSnapshot.forEach(doc => {
+      if (doc.data().paid) paidCount++;
+      else unpaidCount++;
+    });
+
+    // Build response
+    let response = language === 'ru'
+      ? '📋 *СВОДКА ПОЕЗДКИ*\n\n'
+      : '📋 *TRIP SUMMARY*\n\n';
+
+    response += `📍 *${trip.title}*\n`;
+
+    if (language === 'ru') {
+      response += `📅 *Дата:* ${tripDate.toLocaleDateString('ru-RU')} в ${tripDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}\n`;
+      if (trip.driverName) {
+        response += `🚗 *Водитель:* ${trip.driverName}\n`;
+      }
+      if (trip.pickupPlace) {
+        response += `📍 *Место сбора:* ${trip.pickupPlace}\n`;
+      }
+      response += `💰 *Цена за человека:* ₪${pricePerPerson}\n`;
+      response += `👥 *Зарегистрировано:* ${registrationsSnapshot.size} человек\n`;
+      response += `✅ *Оплачено:* ${paidCount} | ⏳ *Не оплачено:* ${unpaidCount}\n`;
+      response += `💵 *Доход:* ₪${paidCount * pricePerPerson}\n\n`;
+
+      response += `👥 *УЧАСТНИКИ И МЕСТА СБОРА:*\n\n`;
+    } else {
+      response += `📅 *Date:* ${tripDate.toLocaleDateString()} at ${tripDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n`;
+      if (trip.driverName) {
+        response += `🚗 *Driver:* ${trip.driverName}\n`;
+      }
+      if (trip.pickupPlace) {
+        response += `📍 *Meeting Point:* ${trip.pickupPlace}\n`;
+      }
+      response += `💰 *Price per person:* ₪${pricePerPerson}\n`;
+      response += `👥 *Registered:* ${registrationsSnapshot.size} people\n`;
+      response += `✅ *Paid:* ${paidCount} | ⏳ *Unpaid:* ${unpaidCount}\n`;
+      response += `💵 *Revenue:* ₪${paidCount * pricePerPerson}\n\n`;
+
+      response += `👥 *PARTICIPANTS & PICKUP LOCATIONS:*\n\n`;
+    }
+
+    // Group by pickup place
+    const pickupGroups = {};
+    registrationsSnapshot.forEach((doc) => {
+      const reg = doc.data();
+      const pickupPlace = reg.preferredPickupPlace || (language === 'ru' ? 'Не указано' : 'Not specified');
+
+      if (!pickupGroups[pickupPlace]) {
+        pickupGroups[pickupPlace] = [];
+      }
+
+      pickupGroups[pickupPlace].push({
+        name: `${reg.firstName} ${reg.lastName}`,
+        seat: reg.seatNumber,
+        phone: reg.phone,
+        paid: reg.paid
+      });
+    });
+
+    // Sort pickup places (undefined/not specified last)
+    const sortedPickupPlaces = Object.keys(pickupGroups).sort((a, b) => {
+      const aIsUnspecified = a === 'Not specified' || a === 'Не указано';
+      const bIsUnspecified = b === 'Not specified' || b === 'Не указано';
+      if (aIsUnspecified && !bIsUnspecified) return 1;
+      if (!aIsUnspecified && bIsUnspecified) return -1;
+      return a.localeCompare(b);
+    });
+
+    // Output grouped by pickup location
+    sortedPickupPlaces.forEach(pickupPlace => {
+      const participants = pickupGroups[pickupPlace];
+      response += `📍 *${pickupPlace}* (${participants.length})\n`;
+
+      participants.forEach(p => {
+        const paidStatus = p.paid ? '✅' : '⏳';
+        const seatText = language === 'ru' ? 'Место' : 'Seat';
+        response += `  ${paidStatus} ${p.name} - ${seatText} #${p.seat}`;
+        if (p.phone) {
+          response += ` | 📞 ${p.phone}`;
+        }
+        response += '\n';
+      });
+      response += '\n';
+    });
+
+    // Add footer
+    if (language === 'ru') {
+      response += `\n━━━━━━━━━━━━━━━━━━\n`;
+      response += `💡 *Всего ${registrationsSnapshot.size} участников из ${sortedPickupPlaces.length} ${sortedPickupPlaces.length === 1 ? 'места' : 'мест'} сбора*`;
+    } else {
+      response += `\n━━━━━━━━━━━━━━━━━━\n`;
+      response += `💡 *Total ${registrationsSnapshot.size} participants from ${sortedPickupPlaces.length} pickup ${sortedPickupPlaces.length === 1 ? 'location' : 'locations'}*`;
+    }
+
+    return response;
+  } catch (error) {
+    console.error('Error getting trip summary:', error);
+    return language === 'ru'
+      ? 'Извините, не удалось получить сводку поездки. Пожалуйста, попробуйте снова.'
+      : 'Sorry, I couldn\'t retrieve trip summary. Please try again.';
+  }
+}
+
+/**
+ * Sends contact form email to admin
+ */
+exports.sendContactEmail = functions.https.onCall(async (data, context) => {
+  const { name, email, phone, destination, message, toEmail } = data;
+
+  if (!name || !email || !message) {
+    throw new functions.https.HttpsError('invalid-argument', 'Missing required fields');
+  }
+
+  const mailOptions = {
+    from: `IVRI Tours Contact Form <${functions.config().email?.user || 'your-email@gmail.com'}>`,
+    to: toEmail || 'pupko@mail.com',
+    replyTo: email,
+    subject: `New Contact Form Submission from ${name}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">IVRI Tours - New Contact Request</h1>
+        </div>
+
+        <div style="background: #f9f9f9; padding: 30px; border: 1px solid #e0e0e0;">
+          <h2 style="color: #333; border-bottom: 2px solid #00BCD4; padding-bottom: 10px;">Contact Information</h2>
+
+          <table style="width: 100%; margin: 20px 0;">
+            <tr>
+              <td style="padding: 10px; font-weight: bold; color: #555; width: 150px;">Name:</td>
+              <td style="padding: 10px; color: #333;">${name}</td>
+            </tr>
+            <tr style="background: white;">
+              <td style="padding: 10px; font-weight: bold; color: #555;">Email:</td>
+              <td style="padding: 10px; color: #333;"><a href="mailto:${email}" style="color: #00BCD4;">${email}</a></td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: bold; color: #555;">Phone:</td>
+              <td style="padding: 10px; color: #333;">${phone || 'Not provided'}</td>
+            </tr>
+            <tr style="background: white;">
+              <td style="padding: 10px; font-weight: bold; color: #555;">Destination:</td>
+              <td style="padding: 10px; color: #333;">${destination || 'Not specified'}</td>
+            </tr>
+          </table>
+
+          <h3 style="color: #333; border-bottom: 2px solid #00BCD4; padding-bottom: 10px; margin-top: 30px;">Message</h3>
+          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="color: #333; line-height: 1.6; white-space: pre-wrap;">${message}</p>
+          </div>
+
+          <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-left: 4px solid #00BCD4; border-radius: 4px;">
+            <p style="margin: 0; color: #555; font-size: 14px;">
+              <strong>Quick Reply:</strong> Click the email address above to respond directly to ${name}
+            </p>
+          </div>
+        </div>
+
+        <div style="background: #333; padding: 20px; text-align: center;">
+          <p style="color: #999; margin: 0; font-size: 12px;">
+            This email was sent from the IVRI Tours contact form<br>
+            Received on ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} EST
+          </p>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Contact form email sent successfully to:', toEmail);
+    return { success: true, message: 'Email sent successfully' };
+  } catch (error) {
+    console.error('Error sending contact email:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to send email');
+  }
+});

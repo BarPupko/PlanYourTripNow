@@ -1,13 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Facebook, Instagram, MapPin, Clock, Users, Gift } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Clock, Users, Gift, X, Cookie, Eye, ZoomIn, Type } from 'lucide-react';
 import colors from '../utils/colors';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const { language, changeLanguage } = useLanguage();
   const [showWelcome, setShowWelcome] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const [showCookieConsent, setShowCookieConsent] = useState(false);
+  const [showAccessibility, setShowAccessibility] = useState(false);
+  const [accessibilitySettings, setAccessibilitySettings] = useState({
+    fontSize: 100,
+    contrast: false,
+    grayScale: false
+  });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,14 +25,41 @@ const LandingPage = () => {
     destination: '',
     message: ''
   });
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     const hasVisited = sessionStorage.getItem('hasVisitedLanding');
     if (!hasVisited) {
-      setShowWelcome(true);
+      setTimeout(() => setShowWelcome(true), 100);
       sessionStorage.setItem('hasVisitedLanding', 'true');
     }
+
+    const cookieConsent = localStorage.getItem('cookieConsent');
+    if (!cookieConsent) {
+      setTimeout(() => setShowCookieConsent(true), 2000);
+    }
+
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${accessibilitySettings.fontSize}%`;
+    if (accessibilitySettings.contrast) {
+      document.body.classList.add('high-contrast');
+    } else {
+      document.body.classList.remove('high-contrast');
+    }
+    if (accessibilitySettings.grayScale) {
+      document.body.style.filter = 'grayscale(100%)';
+    } else {
+      document.body.style.filter = 'none';
+    }
+  }, [accessibilitySettings]);
 
   const translations = {
     en: {
@@ -334,15 +371,49 @@ const LandingPage = () => {
     'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80'
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const messages = {
-      en: 'Thank you for your message! We will contact you soon.',
-      he: 'תודה על ההודעה! ניצור איתך קשר בקרוב.',
-      ru: 'Спасибо за ваше сообщение! Мы скоро свяжемся с вами.'
-    };
-    alert(messages[language]);
-    setFormData({ name: '', email: '', phone: '', destination: '', message: '' });
+    setSending(true);
+
+    try {
+      const sendContactEmail = httpsCallable(functions, 'sendContactEmail');
+      await sendContactEmail({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        destination: formData.destination,
+        message: formData.message,
+        toEmail: 'pupko@mail.com'
+      });
+
+      const messages = {
+        en: 'Thank you for your message! We will contact you soon.',
+        he: 'תודה על ההודעה! ניצור איתך קשר בקרוב.',
+        ru: 'Спасибо за ваше сообщение! Мы скоро свяжемся с вами.'
+      };
+      alert(messages[language]);
+      setFormData({ name: '', email: '', phone: '', destination: '', message: '' });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessages = {
+        en: 'Failed to send message. Please try again.',
+        he: 'שליחת ההודעה נכשלה. אנא נסה שוב.',
+        ru: 'Не удалось отправить сообщение. Пожалуйста, попробуйте снова.'
+      };
+      alert(errorMessages[language]);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const acceptCookies = () => {
+    localStorage.setItem('cookieConsent', 'accepted');
+    setShowCookieConsent(false);
+  };
+
+  const declineCookies = () => {
+    localStorage.setItem('cookieConsent', 'declined');
+    setShowCookieConsent(false);
   };
 
   return (
@@ -524,7 +595,14 @@ const LandingPage = () => {
             <label className="block text-gray-700 font-semibold mb-2">{t.messageLabel} *</label>
             <textarea value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} rows="6" className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#00BCD4] focus:outline-none transition-colors resize-vertical" required />
           </div>
-          <button type="submit" className="w-full py-4 text-white text-lg font-bold rounded-lg hover:opacity-90 transition-opacity" style={{ backgroundColor: colors.primary.teal }}>{t.submitBtn}</button>
+          <button
+            type="submit"
+            disabled={sending}
+            className="w-full py-4 text-white text-lg font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: colors.primary.teal }}
+          >
+            {sending ? (language === 'ru' ? 'Отправка...' : language === 'he' ? 'שולח...' : 'Sending...') : t.submitBtn}
+          </button>
         </form>
       </section>
 
@@ -536,11 +614,157 @@ const LandingPage = () => {
         </div>
       </footer>
 
+      {/* Floating Gift Button on Scroll */}
+      {scrollY > 300 && (
+        <button
+          onClick={() => navigate('/gift-card-purchase')}
+          className="fixed bottom-8 left-8 bg-white rounded-full shadow-2xl p-4 hover:scale-110 transition-all duration-300 z-50 animate-float"
+          style={{ boxShadow: '0 10px 30px rgba(0,188,212,0.3)' }}
+          title={language === 'ru' ? 'Купить подарочную карту' : language === 'he' ? 'קנה כרטיס מתנה' : 'Purchase Gift Card'}
+        >
+          <Gift className="w-8 h-8" style={{ color: colors.primary.teal }} />
+        </button>
+      )}
+
+      {/* Israeli Accessibility Widget */}
+      <div className="fixed top-24 right-4 z-50">
+        <button
+          onClick={() => setShowAccessibility(!showAccessibility)}
+          className="bg-blue-600 text-white rounded-full p-3 shadow-lg hover:bg-blue-700 transition-colors"
+          title={language === 'ru' ? 'Доступность' : language === 'he' ? 'נגישות' : 'Accessibility'}
+          aria-label="Accessibility Menu"
+        >
+          <Eye className="w-6 h-6" />
+        </button>
+
+        {showAccessibility && (
+          <div className="absolute top-14 right-0 bg-white rounded-lg shadow-2xl p-4 w-64 border-2 border-blue-600">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-lg">
+                {language === 'ru' ? 'Доступность' : language === 'he' ? 'נגישות' : 'Accessibility'}
+              </h3>
+              <button onClick={() => setShowAccessibility(false)} className="text-gray-500 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Font Size */}
+              <div>
+                <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
+                  <Type className="w-4 h-4" />
+                  {language === 'ru' ? 'Размер шрифта' : language === 'he' ? 'גודל גופן' : 'Font Size'}
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setAccessibilitySettings(prev => ({ ...prev, fontSize: Math.max(80, prev.fontSize - 10) }))}
+                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    A-
+                  </button>
+                  <span className="text-sm">{accessibilitySettings.fontSize}%</span>
+                  <button
+                    onClick={() => setAccessibilitySettings(prev => ({ ...prev, fontSize: Math.min(150, prev.fontSize + 10) }))}
+                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    A+
+                  </button>
+                </div>
+              </div>
+
+              {/* High Contrast */}
+              <div>
+                <button
+                  onClick={() => setAccessibilitySettings(prev => ({ ...prev, contrast: !prev.contrast }))}
+                  className={`w-full p-3 rounded-lg flex items-center gap-2 ${accessibilitySettings.contrast ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                >
+                  <ZoomIn className="w-5 h-5" />
+                  {language === 'ru' ? 'Высокий контраст' : language === 'he' ? 'ניגודיות גבוהה' : 'High Contrast'}
+                </button>
+              </div>
+
+              {/* Grayscale */}
+              <div>
+                <button
+                  onClick={() => setAccessibilitySettings(prev => ({ ...prev, grayScale: !prev.grayScale }))}
+                  className={`w-full p-3 rounded-lg ${accessibilitySettings.grayScale ? 'bg-gray-800 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                >
+                  {language === 'ru' ? 'Оттенки серого' : language === 'he' ? 'גווני אפור' : 'Grayscale'}
+                </button>
+              </div>
+
+              {/* Reset */}
+              <button
+                onClick={() => setAccessibilitySettings({ fontSize: 100, contrast: false, grayScale: false })}
+                className="w-full py-2 text-sm text-blue-600 hover:underline"
+              >
+                {language === 'ru' ? 'Сбросить' : language === 'he' ? 'איפוס' : 'Reset'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Cookie Consent Banner */}
+      {showCookieConsent && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-blue-600 shadow-2xl p-6 z-50 animate-slideUp">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-start gap-4 flex-1">
+              <Cookie className="w-8 h-8 flex-shrink-0" style={{ color: colors.primary.teal }} />
+              <div>
+                <h3 className="font-bold text-lg mb-2">
+                  {language === 'ru' ? 'Мы используем cookies' : language === 'he' ? 'אנו משתמשים בעוגיות' : 'We use cookies'}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {language === 'ru'
+                    ? 'Этот сайт использует cookies для улучшения вашего опыта. Используя наш сайт, вы соглашаетесь с нашей политикой в отношении cookies.'
+                    : language === 'he'
+                    ? 'אתר זה משתמש בעוגיות כדי לשפר את החוויה שלך. על ידי שימוש באתר שלנו, אתה מסכים למדיניות העוגיות שלנו.'
+                    : 'This website uses cookies to enhance your experience. By using our site, you agree to our cookie policy.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={declineCookies}
+                className="px-6 py-2 border-2 rounded-lg hover:bg-gray-50 transition-colors"
+                style={{ borderColor: colors.primary.teal, color: colors.primary.teal }}
+              >
+                {language === 'ru' ? 'Отклонить' : language === 'he' ? 'דחה' : 'Decline'}
+              </button>
+              <button
+                onClick={acceptCookies}
+                className="px-6 py-2 text-white rounded-lg hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: colors.primary.teal }}
+              >
+                {language === 'ru' ? 'Принять' : language === 'he' ? 'קבל' : 'Accept'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
         .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
         .animate-slideDown { animation: slideDown 0.5s ease-out; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-slideUp { animation: slideUp 0.5s ease-out; }
+        .high-contrast {
+          filter: contrast(2);
+        }
+        .high-contrast * {
+          border-color: #000 !important;
+        }
       `}</style>
     </div>
   );

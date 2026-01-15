@@ -147,7 +147,7 @@ const AdminDashboard = () => {
 
   // Get vehicle capacity from layout
   const getVehicleCapacity = (vehicleLayout) => {
-    if (vehicleLayout === 'sprinter_15') return 13;
+    if (vehicleLayout === 'sprinter_15') return 14;
     if (vehicleLayout === 'bus_30') return 11;
     if (vehicleLayout === 'highlander_7') return 7;
     if (vehicleLayout?.startsWith('custom_')) {
