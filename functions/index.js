@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
 admin.initializeApp();
 
 // Admin email configuration
-const ADMIN_EMAIL = 'barpupco@gmail.com';
+const ADMIN_EMAIL = 'ivristats@gmail.com';
 
 // Configure email transporter
 // IMPORTANT: Replace with your email service credentials
