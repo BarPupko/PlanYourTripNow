@@ -382,6 +382,20 @@ exports.resendConfirmationEmail = functions.https.onCall(async (data, context) =
 const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 /**
+ * Get vehicle capacity from layout
+ */
+function getVehicleCapacity(vehicleLayout) {
+  if (vehicleLayout === 'sprinter_15') return 14;
+  if (vehicleLayout === 'bus_30') return 11;
+  if (vehicleLayout === 'highlander_7') return 7;
+  if (vehicleLayout?.startsWith('custom_')) {
+    const capacity = parseInt(vehicleLayout.split('_')[1]);
+    return isNaN(capacity) ? 0 : capacity;
+  }
+  return 0;
+}
+
+/**
  * Detect language from message (simple detection)
  */
 function detectLanguage(message) {
@@ -405,17 +419,36 @@ exports.whatsappBot = functions.https.onRequest(async (req, res) => {
     const twiml = new MessagingResponse();
     let responseMessage = '';
 
+    // FIRST: Check if there's an active booking session
+    const sessionRef = admin.firestore().collection('whatsappBookingSessions').doc(fromNumber);
+    const sessionDoc = await sessionRef.get();
+    const hasActiveSession = sessionDoc.exists;
+
+    // If there's an active booking session and the message is not a new command, continue the booking flow
+    if (hasActiveSession &&
+        !incomingLower.startsWith('book') &&
+        !incomingLower.startsWith('help') &&
+        !incomingLower.startsWith('trips') &&
+        !incomingLower.startsWith('cancel') &&
+        !incomingLower.startsWith('помощь') &&
+        !incomingLower.startsWith('поездки') &&
+        !incomingLower.startsWith('отменить')) {
+      // Continue booking flow
+      responseMessage = await handleBookCommand(incomingMessage, language, fromNumber);
+    }
     // Command routing (support both English and Russian)
-    if (incomingLower.includes('help') || incomingLower.includes('помощь') ||
+    else if (incomingLower.includes('help') || incomingLower.includes('помощь') ||
         incomingLower === 'hi' || incomingLower === 'hello' ||
         incomingLower === 'привет' || incomingLower === 'здравствуйте') {
       responseMessage = await handleHelpCommand(language);
     } else if (incomingLower.includes('summary') || incomingLower.includes('pickup') ||
                incomingLower.includes('сводка') || incomingLower.includes('места сбора')) {
       responseMessage = await handleSummaryCommand(incomingMessage, language);
+    } else if (incomingLower.startsWith('bookline') || incomingLower.startsWith('быстробронь')) {
+      responseMessage = await handleBookLineCommand(incomingMessage, language, fromNumber);
     } else if (incomingLower.includes('book') || incomingLower.includes('register') ||
                incomingLower.includes('забронировать') || incomingLower.includes('регистрация')) {
-      responseMessage = await handleBookCommand(incomingMessage, language);
+      responseMessage = await handleBookCommand(incomingMessage, language, fromNumber);
     } else if (incomingLower.includes('trips') || incomingLower.includes('list') ||
                incomingLower.includes('поездки') || incomingLower.includes('туры') ||
                incomingLower.includes('список')) {
@@ -465,13 +498,14 @@ async function handleHelpCommand(language = 'en') {
       `📋 *ПОЕЗДКИ* - Просмотр предстоящих туров\n` +
       `👥 *КТО [название]* - Кто зарегистрирован на поездку\n` +
       `📍 *СВОДКА* - Сводка поездки с местами сбора\n` +
-      `🎫 *ЗАБРОНИРОВАТЬ* - Забронировать тур\n` +
+      `🎫 *ЗАБРОНИРОВАТЬ* - Пошаговое бронирование\n` +
+      `⚡ *БЫСТРОБРОНЬ [поездка], [имя], [email], [телефон], [место]* - Быстрое бронирование\n` +
       `🎁 *КАРТА [код]* - Проверить подарочную карту\n` +
       `ℹ️ *ИНФО [название]* - Детали о поездке\n` +
       `📊 *СТАТИСТИКА* - Общая статистика по турам\n` +
       `❌ *ОТМЕНИТЬ* - Отменить регистрацию\n` +
       `❓ *ПОМОЩЬ* - Показать это сообщение\n\n` +
-      `Пример: "сводка" или "кто едет в Масаду?"`;
+      `Пример: "быстробронь Масада, Иван Иванов, ivan@mail.com, +972501234567, Тель-Авив"`;
   }
 
   return `🤖 *IVRI Tours WhatsApp Assistant*\n\n` +
@@ -479,13 +513,14 @@ async function handleHelpCommand(language = 'en') {
     `📋 *TRIPS* - View upcoming trips\n` +
     `👥 *WHO [trip name]* - See who's registered for a trip\n` +
     `📍 *SUMMARY* - Trip summary with pickup locations\n` +
-    `🎫 *BOOK* - Book someone for a trip\n` +
+    `🎫 *BOOK* - Step-by-step booking\n` +
+    `⚡ *BOOKLINE [trip], [name], [email], [phone], [pickup]* - Quick one-line booking\n` +
     `🎁 *GIFT [code]* - Check gift card balance\n` +
     `ℹ️ *INFO [trip name]* - Get detailed trip information\n` +
     `📊 *STATS* - Get overall tour statistics\n` +
     `❌ *CANCEL* - Cancel a registration\n` +
     `❓ *HELP* - Show this message\n\n` +
-    `Example: "summary" or "who is going to Masada?"`;
+    `Example: "bookline Masada, John Doe, john@email.com, +1234567890, Tel Aviv"`;
 }
 
 /**
@@ -637,30 +672,427 @@ async function handleWhoIsGoingCommand(message, language = 'en') {
 }
 
 /**
- * Book someone for a trip
+ * Book someone for a trip - Step-by-step booking
  */
-async function handleBookCommand(message, language = 'en') {
-  if (language === 'ru') {
-    return `🎫 *Функция бронирования*\n\n` +
-      `Для бронирования тура, пожалуйста, используйте веб-панель:\n` +
-      `https://planyourtrip-ed010.web.app\n\n` +
-      `Это гарантирует правильное оформление всех деталей:\n` +
-      `• Полная контактная информация\n` +
-      `• Выбор места\n` +
-      `• Детали оплаты\n` +
-      `• Подпись соглашения\n\n` +
-      `Вы можете просматривать списки участников в любое время!`;
+async function handleBookCommand(message, language = 'en', fromNumber) {
+  try {
+    // Get or initialize booking session
+    const sessionRef = admin.firestore().collection('whatsappBookingSessions').doc(fromNumber);
+    const sessionDoc = await sessionRef.get();
+
+    let session = sessionDoc.exists ? sessionDoc.data() : null;
+
+    // If no active session or user typed "book" to start new
+    if (!session || message.toLowerCase().trim() === 'book' || message.toLowerCase().trim() === 'забронировать') {
+      // List available trips
+      const now = new Date();
+      const tripsSnapshot = await admin.firestore()
+        .collection('trips')
+        .where('date', '>=', admin.firestore.Timestamp.fromDate(now))
+        .orderBy('date', 'asc')
+        .limit(10)
+        .get();
+
+      if (tripsSnapshot.empty) {
+        return language === 'ru'
+          ? '📅 Нет доступных поездок для бронирования.'
+          : '📅 No trips available for booking.';
+      }
+
+      let response = language === 'ru'
+        ? '🎫 *Доступные поездки:*\n\n'
+        : '🎫 *Available Trips:*\n\n';
+
+      const trips = [];
+      let index = 0;
+
+      // First, get all trips with their registration counts
+      for (const doc of tripsSnapshot.docs) {
+        const trip = doc.data();
+        const tripDate = trip.date.toDate();
+
+        // Calculate total seats from vehicle layout
+        const totalSeats = getVehicleCapacity(trip.vehicleLayout);
+
+        // Count occupied seats from registrations
+        const registrationsSnapshot = await admin.firestore()
+          .collection('registrations')
+          .where('tripId', '==', doc.id)
+          .get();
+        const occupiedSeats = registrationsSnapshot.size;
+
+        const availableSeats = totalSeats - occupiedSeats;
+
+        // Store trip with calculated values
+        trips.push({
+          id: doc.id,
+          ...trip,
+          totalSeats: totalSeats,
+          occupiedSeats: occupiedSeats
+        });
+
+        index++;
+        response += `${index}. *${trip.title || 'Unnamed Trip'}*\n`;
+        response += language === 'ru'
+          ? `   Дата: ${tripDate.toLocaleDateString('ru-RU')}\n   Доступно: ${availableSeats}/${totalSeats} мест\n\n`
+          : `   Date: ${tripDate.toLocaleDateString()}\n   Available: ${availableSeats}/${totalSeats} seats\n\n`;
+      }
+
+      response += language === 'ru'
+        ? '\nОтветьте номером (1-' + trips.length + ') или названием поездки:'
+        : '\nReply with number (1-' + trips.length + ') or trip name:';
+
+      // Save session
+      await sessionRef.set({
+        step: 'trip_selection',
+        trips: trips,
+        createdAt: admin.firestore.Timestamp.now(),
+        language: language
+      });
+
+      return response;
+    }
+
+    // Handle each step
+    if (session.step === 'trip_selection') {
+      // User selected a trip
+      const selectedTrip = findTripFromMessage(message, session.trips);
+      if (!selectedTrip) {
+        return language === 'ru'
+          ? '❌ Поездка не найдена. Пожалуйста, ответьте номером или точным названием.'
+          : '❌ Trip not found. Please reply with a number or exact trip name.';
+      }
+
+      // Update session
+      await sessionRef.update({
+        step: 'passenger_details',
+        selectedTrip: selectedTrip
+      });
+
+      return language === 'ru'
+        ? `✅ Выбрана поездка: *${selectedTrip.title}*\n\n` +
+          `Введите данные пассажира в формате:\n` +
+          `Имя, Email, Телефон, Место посадки\n\n` +
+          `Пример:\nИван Иванов, ivan@mail.com, +972501234567, Тель-Авив`
+        : `✅ Selected trip: *${selectedTrip.title}*\n\n` +
+          `Enter passenger details in format:\n` +
+          `Name, Email, Phone, Pickup Location\n\n` +
+          `Example:\nJohn Doe, john@email.com, +1234567890, Tel Aviv`;
+    }
+
+    if (session.step === 'passenger_details') {
+      // Parse passenger details
+      const details = parsePassengerDetails(message);
+      if (!details) {
+        return language === 'ru'
+          ? '❌ Неверный формат. Используйте:\nИмя, Email, Телефон, Место посадки'
+          : '❌ Invalid format. Use:\nName, Email, Phone, Pickup Location';
+      }
+
+      // Update session
+      await sessionRef.update({
+        step: 'confirmation',
+        passengerDetails: details
+      });
+
+      const trip = session.selectedTrip;
+      return language === 'ru'
+        ? `📋 *Подтверждение бронирования:*\n\n` +
+          `Поездка: ${trip.title}\n` +
+          `Дата: ${trip.date.toDate().toLocaleDateString('ru-RU')}\n` +
+          `Цена: ₪${trip.pricePerPerson || trip.price}\n\n` +
+          `Пассажир:\n` +
+          `• Имя: ${details.name}\n` +
+          `• Email: ${details.email}\n` +
+          `• Телефон: ${details.phone}\n` +
+          `• Место посадки: ${details.pickupLocation}\n\n` +
+          `Ответьте *ДА* для подтверждения или *НЕТ* для отмены.`
+        : `📋 *Booking Confirmation:*\n\n` +
+          `Trip: ${trip.title}\n` +
+          `Date: ${trip.date.toDate().toLocaleDateString()}\n` +
+          `Price: ₪${trip.pricePerPerson || trip.price}\n\n` +
+          `Passenger:\n` +
+          `• Name: ${details.name}\n` +
+          `• Email: ${details.email}\n` +
+          `• Phone: ${details.phone}\n` +
+          `• Pickup: ${details.pickupLocation}\n\n` +
+          `Reply *YES* to confirm or *NO* to cancel.`;
+    }
+
+    if (session.step === 'confirmation') {
+      const confirmed = message.toLowerCase().trim();
+      if (confirmed === 'yes' || confirmed === 'да') {
+        // Create the booking
+        const result = await createBooking(session.selectedTrip, session.passengerDetails, language);
+
+        // Clear session
+        await sessionRef.delete();
+
+        return result;
+      } else if (confirmed === 'no' || confirmed === 'нет') {
+        await sessionRef.delete();
+        return language === 'ru'
+          ? '❌ Бронирование отменено.'
+          : '❌ Booking cancelled.';
+      } else {
+        return language === 'ru'
+          ? 'Пожалуйста, ответьте *ДА* или *НЕТ*.'
+          : 'Please reply *YES* or *NO*.';
+      }
+    }
+
+  } catch (error) {
+    console.error('Error in handleBookCommand:', error);
+    return language === 'ru'
+      ? 'Произошла ошибка при бронировании. Попробуйте снова.'
+      : 'An error occurred while booking. Please try again.';
+  }
+}
+
+/**
+ * One-line booking command
+ */
+async function handleBookLineCommand(message, language = 'en', fromNumber) {
+  try {
+    // Remove "bookline" or "быстробронь" from message
+    const cleanMessage = message.replace(/^(bookline|быстробронь)\s*/i, '').trim();
+
+    // Parse format: trip, name, email, phone, pickup
+    const parts = cleanMessage.split(',').map(p => p.trim());
+
+    if (parts.length < 5) {
+      return language === 'ru'
+        ? `⚡ *Быстрое бронирование*\n\n` +
+          `Формат: быстробронь [поездка], [имя], [email], [телефон], [место посадки]\n\n` +
+          `Пример:\nбыстробронь Масада, Иван Иванов, ivan@mail.com, +972501234567, Тель-Авив`
+        : `⚡ *Quick Booking*\n\n` +
+          `Format: bookline [trip], [name], [email], [phone], [pickup location]\n\n` +
+          `Example:\nbookline Masada, John Doe, john@email.com, +1234567890, Tel Aviv`;
+    }
+
+    const [tripName, name, email, phone, pickupLocation] = parts;
+
+    // Find the trip
+    const now = new Date();
+    const tripsSnapshot = await admin.firestore()
+      .collection('trips')
+      .where('date', '>=', admin.firestore.Timestamp.fromDate(now))
+      .get();
+
+    let selectedTrip = null;
+    tripsSnapshot.forEach((doc) => {
+      const trip = doc.data();
+      if (trip.title.toLowerCase().includes(tripName.toLowerCase())) {
+        selectedTrip = { id: doc.id, ...trip };
+      }
+    });
+
+    if (!selectedTrip) {
+      return language === 'ru'
+        ? `❌ Поездка "${tripName}" не найдена. Напишите *ПОЕЗДКИ* чтобы увидеть доступные туры.`
+        : `❌ Trip "${tripName}" not found. Type *TRIPS* to see available tours.`;
+    }
+
+    // Create booking
+    const details = { name, email, phone, pickupLocation };
+    return await createBooking(selectedTrip, details, language);
+
+  } catch (error) {
+    console.error('Error in handleBookLineCommand:', error);
+    return language === 'ru'
+      ? 'Произошла ошибка при бронировании. Попробуйте снова.'
+      : 'An error occurred while booking. Please try again.';
+  }
+}
+
+// Helper functions
+function findTripFromMessage(message, trips) {
+  const msg = message.toLowerCase().trim();
+
+  // Check if it's a number
+  const num = parseInt(msg);
+  if (!isNaN(num) && num >= 1 && num <= trips.length) {
+    return trips[num - 1];
   }
 
-  return `🎫 *Booking Feature*\n\n` +
-    `To book someone for a trip, please use the web dashboard:\n` +
-    `https://planyourtrip-ed010.web.app\n\n` +
-    `This ensures all details are captured correctly including:\n` +
-    `• Full contact information\n` +
-    `• Seat selection\n` +
-    `• Payment details\n` +
-    `• Waiver signature\n\n` +
-    `You can view participant lists here anytime!`;
+  // Check if it matches trip title
+  for (const trip of trips) {
+    if (trip.title.toLowerCase().includes(msg) || msg.includes(trip.title.toLowerCase())) {
+      return trip;
+    }
+  }
+
+  return null;
+}
+
+function parsePassengerDetails(message) {
+  const parts = message.split(',').map(p => p.trim());
+
+  if (parts.length < 4) {
+    return null;
+  }
+
+  return {
+    name: parts[0],
+    email: parts[1],
+    phone: parts[2],
+    pickupLocation: parts[3]
+  };
+}
+
+async function createBooking(trip, details, language) {
+  try {
+    // Check if trip has available seats
+    const tripRef = admin.firestore().collection('trips').doc(trip.id);
+    const tripDoc = await tripRef.get();
+    const currentTrip = tripDoc.data();
+
+    // Calculate total seats from vehicle layout
+    const totalSeats = getVehicleCapacity(currentTrip.vehicleLayout);
+
+    // Find next available seat and count occupied seats
+    const registrationsSnapshot = await admin.firestore()
+      .collection('registrations')
+      .where('tripId', '==', trip.id)
+      .get();
+
+    const occupiedSeats = registrationsSnapshot.size;
+
+    // Check if trip is fully booked
+    if (occupiedSeats >= totalSeats) {
+      return language === 'ru'
+        ? '❌ Извините, эта поездка полностью забронирована.'
+        : '❌ Sorry, this trip is fully booked.';
+    }
+
+    const takenSeats = new Set();
+    registrationsSnapshot.forEach(doc => {
+      const reg = doc.data();
+      if (reg.seatNumber) {
+        takenSeats.add(reg.seatNumber);
+      }
+    });
+
+    let seatNumber = 1;
+    while (takenSeats.has(seatNumber) && seatNumber <= totalSeats) {
+      seatNumber++;
+    }
+
+    // Split name into first and last
+    const nameParts = details.name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    // Create registration
+    const registration = {
+      tripId: trip.id,
+      firstName: firstName,
+      lastName: lastName,
+      email: details.email,
+      phone: details.phone,
+      seatNumber: seatNumber,
+      pickupLocation: details.pickupLocation,
+      paymentMethod: 'pending',
+      waiverSigned: false,
+      registeredAt: admin.firestore.Timestamp.now(),
+      registeredVia: 'whatsapp'
+    };
+
+    await admin.firestore().collection('registrations').add(registration);
+
+    // Send confirmation email
+    try {
+      await sendSimpleConfirmationEmail(trip, registration, language);
+    } catch (emailError) {
+      console.error('Error sending confirmation email:', emailError);
+    }
+
+    return language === 'ru'
+      ? `✅ *Бронирование подтверждено!*\n\n` +
+        `Поездка: ${trip.title}\n` +
+        `Пассажир: ${details.name}\n` +
+        `Место: #${seatNumber}\n` +
+        `Email: ${details.email}\n` +
+        `Телефон: ${details.phone}\n` +
+        `Место посадки: ${details.pickupLocation}\n\n` +
+        `Подтверждение отправлено на ${details.email}`
+      : `✅ *Booking Confirmed!*\n\n` +
+        `Trip: ${trip.title}\n` +
+        `Passenger: ${details.name}\n` +
+        `Seat: #${seatNumber}\n` +
+        `Email: ${details.email}\n` +
+        `Phone: ${details.phone}\n` +
+        `Pickup: ${details.pickupLocation}\n\n` +
+        `Confirmation sent to ${details.email}`;
+
+  } catch (error) {
+    console.error('Error creating booking:', error);
+    return language === 'ru'
+      ? 'Произошла ошибка при создании бронирования.'
+      : 'An error occurred while creating the booking.';
+  }
+}
+
+async function sendSimpleConfirmationEmail(trip, registration, language) {
+  const mailOptions = {
+    from: `IVRI Tours <${functions.config().email?.user || 'ivristats@gmail.com'}>`,
+    to: [registration.email, ADMIN_EMAIL],
+    subject: language === 'ru'
+      ? `Подтверждение бронирования - ${trip.title}`
+      : `Booking Confirmation - ${trip.title}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">IVRI Tours</h1>
+          <p style="color: white; margin: 10px 0 0 0;">${language === 'ru' ? 'Подтверждение бронирования' : 'Booking Confirmation'}</p>
+        </div>
+
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #333;">${trip.title}</h2>
+
+          <table style="width: 100%; margin: 20px 0;">
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">${language === 'ru' ? 'Дата:' : 'Date:'}</td>
+              <td style="padding: 10px;">${trip.date.toDate().toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US')}</td>
+            </tr>
+            <tr style="background: white;">
+              <td style="padding: 10px; font-weight: bold;">${language === 'ru' ? 'Пассажир:' : 'Passenger:'}</td>
+              <td style="padding: 10px;">${registration.firstName} ${registration.lastName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">${language === 'ru' ? 'Место:' : 'Seat:'}</td>
+              <td style="padding: 10px;">#${registration.seatNumber}</td>
+            </tr>
+            <tr style="background: white;">
+              <td style="padding: 10px; font-weight: bold;">${language === 'ru' ? 'Место посадки:' : 'Pickup Location:'}</td>
+              <td style="padding: 10px;">${registration.pickupLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: bold;">${language === 'ru' ? 'Телефон:' : 'Phone:'}</td>
+              <td style="padding: 10px;">${registration.phone}</td>
+            </tr>
+          </table>
+
+          <p style="color: #666; font-size: 14px;">
+            ${language === 'ru'
+              ? 'Пожалуйста, завершите регистрацию и подпишите соглашение на нашем сайте:'
+              : 'Please complete your registration and sign the waiver on our website:'}
+          </p>
+          <a href="https://planyourtrip-ed010.web.app" style="display: inline-block; background: #00BCD4; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 10px 0;">
+            ${language === 'ru' ? 'Завершить регистрацию' : 'Complete Registration'}
+          </a>
+        </div>
+
+        <div style="background: #333; padding: 20px; text-align: center;">
+          <p style="color: #999; margin: 0; font-size: 12px;">
+            ${language === 'ru' ? 'Забронировано через WhatsApp' : 'Booked via WhatsApp'}
+          </p>
+        </div>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
 }
 
 /**
