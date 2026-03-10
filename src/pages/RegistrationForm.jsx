@@ -10,9 +10,9 @@ import colors from '../utils/colors';
 
 const CANCELLATION_POLICY = `CANCELLATION POLICY
 
-1. Cancellations made 30 days or more before the trip date will receive a full refund.
-2. Cancellations made 15-29 days before the trip date will receive a 50% refund.
-3. Cancellations made less than 15 days before the trip date are non-refundable.
+1. Cancellations made 7 days or more before the trip date will receive a full refund.
+2. Cancellations made 4 days before the trip date will receive a 50% refund.
+3. Cancellations made less than 3 days before the trip date are non-refundable.
 4. No-shows on the trip date are non-refundable.
 5. Trip organizers reserve the right to cancel trips due to weather, safety concerns, or insufficient participation, in which case full refunds will be provided.`;
 

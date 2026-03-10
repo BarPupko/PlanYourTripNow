@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, Copy, Check, MessageCircle } from 'lucide-react';
+import { Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, Copy, Check, MessageCircle, ArrowLeftRight, UserX } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getTrip, updateRegistration } from '../utils/firestoreUtils';
+import { getTrip, updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
 import VehicleSeatingMap from '../components/VehicleSeatingMap';
 import AddParticipantModal from '../components/AddParticipantModal';
 import Header from '../components/Header';
@@ -23,6 +23,7 @@ const TripView = () => {
   const [preselectedSeat, setPreselectedSeat] = useState(null);
   const [selectedParticipant, setSelectedParticipant] = useState(null);
   const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
+  const [isChangingSeat, setIsChangingSeat] = useState(false);
 
   useEffect(() => {
     loadTrip();
@@ -63,6 +64,53 @@ const TripView = () => {
     } catch (error) {
       console.error('Error updating payment status:', error);
       alert('Failed to update payment status');
+    }
+  };
+
+  const handleSeatClick = (seatNumber, occupant) => {
+    if (isChangingSeat && selectedParticipant) {
+      if (seatNumber === selectedParticipant.seatNumber) {
+        // Clicked same seat - cancel
+        setIsChangingSeat(false);
+        return;
+      }
+      if (occupant) {
+        // Swap seats
+        Promise.all([
+          updateRegistration(selectedParticipant.id, { seatNumber }),
+          updateRegistration(occupant.id, { seatNumber: selectedParticipant.seatNumber })
+        ]).then(() => {
+          setSelectedParticipant(prev => ({ ...prev, seatNumber }));
+          setIsChangingSeat(false);
+        }).catch(() => alert('Failed to swap seats'));
+      } else {
+        // Move to vacant seat
+        updateRegistration(selectedParticipant.id, { seatNumber })
+          .then(() => {
+            setSelectedParticipant(prev => ({ ...prev, seatNumber }));
+            setIsChangingSeat(false);
+          })
+          .catch(() => alert('Failed to change seat'));
+      }
+    } else {
+      if (occupant) {
+        setSelectedParticipant(occupant);
+      } else {
+        setPreselectedSeat(seatNumber);
+        setShowAddModal(true);
+      }
+    }
+  };
+
+  const handleUnassignSeat = async (registrationId) => {
+    if (!window.confirm('Remove this participant from their seat? They will have no assigned seat.')) return;
+    try {
+      await updateRegistration(registrationId, { seatNumber: null });
+      setSelectedParticipant(prev => ({ ...prev, seatNumber: null }));
+      setIsChangingSeat(false);
+    } catch (error) {
+      console.error('Error unassigning seat:', error);
+      alert('Failed to unassign seat');
     }
   };
 
@@ -169,18 +217,23 @@ const TripView = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Side - Seating Map */}
           <div className="lg:col-span-2">
+            {isChangingSeat && selectedParticipant && (
+              <div className="mb-3 p-3 rounded-lg border-2 flex items-center justify-between"
+                style={{ backgroundColor: '#FFF3CD', borderColor: colors.warning }}>
+                <span className="font-medium text-sm" style={{ color: '#856404' }}>
+                  Moving <strong>{selectedParticipant.firstName} {selectedParticipant.lastName}</strong> from seat #{selectedParticipant.seatNumber} — tap a seat to move, or tap their current seat to cancel
+                </span>
+                <button onClick={() => setIsChangingSeat(false)} className="ml-3 text-xs underline" style={{ color: '#856404' }}>
+                  Cancel
+                </button>
+              </div>
+            )}
             <VehicleSeatingMap
               vehicleType={trip.vehicleLayout}
               registrations={registrations}
               driverName={trip.driverName}
-              onSeatClick={(seatNumber, occupant) => {
-                if (occupant) {
-                  setSelectedParticipant(occupant);
-                } else {
-                  setPreselectedSeat(seatNumber);
-                  setShowAddModal(true);
-                }
-              }}
+              selectedSeat={isChangingSeat ? selectedParticipant?.seatNumber : null}
+              onSeatClick={handleSeatClick}
             />
           </div>
 
@@ -297,7 +350,7 @@ const TripView = () => {
       )}
 
       {/* Participant Details Modal */}
-      {selectedParticipant && (
+      {selectedParticipant && !isChangingSeat && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedParticipant(null)}>
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
@@ -404,8 +457,31 @@ const TripView = () => {
                 >
                   {selectedParticipant.paid ? t.markAsNotPaid : t.markAsPaidBtn}
                 </button>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setIsChangingSeat(true);
+                      setSelectedParticipant(null);
+                    }}
+                    style={{ backgroundColor: colors.warning }}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                  >
+                    <ArrowLeftRight className="w-4 h-4" />
+                    Change Seat
+                  </button>
+                  <button
+                    onClick={() => handleUnassignSeat(selectedParticipant.id)}
+                    style={{ backgroundColor: '#6B7280' }}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                  >
+                    <UserX className="w-4 h-4" />
+                    Unassign
+                  </button>
+                </div>
+
                 <button
-                  onClick={() => setSelectedParticipant(null)}
+                  onClick={() => { setSelectedParticipant(null); setIsChangingSeat(false); }}
                   className="w-full px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
                   {t.close}

@@ -170,7 +170,7 @@ exports.onRegistrationCreated = functions.firestore
                 <h3 style="color: #00BCD4; margin-top: 0;">📅 Trip Details</h3>
                 <p style="margin: 8px 0;"><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
                 <p style="margin: 8px 0;"><strong>Time:</strong> ${trip.date.toDate().toLocaleTimeString()}</p>
-                <p style="margin: 8px 0;"><strong>Your Seat:</strong> <span style="background-color: #00BCD4; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">#${registration.seatNumber}</span></p>
+                <p style="margin: 8px 0;"><strong>Your Seat:</strong> <span style="background-color: #00BCD4; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">Seat will be placed upon arrival</span></p>
               </div>
 
               <div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #00BCD4; margin: 20px 0;">
@@ -356,7 +356,7 @@ exports.resendConfirmationEmail = functions.https.onCall(async (data, context) =
         <p>Dear ${registration.firstName} ${registration.lastName},</p>
         <p>As requested, here is your registration confirmation for <strong>${trip.title}</strong>.</p>
         <p><strong>Trip Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
-        <p><strong>Your Seat:</strong> #${registration.seatNumber}</p>
+        <p><strong>Your Seat:</strong> Seat will be placed upon arrival</p>
         <p>Your signed waiver is attached to this email.</p>
       `,
       attachments: [
@@ -1061,7 +1061,7 @@ async function sendSimpleConfirmationEmail(trip, registration, language) {
             </tr>
             <tr>
               <td style="padding: 10px; font-weight: bold;">${language === 'ru' ? 'Место:' : 'Seat:'}</td>
-              <td style="padding: 10px;">#${registration.seatNumber}</td>
+              <td style="padding: 10px;">${language === 'ru' ? 'Место будет назначено при посадке' : 'Seat will be placed upon arrival'}</td>
             </tr>
             <tr style="background: white;">
               <td style="padding: 10px; font-weight: bold;">${language === 'ru' ? 'Место посадки:' : 'Pickup Location:'}</td>
