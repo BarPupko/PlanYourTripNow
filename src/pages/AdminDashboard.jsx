@@ -26,7 +26,8 @@ const AdminDashboard = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [editingTrip, setEditingTrip] = useState(null);
   const [viewingTripId, setViewingTripId] = useState(null);
-  const [registrationCounts, setRegistrationCounts] = useState({}); // Map of tripId -> count
+  const [registrationCounts, setRegistrationCounts] = useState({}); // Map of tripId -> approved count
+  const [pendingCounts, setPendingCounts] = useState({}); // Map of tripId -> pending count
 
   useEffect(() => {
     loadTrips();
@@ -51,6 +52,7 @@ const AdminDashboard = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const counts = {};
+    const pending = {};
 
     for (const trip of trips) {
       let needsUpdate = false;
@@ -65,8 +67,11 @@ const AdminDashboard = () => {
         const registrationsRef = collection(db, 'registrations');
         const q = query(registrationsRef, where('tripId', '==', trip.id));
         const snapshot = await getDocs(q);
-        const participantCount = snapshot.size;
+        const allRegs = snapshot.docs.map(d => d.data());
+        const participantCount = allRegs.filter(r => r.status !== 'pending').length;
+        const pendingCount = allRegs.filter(r => r.status === 'pending').length;
         counts[trip.id] = participantCount;
+        pending[trip.id] = pendingCount;
 
         // Check if trip date has passed (check end date)
         if (tripEndDate < today && newStatus !== 'done') {
@@ -98,6 +103,7 @@ const AdminDashboard = () => {
 
     // Update registration counts state
     setRegistrationCounts(counts);
+    setPendingCounts(pending);
   };
 
   const handleCreateTrip = async (tripData) => {
@@ -420,6 +426,12 @@ const AdminDashboard = () => {
                           >
                             {getStatusColor(trip.status).label}
                           </span>
+                          {pendingCounts[trip.id] > 0 && (
+                            <span className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-yellow-100 text-yellow-800">
+                              <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse inline-block" />
+                              {pendingCounts[trip.id]} Pending
+                            </span>
+                          )}
                         </div>
                         <p className="text-[10px] sm:text-sm text-gray-600 mt-1">
                           {(() => {

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Facebook, Instagram, MapPin, Clock, Users, Gift, X, Cookie, Eye, ZoomIn, Type } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Clock, Users, Gift, X, Cookie, Eye, ZoomIn, Type, CalendarDays, CheckCircle2 } from 'lucide-react';
 import colors from '../utils/colors';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -26,6 +28,112 @@ const LandingPage = () => {
     message: ''
   });
   const [sending, setSending] = useState(false);
+  const [upcomingTrips, setUpcomingTrips] = useState([]);
+  const [tripsLoading, setTripsLoading] = useState(true);
+  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [regForm, setRegForm] = useState({ firstName: '', lastName: '', email: '', phone: '', pickupLocation: '' });
+  const [regSubmitting, setRegSubmitting] = useState(false);
+  const [regSuccess, setRegSuccess] = useState(false);
+  const [tripRegistrationCounts, setTripRegistrationCounts] = useState({});
+
+  useEffect(() => {
+    const fetchUpcomingTrips = async () => {
+      setTripsLoading(true);
+      try {
+        const tripsSnap = await getDocs(collection(db, 'trips'));
+        const trips = [];
+        const counts = {};
+        for (const doc of tripsSnap.docs) {
+          const data = doc.data();
+          const tripDate = data.date?.toDate?.() || (data.date ? new Date(data.date) : null);
+          if (tripDate && tripDate >= new Date() && data.status !== 'done') {
+            trips.push({ id: doc.id, ...data });
+            // Count approved registrations
+            const regSnap = await getDocs(query(
+              collection(db, 'registrations'),
+              where('tripId', '==', doc.id),
+              where('status', '!=', 'pending')
+            ));
+            counts[doc.id] = regSnap.size;
+          }
+        }
+        trips.sort((a, b) => {
+          const da = a.date?.toDate?.() || new Date(a.date);
+          const db2 = b.date?.toDate?.() || new Date(b.date);
+          return da - db2;
+        });
+        setUpcomingTrips(trips);
+        setTripRegistrationCounts(counts);
+      } catch (err) {
+        console.error('Error fetching trips:', err);
+      } finally {
+        setTripsLoading(false);
+      }
+    };
+    fetchUpcomingTrips();
+  }, []);
+
+  const getImageForTrip = (title) => {
+    const t = (title || '').toLowerCase();
+    if (t.includes('toronto')) return 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80';
+    if (t.includes('niagara')) return 'https://images.unsplash.com/photo-1489447068241-b3490214e879?w=800&q=80';
+    if (t.includes('tremblant') || t.includes('трамблан') || t.includes('טרמבלן')) return 'https://images.unsplash.com/photo-1729477458908-0a59d8026ed8?q=80&w=800';
+    if (t.includes('quebec') || t.includes('квебек') || t.includes('קוויבק')) return 'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=800&q=80';
+    if (t.includes('barrie') || t.includes('simco') || t.includes('симко') || t.includes('ברי')) return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80';
+    if (t.includes('detroit') || t.includes('детройт') || t.includes('דטרויט')) return 'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=800&q=80';
+    if (t.includes('chicago') || t.includes('чикаго') || t.includes('שיקגו')) return 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80';
+    if (t.includes('fish') || t.includes('рыб') || t.includes('דיג')) return 'https://images.unsplash.com/photo-1467809297455-d89a8a6fea83?w=800&q=80';
+    if (t.includes('ski') || t.includes('snow') || t.includes('лыж') || t.includes('סקי')) return 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&q=80';
+    return 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80';
+  };
+
+  const getVehicleCapacity = (vehicleLayout) => {
+    if (vehicleLayout === 'sprinter_15') return 14;
+    if (vehicleLayout === 'bus_30') return 11;
+    if (vehicleLayout === 'highlander_7') return 7;
+    if (vehicleLayout?.startsWith('custom_')) {
+      const cap = parseInt(vehicleLayout.split('_')[1]);
+      return isNaN(cap) ? 0 : cap;
+    }
+    return 0;
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setRegSubmitting(true);
+    try {
+      await addDoc(collection(db, 'registrations'), {
+        tripId: selectedTrip.id,
+        tripTitle: selectedTrip.title,
+        firstName: regForm.firstName,
+        lastName: regForm.lastName,
+        email: regForm.email,
+        phone: regForm.phone,
+        pickupLocation: regForm.pickupLocation,
+        status: 'pending',
+        paid: false,
+        seatNumber: null,
+        createdAt: serverTimestamp(),
+      });
+      setRegSuccess(true);
+    } catch (err) {
+      console.error('Error submitting registration:', err);
+      alert(language === 'ru' ? 'Ошибка при регистрации. Попробуйте снова.' : language === 'he' ? 'שגיאה בהרשמה. נסה שוב.' : 'Registration failed. Please try again.');
+    } finally {
+      setRegSubmitting(false);
+    }
+  };
+
+  const openRegisterModal = (trip) => {
+    setSelectedTrip(trip);
+    setRegForm({ firstName: '', lastName: '', email: '', phone: '', pickupLocation: '' });
+    setRegSuccess(false);
+  };
+
+  const closeRegisterModal = () => {
+    setSelectedTrip(null);
+    setRegSuccess(false);
+  };
 
   useEffect(() => {
     const hasVisited = sessionStorage.getItem('hasVisitedLanding');
@@ -496,6 +604,150 @@ const LandingPage = () => {
           ))}
         </div>
       </section>
+
+      {/* Upcoming Trips Section */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-4xl font-bold text-center mb-4" style={{ color: colors.primary.teal }}>
+            {language === 'ru' ? 'Ближайшие туры' : language === 'he' ? 'טיולים קרובים' : 'Upcoming Trips'}
+          </h2>
+          <p className="text-center text-gray-500 mb-12 text-lg">
+            {language === 'ru' ? 'Зарегистрируйтесь на один из наших туров' : language === 'he' ? 'הירשמו לאחד הטיולים שלנו' : 'Register for one of our upcoming tours'}
+          </p>
+          {tripsLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${colors.primary.teal} transparent ${colors.primary.teal} ${colors.primary.teal}` }} />
+            </div>
+          ) : upcomingTrips.length === 0 ? (
+            <p className="text-center text-gray-400 py-12 text-lg">
+              {language === 'ru' ? 'Нет запланированных туров' : language === 'he' ? 'אין טיולים מתוכננים כרגע' : 'No upcoming trips at the moment'}
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {upcomingTrips.map((trip) => {
+                const capacity = getVehicleCapacity(trip.vehicleLayout);
+                const taken = tripRegistrationCounts[trip.id] || 0;
+                const available = Math.max(0, capacity - taken);
+                const tripDate = trip.date?.toDate?.() || (trip.date ? new Date(trip.date) : null);
+                return (
+                  <div key={trip.id} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="h-48 bg-cover bg-center relative" style={{ backgroundImage: `url(${getImageForTrip(trip.title)})` }}>
+                      {available === 0 && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                          <span className="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">
+                            {language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Full'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-5">
+                      <h3 className="text-xl font-bold mb-3" style={{ color: colors.primary.teal }}>{trip.title}</h3>
+                      <div className="space-y-2 mb-4 text-sm text-gray-600">
+                        {tripDate && (
+                          <div className="flex items-center gap-2">
+                            <CalendarDays className="w-4 h-4" style={{ color: colors.primary.teal }} />
+                            <span>{tripDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                          </div>
+                        )}
+                        {capacity > 0 && (
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4" style={{ color: colors.primary.teal }} />
+                            <span>
+                              {language === 'ru' ? `Мест: ${available} из ${capacity}` : language === 'he' ? `מקומות: ${available} מתוך ${capacity}` : `Seats: ${available} of ${capacity} available`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => openRegisterModal(trip)}
+                        disabled={available === 0}
+                        className="w-full py-2.5 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{ backgroundColor: colors.primary.teal }}
+                      >
+                        {language === 'ru' ? 'Записаться' : language === 'he' ? 'הירשם' : 'Register'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Registration Modal */}
+      {selectedTrip && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-xl font-bold" style={{ color: colors.primary.teal }}>{selectedTrip.title}</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {language === 'ru' ? 'Заявка будет рассмотрена администратором' : language === 'he' ? 'הבקשה תאושר על ידי המנהל' : 'Your request will be reviewed by an admin'}
+                </p>
+              </div>
+              <button onClick={closeRegisterModal} className="text-gray-400 hover:text-gray-600 ml-4 flex-shrink-0">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {regSuccess ? (
+              <div className="text-center py-8">
+                <CheckCircle2 className="w-16 h-16 mx-auto mb-4" style={{ color: colors.success }} />
+                <h4 className="text-xl font-bold text-gray-800 mb-2">
+                  {language === 'ru' ? 'Заявка отправлена!' : language === 'he' ? 'הבקשה נשלחה!' : 'Request Submitted!'}
+                </h4>
+                <p className="text-gray-500 mb-6">
+                  {language === 'ru' ? 'Мы свяжемся с вами после подтверждения.' : language === 'he' ? 'ניצור איתך קשר לאחר האישור.' : 'We will contact you once confirmed.'}
+                </p>
+                <button onClick={closeRegisterModal} className="px-6 py-2 text-white rounded-lg" style={{ backgroundColor: colors.primary.teal }}>
+                  {language === 'ru' ? 'Закрыть' : language === 'he' ? 'סגור' : 'Close'}
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      {language === 'ru' ? 'Имя *' : language === 'he' ? 'שם פרטי *' : 'First Name *'}
+                    </label>
+                    <input type="text" required value={regForm.firstName} onChange={(e) => setRegForm({ ...regForm, firstName: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      {language === 'ru' ? 'Фамилия *' : language === 'he' ? 'שם משפחה *' : 'Last Name *'}
+                    </label>
+                    <input type="text" required value={regForm.lastName} onChange={(e) => setRegForm({ ...regForm, lastName: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    {language === 'ru' ? 'Email *' : language === 'he' ? 'אימייל *' : 'Email *'}
+                  </label>
+                  <input type="email" required value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    {language === 'ru' ? 'Телефон *' : language === 'he' ? 'טלפון *' : 'Phone *'}
+                  </label>
+                  <input type="tel" required value={regForm.phone} onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    {language === 'ru' ? 'Место посадки' : language === 'he' ? 'נקודת איסוף' : 'Pickup Location'}
+                  </label>
+                  <input type="text" value={regForm.pickupLocation} onChange={(e) => setRegForm({ ...regForm, pickupLocation: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" placeholder={language === 'ru' ? 'Необязательно' : language === 'he' ? 'אופציונלי' : 'Optional'} />
+                </div>
+                <button type="submit" disabled={regSubmitting} className="w-full py-3 text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50" style={{ backgroundColor: colors.primary.teal }}>
+                  {regSubmitting
+                    ? (language === 'ru' ? 'Отправка...' : language === 'he' ? 'שולח...' : 'Submitting...')
+                    : (language === 'ru' ? 'Отправить заявку' : language === 'he' ? 'שלח בקשה' : 'Submit Request')}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">

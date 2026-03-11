@@ -115,6 +115,12 @@ exports.onRegistrationCreated = functions.firestore
     const registration = snap.data();
     const registrationId = context.params.registrationId;
 
+    // Skip email/PDF for pending registrations (require admin approval)
+    if (registration.status === 'pending') {
+      console.log('Skipping email for pending registration:', registrationId);
+      return null;
+    }
+
     try {
       // Get trip details
       const tripDoc = await admin.firestore().collection('trips').doc(registration.tripId).get();
@@ -230,6 +236,101 @@ exports.onRegistrationCreated = functions.firestore
 
     } catch (error) {
       console.error('Error processing registration:', error);
+      throw error;
+    }
+  });
+
+/**
+ * Cloud Function triggered when a pending registration is approved by admin
+ * Generates PDF and sends confirmation emails
+ */
+exports.onRegistrationApproved = functions.firestore
+  .document('registrations/{registrationId}')
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+    const registrationId = context.params.registrationId;
+
+    // Only run when status changes from 'pending' to 'approved'
+    if (before.status !== 'pending' || after.status !== 'approved') {
+      return null;
+    }
+
+    const registration = after;
+
+    try {
+      const tripDoc = await admin.firestore().collection('trips').doc(registration.tripId).get();
+      if (!tripDoc.exists) {
+        console.error('Trip not found:', registration.tripId);
+        return null;
+      }
+      const trip = tripDoc.data();
+
+      // Generate PDF
+      const pdfBuffer = await generateWaiverPDF(registration, trip);
+
+      // Upload PDF to Storage
+      const bucket = admin.storage().bucket();
+      const pdfFileName = `waivers/${registration.tripId}/${registrationId}.pdf`;
+      const file = bucket.file(pdfFileName);
+      await file.save(pdfBuffer, {
+        metadata: { contentType: 'application/pdf' }
+      });
+      await file.makePublic();
+      const pdfUrl = `https://storage.googleapis.com/${bucket.name}/${pdfFileName}`;
+      await change.after.ref.update({ pdfUrl });
+
+      // Send confirmation email to participant
+      await transporter.sendMail({
+        from: '"IVRI Tours" <noreply@ivritours.com>',
+        to: registration.email,
+        subject: `✅ Registration Approved: ${trip.title}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; font-size: 28px;">✅ Registration Approved!</h1>
+            </div>
+            <div style="background-color: white; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px;">
+              <p style="font-size: 16px;">Dear ${registration.firstName} ${registration.lastName},</p>
+              <p style="font-size: 16px;">Your registration for <strong style="color: #00BCD4;">${trip.title}</strong> has been approved!</p>
+              <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #00BCD4; margin-top: 0;">📅 Trip Details</h3>
+                <p style="margin: 8px 0;"><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
+                <p style="margin: 8px 0;"><strong>Time:</strong> ${trip.date.toDate().toLocaleTimeString()}</p>
+                <p style="margin: 8px 0;"><strong>Your Seat:</strong> <span style="background-color: #00BCD4; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">Seat will be placed upon arrival</span></p>
+              </div>
+              <p style="font-size: 16px; margin-top: 30px;">We look forward to seeing you on the trip!</p>
+              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRI Tours Team</strong></p>
+              </div>
+            </div>
+          </div>
+        `,
+        attachments: [{ filename: 'trip-waiver.pdf', content: pdfBuffer }]
+      });
+
+      // Notify admin
+      await transporter.sendMail({
+        from: '"IVRI Tours" <noreply@ivritours.com>',
+        to: ADMIN_EMAIL,
+        subject: `✅ Registration Approved: ${trip.title}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #00BCD4;">✅ Pending Registration Approved</h2>
+            <p><strong>Trip:</strong> ${trip.title}</p>
+            <p><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
+            <p><strong>Name:</strong> ${registration.firstName} ${registration.lastName}</p>
+            <p><strong>Email:</strong> ${registration.email}</p>
+            <p><strong>Phone:</strong> ${registration.phone}</p>
+            <p><strong>Seat:</strong> #${registration.seatNumber}</p>
+          </div>
+        `
+      });
+
+      console.log('Successfully processed approved registration:', registrationId);
+      return null;
+    } catch (error) {
+      console.error('Error processing approved registration:', error);
       throw error;
     }
   });
