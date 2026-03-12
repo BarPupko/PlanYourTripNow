@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -rn \"status.*:\" /c/Projects/PlanYourTrip/tsms/src/pages/*.jsx)"
+    ]
+  }
+}
