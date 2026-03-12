@@ -18,6 +18,40 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// Cyrillic → Latin transliteration map
+const CYRILLIC_MAP = {
+  'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z',
+  'и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r',
+  'с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh',
+  'щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',
+  'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'Yo','Ж':'Zh','З':'Z',
+  'И':'I','Й':'Y','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P','Р':'R',
+  'С':'S','Т':'T','У':'U','Ф':'F','Х':'Kh','Ц':'Ts','Ч':'Ch','Ш':'Sh',
+  'Щ':'Sch','Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'Yu','Я':'Ya'
+};
+
+// Hebrew → Latin transliteration map
+const HEBREW_MAP = {
+  'א':'A','ב':'B','ג':'G','ד':'D','ה':'H','ו':'V','ז':'Z','ח':'Ch','ט':'T',
+  'י':'Y','כ':'K','ך':'K','ל':'L','מ':'M','ם':'M','נ':'N','ן':'N','ס':'S',
+  'ע':'A','פ':'P','ף':'F','צ':'Ts','ץ':'Ts','ק':'K','ר':'R','ש':'Sh','ת':'T'
+};
+
+/**
+ * Transliterates Cyrillic and Hebrew characters to Latin equivalents so
+ * PDFKit's built-in Helvetica font can render them without garbling.
+ * Latin-1 characters pass through unchanged.
+ */
+function pdfSafe(text) {
+  if (!text) return '';
+  return String(text).split('').map(c => {
+    if (CYRILLIC_MAP[c] !== undefined) return CYRILLIC_MAP[c];
+    if (HEBREW_MAP[c] !== undefined) return HEBREW_MAP[c];
+    if (c.charCodeAt(0) > 255) return '?';
+    return c;
+  }).join('');
+}
+
 /**
  * Generates a PDF waiver with user information and signature
  */
@@ -37,28 +71,45 @@ async function generateWaiverPDF(registration, trip) {
     // Trip Information
     doc.fontSize(14).font('Helvetica-Bold').text('Trip Information');
     doc.fontSize(11).font('Helvetica');
-    doc.text(`Trip: ${trip.title}`);
+    doc.text(`Trip: ${pdfSafe(trip.title)}`);
     doc.text(`Date: ${trip.date.toDate().toLocaleDateString()}`);
+    if (trip.endDate && trip.endDate.toDate().toDateString() !== trip.date.toDate().toDateString()) {
+      doc.text(`End Date: ${trip.endDate.toDate().toLocaleDateString()}`);
+    }
+    if (trip.price) doc.text(`Price: C$${trip.price} per person`);
     doc.moveDown();
 
     // Participant Information
     doc.fontSize(14).font('Helvetica-Bold').text('Participant Information');
     doc.fontSize(11).font('Helvetica');
-    doc.text(`Name: ${registration.firstName} ${registration.lastName}`);
-    doc.text(`Email: ${registration.email}`);
-    doc.text(`Phone: ${registration.phone}`);
-    doc.text(`Seat Number: ${registration.seatNumber}`);
+    doc.text(`Name: ${pdfSafe(registration.firstName)} ${pdfSafe(registration.lastName)}`);
+    doc.text(`Email: ${registration.email || ''}`);
+    doc.text(`Phone: ${registration.phone || ''}`);
+    if (registration.seatNumber) doc.text(`Seat Number: #${registration.seatNumber}`);
+    if (registration.preferredPickupPlace) doc.text(`Pickup: ${pdfSafe(registration.preferredPickupPlace)}`);
+    doc.text(`Payment Method: ${registration.paymentMethod === 'card' ? 'Pay with Card' : 'Pay on Trip'}`);
     doc.moveDown();
+
+    // Custom Trip Information (if set by admin)
+    if (trip.customInfo) {
+      doc.fontSize(14).font('Helvetica-Bold').text('Trip-Specific Information');
+      doc.fontSize(10).font('Helvetica');
+      doc.text(pdfSafe(trip.customInfo), { lineGap: 2 });
+      doc.moveDown(0.5);
+      doc.fontSize(10).font('Helvetica-Oblique').text('✓ Participant agreed to the above trip-specific information.');
+      doc.moveDown();
+    }
 
     // Cancellation Policy
     doc.fontSize(14).font('Helvetica-Bold').text('Cancellation Policy');
     doc.fontSize(10).font('Helvetica');
     doc.text(
-      '1. Cancellations made 30 days or more before the trip date will receive a full refund.\n' +
-      '2. Cancellations made 15-29 days before the trip date will receive a 50% refund.\n' +
-      '3. Cancellations made less than 15 days before the trip date are non-refundable.\n' +
+      '1. Cancellations made 7 days or more before the trip date will receive a full refund.\n' +
+      '2. Cancellations made 4 days before the trip date will receive a 50% refund.\n' +
+      '3. Cancellations made less than 3 days before the trip date are non-refundable.\n' +
       '4. No-shows on the trip date are non-refundable.\n' +
-      '5. Trip organizers reserve the right to cancel trips due to weather, safety concerns, or insufficient participation.'
+      '5. Trip organizers reserve the right to cancel trips due to weather, safety concerns, or insufficient participation.',
+      { lineGap: 2 }
     );
     doc.moveDown();
 
@@ -73,31 +124,36 @@ async function generateWaiverPDF(registration, trip) {
       '2. ASSUME ALL RISKS associated with participation in this trip, whether known or unknown.\n' +
       '3. AGREE TO INDEMNIFY AND HOLD HARMLESS the trip organizers from any claims, actions, or losses.\n' +
       '4. CONSENT to receive emergency medical treatment if necessary.\n\n' +
-      'I have read this waiver, fully understand its terms, and sign it freely and voluntarily.'
+      'I have read this waiver, fully understand its terms, and sign it freely and voluntarily.',
+      { lineGap: 2 }
     );
     doc.moveDown();
 
     // Signature Section
+    doc.fontSize(12).font('Helvetica-Bold').text('Digital Signature');
+    doc.moveDown(0.5);
     doc.fontSize(11).font('Helvetica');
-    doc.text(`Date: ${new Date().toLocaleDateString()}`);
-    doc.moveDown();
+    doc.text(`Signed on: ${new Date(registration.registrationDate || Date.now()).toLocaleDateString()}`);
+    doc.moveDown(0.5);
 
-    // Add signature image if available
-    if (registration.signatureUrl) {
-      doc.fontSize(11).font('Helvetica-Bold').text('Digital Signature:');
-      doc.moveDown(0.5);
-
-      // Note: In a production environment, you would fetch and embed the signature image
-      // For now, we'll just indicate it's been signed
-      doc.fontSize(10).font('Helvetica-Oblique');
-      doc.text('[Digital signature on file]');
-      doc.text(`Signature URL: ${registration.signatureUrl}`);
+    // Embed the base64 signature image directly
+    if (registration.signatureData) {
+      try {
+        const base64Data = registration.signatureData.replace(/^data:image\/\w+;base64,/, '');
+        const imgBuffer = Buffer.from(base64Data, 'base64');
+        doc.image(imgBuffer, { width: 250, height: 80 });
+      } catch (imgErr) {
+        console.warn('Could not embed signature image:', imgErr.message);
+        doc.fontSize(10).font('Helvetica-Oblique').text('[Digital signature on file]');
+      }
+    } else {
+      doc.fontSize(10).font('Helvetica-Oblique').text('[Signature not provided]');
     }
 
     // Footer
     doc.moveDown(2);
     doc.fontSize(8).font('Helvetica').text(
-      `Generated on ${new Date().toLocaleString()}`,
+      `Generated on ${new Date().toLocaleString()} | IVRI Tours`,
       { align: 'center' }
     );
 
@@ -361,22 +417,48 @@ exports.onRegistrationConfirmed = functions.firestore
             <div style="background-color: white; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px;">
               <p style="font-size: 16px;">Dear ${registration.firstName} ${registration.lastName},</p>
               <p style="font-size: 16px;">Your registration for <strong style="color: #00BCD4;">${trip.title}</strong> is confirmed!</p>
+
               <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #00BCD4; margin-top: 0;">📅 Trip Details</h3>
                 <p style="margin: 8px 0;"><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
+                ${trip.endDate && trip.endDate.toDate().toDateString() !== trip.date.toDate().toDateString()
+                  ? `<p style="margin: 8px 0;"><strong>End Date:</strong> ${trip.endDate.toDate().toLocaleDateString()}</p>`
+                  : ''}
                 ${registration.seatNumber ? `<p style="margin: 8px 0;"><strong>Your Seat:</strong> <span style="background-color: #00BCD4; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">#${registration.seatNumber}</span></p>` : ''}
+                ${trip.price ? `<p style="margin: 8px 0;"><strong>Price:</strong> C$${trip.price} per person</p>` : ''}
               </div>
-              <p style="font-size: 14px; color: #666;">Your signed waiver is attached to this email.</p>
+
+              <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #333; margin-top: 0;">👤 Your Details</h3>
+                <p style="margin: 8px 0;"><strong>Name:</strong> ${registration.firstName} ${registration.lastName}</p>
+                <p style="margin: 8px 0;"><strong>Email:</strong> ${registration.email}</p>
+                <p style="margin: 8px 0;"><strong>Phone:</strong> ${registration.phone}</p>
+                ${registration.preferredPickupPlace ? `<p style="margin: 8px 0;"><strong>Pickup:</strong> ${registration.preferredPickupPlace}</p>` : ''}
+                <p style="margin: 8px 0;"><strong>Payment:</strong> ${registration.paymentMethod === 'card' ? '💳 Card Payment' : '💵 Pay on Trip'}</p>
+              </div>
+
+              ${trip.customInfo ? `
+              <div style="background-color: #FFFBEB; border-left: 4px solid #F59E0B; padding: 16px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+                <h3 style="color: #92400E; margin-top: 0;">📋 Trip-Specific Information</h3>
+                <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; font-size: 13px; color: #78350F; margin: 0;">${trip.customInfo}</pre>
+                <p style="margin: 8px 0 0; font-size: 12px; color: #92400E;">✓ You agreed to the above terms during registration.</p>
+              </div>` : ''}
+
+              <div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #00BCD4; margin: 20px 0;">
+                <p style="margin: 0; font-size: 14px;"><strong>📎 Note:</strong> Your signed waiver PDF is attached to this email for your records.</p>
+              </div>
+
+              <p style="font-size: 16px; margin-top: 30px;">We look forward to seeing you on the trip! If you have any questions, feel free to reach out.</p>
               <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                 <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRI Tours Team</strong></p>
               </div>
             </div>
           </div>
         `,
-        attachments: [{ filename: 'trip-waiver.pdf', content: pdfBuffer }]
+        attachments: [{ filename: `waiver-${registration.firstName}-${registration.lastName}.pdf`, content: pdfBuffer }]
       });
 
-      // Notify admin
+      // Notify admin (include PDF attachment)
       await transporter.sendMail({
         from: '"IVRI Tours" <noreply@ivritours.com>',
         to: ADMIN_EMAIL,
@@ -384,14 +466,24 @@ exports.onRegistrationConfirmed = functions.firestore
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #00BCD4;">✅ Registration Confirmed</h2>
-            <p><strong>Trip:</strong> ${trip.title}</p>
-            <p><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
-            <p><strong>Name:</strong> ${registration.firstName} ${registration.lastName}</p>
-            <p><strong>Email:</strong> ${registration.email}</p>
-            <p><strong>Phone:</strong> ${registration.phone}</p>
-            ${registration.seatNumber ? `<p><strong>Seat:</strong> #${registration.seatNumber}</p>` : ''}
+            <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #333; margin-top: 0;">Trip Details</h3>
+              <p><strong>Trip:</strong> ${trip.title}</p>
+              <p><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
+            </div>
+            <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #333; margin-top: 0;">Participant Information</h3>
+              <p><strong>Name:</strong> ${registration.firstName} ${registration.lastName}</p>
+              <p><strong>Email:</strong> <a href="mailto:${registration.email}">${registration.email}</a></p>
+              <p><strong>Phone:</strong> <a href="tel:${registration.phone}">${registration.phone}</a></p>
+              ${registration.seatNumber ? `<p><strong>Seat:</strong> #${registration.seatNumber}</p>` : ''}
+              <p><strong>Payment Method:</strong> ${registration.paymentMethod === 'card' ? 'Card Payment' : 'Pay on Trip'}</p>
+              <p><strong>Payment Status:</strong> ${registration.paid ? '✅ Paid' : '❌ Not Paid'}</p>
+            </div>
+            <p style="color: #666; font-size: 12px;">The signed waiver PDF is attached to this email.</p>
           </div>
-        `
+        `,
+        attachments: [{ filename: `waiver-${registration.firstName}-${registration.lastName}.pdf`, content: pdfBuffer }]
       });
 
       console.log('Successfully processed confirmed registration:', registrationId);
