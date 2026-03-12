@@ -46,7 +46,7 @@ const LandingPage = () => {
         for (const doc of tripsSnap.docs) {
           const data = doc.data();
           const tripDate = data.date?.toDate?.() || (data.date ? new Date(data.date) : null);
-          if (tripDate && tripDate >= new Date() && data.status !== 'done') {
+          if (tripDate && tripDate >= new Date() && data.status !== 'done' && data.showOnWebsite === true) {
             trips.push({ id: doc.id, ...data });
             // Count approved registrations
             const regSnap = await getDocs(query(
@@ -631,7 +631,7 @@ const LandingPage = () => {
                 const tripDate = trip.date?.toDate?.() || (trip.date ? new Date(trip.date) : null);
                 return (
                   <div key={trip.id} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                    <div className="h-48 bg-cover bg-center relative" style={{ backgroundImage: `url(${getImageForTrip(trip.title)})` }}>
+                    <div className="h-52 bg-cover bg-center relative" style={{ backgroundImage: `url(${trip.websiteImage || getImageForTrip(trip.title)})` }}>
                       {available === 0 && (
                         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                           <span className="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">
@@ -639,9 +639,17 @@ const LandingPage = () => {
                           </span>
                         </div>
                       )}
+                      {trip.price && (
+                        <div className="absolute top-3 right-3 text-white font-bold text-sm px-3 py-1 rounded-full shadow" style={{ backgroundColor: colors.primary.teal }}>
+                          ₪{trip.price}
+                        </div>
+                      )}
                     </div>
                     <div className="p-5">
-                      <h3 className="text-xl font-bold mb-3" style={{ color: colors.primary.teal }}>{trip.title}</h3>
+                      <h3 className="text-xl font-bold mb-2" style={{ color: colors.primary.teal }}>{trip.title}</h3>
+                      {trip.websiteDescription && (
+                        <p className="text-gray-600 text-sm leading-relaxed mb-3 line-clamp-3">{trip.websiteDescription}</p>
+                      )}
                       <div className="space-y-2 mb-4 text-sm text-gray-600">
                         {tripDate && (
                           <div className="flex items-center gap-2">
@@ -682,9 +690,14 @@ const LandingPage = () => {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-xl font-bold" style={{ color: colors.primary.teal }}>{selectedTrip.title}</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  {language === 'ru' ? 'Заявка будет рассмотрена администратором' : language === 'he' ? 'הבקשה תאושר על ידי המנהל' : 'Your request will be reviewed by an admin'}
-                </p>
+                <div className="flex items-center gap-3 mt-1">
+                  <p className="text-sm text-gray-500">
+                    {language === 'ru' ? 'Заявка будет рассмотрена администратором' : language === 'he' ? 'הבקשה תאושר על ידי המנהל' : 'Your request will be reviewed by an admin'}
+                  </p>
+                  {selectedTrip.price && (
+                    <span className="text-sm font-bold text-white px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.primary.teal }}>₪{selectedTrip.price}</span>
+                  )}
+                </div>
               </div>
               <button onClick={closeRegisterModal} className="text-gray-400 hover:text-gray-600 ml-4 flex-shrink-0">
                 <X className="w-6 h-6" />

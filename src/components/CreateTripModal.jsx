@@ -13,7 +13,11 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     status: 'planned',
     date: selectedDate,
     endDate: selectedDate, // Add end date
-    customSeats: []
+    customSeats: [],
+    showOnWebsite: false,
+    websiteImage: '',
+    websiteDescription: '',
+    price: ''
   });
   const [loading, setLoading] = useState(false);
   const [showCustomSeats, setShowCustomSeats] = useState(false);
@@ -318,6 +322,67 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
               <option value="scheduled">Scheduled (Purple)</option>
               <option value="done">Done (Green)</option>
             </select>
+          </div>
+
+          {/* Show on Website Toggle */}
+          <div className="border-2 rounded-lg overflow-hidden" style={{ borderColor: formData.showOnWebsite ? colors.primary.teal : '#E5E7EB' }}>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, showOnWebsite: !formData.showOnWebsite })}
+              className="w-full flex items-center justify-between px-4 py-3 transition-colors"
+              style={{ backgroundColor: formData.showOnWebsite ? '#E0F7FA' : '#F9FAFB' }}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg">🌐</span>
+                <div className="text-left">
+                  <p className="font-semibold text-gray-800">Show on Website</p>
+                  <p className="text-xs text-gray-500">Let visitors see and register for this trip on the landing page</p>
+                </div>
+              </div>
+              <div className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${formData.showOnWebsite ? '' : 'bg-gray-300'}`}
+                style={formData.showOnWebsite ? { backgroundColor: colors.primary.teal } : {}}>
+                <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.showOnWebsite ? 'translate-x-6' : 'translate-x-0'}`} />
+              </div>
+            </button>
+
+            {formData.showOnWebsite && (
+              <div className="px-4 pb-4 pt-2 space-y-3 border-t border-teal-100">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Trip Image URL</label>
+                  <input
+                    type="url"
+                    value={formData.websiteImage}
+                    onChange={(e) => setFormData({ ...formData, websiteImage: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-sm"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                  {formData.websiteImage && (
+                    <div className="mt-2 h-24 rounded-lg bg-cover bg-center border border-gray-200" style={{ backgroundImage: `url(${formData.websiteImage})` }} />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Trip Description</label>
+                  <textarea
+                    value={formData.websiteDescription}
+                    onChange={(e) => setFormData({ ...formData, websiteDescription: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-sm resize-vertical"
+                    placeholder="Describe this trip for website visitors..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price per Person (₪)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-sm"
+                    placeholder="e.g. 250"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">

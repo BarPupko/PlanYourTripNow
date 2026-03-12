@@ -275,6 +275,29 @@ const RegistrationForm = () => {
         day: 'numeric'
       })} />
 
+      {/* Trip hero banner (shown if admin set a website image/description) */}
+      {(trip.websiteImage || trip.websiteDescription) && (
+        <div className="max-w-4xl mx-auto px-4 pt-6">
+          <div className="bg-white rounded-xl overflow-hidden shadow-lg">
+            {trip.websiteImage && (
+              <div className="h-64 bg-cover bg-center" style={{ backgroundImage: `url(${trip.websiteImage})` }} />
+            )}
+            {(trip.websiteDescription || trip.price) && (
+              <div className="p-6">
+                {trip.websiteDescription && (
+                  <p className="text-gray-700 leading-relaxed text-base">{trip.websiteDescription}</p>
+                )}
+                {trip.price && (
+                  <div className="mt-3 inline-block px-4 py-1.5 text-white font-bold rounded-full text-sm" style={{ backgroundColor: colors.primary.teal }}>
+                    ₪{trip.price} {language === 'ru' ? 'за человека' : language === 'he' ? 'לאדם' : 'per person'}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto py-8 px-4">
 
         <form onSubmit={handleSubmit} className="space-y-6">
