@@ -289,7 +289,7 @@ const RegistrationForm = () => {
                 )}
                 {trip.price && (
                   <div className="mt-3 inline-block px-4 py-1.5 text-white font-bold rounded-full text-sm" style={{ backgroundColor: colors.primary.teal }}>
-                    ₪{trip.price} {language === 'ru' ? 'за человека' : language === 'he' ? 'לאדם' : 'per person'}
+                    C${trip.price} {language === 'ru' ? 'за человека' : language === 'he' ? 'לאדם' : 'per person'}
                   </div>
                 )}
               </div>

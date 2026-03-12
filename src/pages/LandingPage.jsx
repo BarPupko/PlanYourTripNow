@@ -48,13 +48,13 @@ const LandingPage = () => {
           const tripDate = data.date?.toDate?.() || (data.date ? new Date(data.date) : null);
           if (tripDate && tripDate >= new Date() && data.status !== 'done' && data.showOnWebsite === true) {
             trips.push({ id: doc.id, ...data });
-            // Count approved registrations
+            // Count approved registrations (filter in JS to avoid needing a composite index)
             const regSnap = await getDocs(query(
               collection(db, 'registrations'),
-              where('tripId', '==', doc.id),
-              where('status', '!=', 'pending')
+              where('tripId', '==', doc.id)
             ));
-            counts[doc.id] = regSnap.size;
+            const approvedCount = regSnap.docs.filter(d => d.data().status !== 'pending').length;
+            counts[doc.id] = approvedCount;
           }
         }
         trips.sort((a, b) => {
@@ -630,8 +630,19 @@ const LandingPage = () => {
                 const available = Math.max(0, capacity - taken);
                 const tripDate = trip.date?.toDate?.() || (trip.date ? new Date(trip.date) : null);
                 return (
-                  <div key={trip.id} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                    <div className="h-52 bg-cover bg-center relative" style={{ backgroundImage: `url(${trip.websiteImage || getImageForTrip(trip.title)})` }}>
+                  <div key={trip.id} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col">
+                    {/* Header: Trip name + cost */}
+                    <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
+                      <h3 className="text-xl font-bold leading-snug" style={{ color: colors.primary.teal }}>{trip.title}</h3>
+                      {trip.price && (
+                        <span className="flex-shrink-0 text-white font-bold text-sm px-3 py-1.5 rounded-full shadow-sm" style={{ backgroundColor: colors.primary.teal }}>
+                          C${trip.price}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Image */}
+                    <div className="mx-5 rounded-xl h-48 bg-cover bg-center relative overflow-hidden" style={{ backgroundImage: `url(${trip.websiteImage || getImageForTrip(trip.title)})` }}>
                       {available === 0 && (
                         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                           <span className="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">
@@ -639,40 +650,44 @@ const LandingPage = () => {
                           </span>
                         </div>
                       )}
-                      {trip.price && (
-                        <div className="absolute top-3 right-3 text-white font-bold text-sm px-3 py-1 rounded-full shadow" style={{ backgroundColor: colors.primary.teal }}>
-                          ₪{trip.price}
+                    </div>
+
+                    <div className="px-5 pt-3 pb-5 flex flex-col flex-1 gap-3">
+                      {/* Date */}
+                      {tripDate && (
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <CalendarDays className="w-4 h-4 flex-shrink-0" style={{ color: colors.primary.teal }} />
+                          <span>{tripDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                         </div>
                       )}
-                    </div>
-                    <div className="p-5">
-                      <h3 className="text-xl font-bold mb-2" style={{ color: colors.primary.teal }}>{trip.title}</h3>
+
+                      {/* Description */}
                       {trip.websiteDescription && (
-                        <p className="text-gray-600 text-sm leading-relaxed mb-3 line-clamp-3">{trip.websiteDescription}</p>
+                        <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">{trip.websiteDescription}</p>
                       )}
-                      <div className="space-y-2 mb-4 text-sm text-gray-600">
-                        {tripDate && (
-                          <div className="flex items-center gap-2">
-                            <CalendarDays className="w-4 h-4" style={{ color: colors.primary.teal }} />
-                            <span>{tripDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+
+                      {/* Registration count (only if showRegistrationCount is on) */}
+                      {trip.showRegistrationCount && capacity > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div className="h-2 rounded-full transition-all" style={{ width: `${Math.min(100, (taken / capacity) * 100)}%`, backgroundColor: taken >= capacity ? colors.error : colors.primary.teal }} />
                           </div>
-                        )}
-                        {capacity > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4" style={{ color: colors.primary.teal }} />
-                            <span>
-                              {language === 'ru' ? `Мест: ${available} из ${capacity}` : language === 'he' ? `מקומות: ${available} מתוך ${capacity}` : `Seats: ${available} of ${capacity} available`}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                          <span className="text-sm font-semibold text-gray-700 flex-shrink-0">
+                            {taken}/{capacity}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Register button */}
                       <button
                         onClick={() => openRegisterModal(trip)}
                         disabled={available === 0}
-                        className="w-full py-2.5 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="mt-auto w-full py-2.5 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{ backgroundColor: colors.primary.teal }}
                       >
-                        {language === 'ru' ? 'Записаться' : language === 'he' ? 'הירשם' : 'Register'}
+                        {available === 0
+                          ? (language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Full')
+                          : (language === 'ru' ? 'Записаться' : language === 'he' ? 'הירשם' : 'Register Now')}
                       </button>
                     </div>
                   </div>
@@ -695,7 +710,7 @@ const LandingPage = () => {
                     {language === 'ru' ? 'Заявка будет рассмотрена администратором' : language === 'he' ? 'הבקשה תאושר על ידי המנהל' : 'Your request will be reviewed by an admin'}
                   </p>
                   {selectedTrip.price && (
-                    <span className="text-sm font-bold text-white px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.primary.teal }}>₪{selectedTrip.price}</span>
+                    <span className="text-sm font-bold text-white px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.primary.teal }}>C${selectedTrip.price}</span>
                   )}
                 </div>
               </div>
