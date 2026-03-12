@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, Copy, Check, MessageCircle, ArrowLeftRight, UserX } from 'lucide-react';
+import { Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, Copy, Check, MessageCircle, ArrowLeftRight, UserX, Phone } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getTrip, updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
@@ -184,6 +184,14 @@ const TripView = () => {
     } catch (error) {
       console.error('Error rejecting registration:', error);
       alert('Failed to reject registration');
+    }
+  };
+
+  const handleToggleContacted = async (regId, currentValue) => {
+    try {
+      await updateRegistration(regId, { contacted: !currentValue });
+    } catch (error) {
+      console.error('Error updating contacted status:', error);
     }
   };
 
@@ -373,18 +381,38 @@ const TripView = () => {
             </div>
             <div className="space-y-3">
               {pendingRegistrations.map((reg) => (
-                <div key={reg.id} className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div>
-                    <p className="font-semibold text-gray-900">{reg.firstName} {reg.lastName}</p>
-                    <p className="text-sm text-gray-500">{reg.email} · {reg.phone}</p>
-                    {reg.pickupLocation && (
-                      <p className="text-sm text-gray-500">Pickup: {reg.pickupLocation}</p>
-                    )}
+                <div key={reg.id} className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-start justify-between gap-3">
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900">{reg.firstName} {reg.lastName}</p>
+                      <p className="text-sm text-gray-500 truncate">{reg.email}</p>
+                      {reg.pickupLocation && (
+                        <p className="text-xs text-gray-400 mt-0.5">📍 {reg.pickupLocation}</p>
+                      )}
+                    </div>
+
+                    {/* Phone contact tracker */}
+                    <button
+                      onClick={() => handleToggleContacted(reg.id, reg.contacted)}
+                      title={reg.contacted ? 'Contacted — click to unmark' : 'Not contacted yet — click to mark as contacted'}
+                      className="flex-shrink-0 flex flex-col items-center gap-0.5 p-2 rounded-lg transition-all hover:bg-yellow-100"
+                    >
+                      <Phone
+                        className="w-5 h-5 transition-colors"
+                        style={{ color: reg.contacted ? colors.success : '#9CA3AF' }}
+                      />
+                      <span className="text-[10px] font-medium" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }}>
+                        {reg.phone}
+                      </span>
+                    </button>
                   </div>
-                  <div className="flex gap-2 ml-4 flex-shrink-0">
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2 mt-3">
                     <button
                       onClick={() => handleApprovePending(reg)}
-                      className="flex items-center gap-1.5 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-semibold"
                       style={{ backgroundColor: colors.success }}
                     >
                       <CheckCircle2 className="w-4 h-4" />
@@ -392,7 +420,7 @@ const TripView = () => {
                     </button>
                     <button
                       onClick={() => handleRejectPending(reg)}
-                      className="flex items-center gap-1.5 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-semibold"
                       style={{ backgroundColor: colors.button.danger }}
                     >
                       <XCircle className="w-4 h-4" />

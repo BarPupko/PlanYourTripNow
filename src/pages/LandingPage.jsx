@@ -644,9 +644,9 @@ const LandingPage = () => {
                     {/* Image */}
                     <div className="mx-5 rounded-xl h-48 bg-cover bg-center relative overflow-hidden" style={{ backgroundImage: `url(${trip.websiteImage || getImageForTrip(trip.title)})` }}>
                       {available === 0 && (
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                          <span className="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">
-                            {language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Full'}
+                        <div className="absolute inset-0 bg-red-900 bg-opacity-60 flex items-center justify-center">
+                          <span className="text-white font-black text-2xl tracking-widest uppercase px-5 py-2 border-4 border-white rounded-lg rotate-[-8deg]">
+                            {language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Sold Out'}
                           </span>
                         </div>
                       )}
@@ -680,13 +680,13 @@ const LandingPage = () => {
 
                       {/* Register button */}
                       <button
-                        onClick={() => openRegisterModal(trip)}
+                        onClick={() => available > 0 && openRegisterModal(trip)}
                         disabled={available === 0}
-                        className="mt-auto w-full py-2.5 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{ backgroundColor: colors.primary.teal }}
+                        className="mt-auto w-full py-2.5 text-white font-semibold rounded-lg transition-opacity disabled:cursor-not-allowed"
+                        style={{ backgroundColor: available === 0 ? '#dc2626' : colors.primary.teal, opacity: available === 0 ? 1 : undefined }}
                       >
                         {available === 0
-                          ? (language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Full')
+                          ? (language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Sold Out')
                           : (language === 'ru' ? 'Записаться' : language === 'he' ? 'הירשם' : 'Register Now')}
                       </button>
                     </div>
