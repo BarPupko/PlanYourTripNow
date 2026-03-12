@@ -14,11 +14,14 @@ service cloud.firestore {
       allow create: if true;
 
       // Allow reading registrations to see occupied seats (public)
-      // This is needed for the registration form to show which seats are taken
       allow read: if true;
 
-      // Only authenticated users (admins) can update/delete
+      // Authenticated users (admins) can update/delete anything
       allow update, delete: if request.auth != null;
+
+      // Public users can update a form_sent registration to confirmed (completing the emailed form)
+      allow update: if resource.data.status == 'form_sent'
+                    && request.resource.data.status == 'confirmed';
     }
 
     // Contacts collection - admin only
