@@ -5,6 +5,7 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getTrip, updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
 import VehicleSeatingMap from '../components/VehicleSeatingMap';
+import { getVehicleLayout } from '../utils/vehicleLayouts';
 import AddParticipantModal from '../components/AddParticipantModal';
 import Header from '../components/Header';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -24,6 +25,8 @@ const TripView = () => {
   const [selectedParticipant, setSelectedParticipant] = useState(null);
   const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
   const [isChangingSeat, setIsChangingSeat] = useState(false);
+  const [confirmingReg, setConfirmingReg] = useState(null);
+  const [confirmSeat, setConfirmSeat] = useState('');
 
   useEffect(() => {
     loadTrip();
@@ -168,12 +171,23 @@ const TripView = () => {
   };
 
   const handleApprovePending = async (reg) => {
-    const seatNumber = getNextAvailableSeat();
     try {
-      await updateRegistration(reg.id, { status: 'approved', seatNumber });
+      await updateRegistration(reg.id, { status: 'form_sent' });
     } catch (error) {
-      console.error('Error approving registration:', error);
-      alert('Failed to approve registration');
+      console.error('Error sending form:', error);
+      alert('Failed to send form');
+    }
+  };
+
+  const handleConfirmManually = async () => {
+    if (!confirmingReg || !confirmSeat) return;
+    try {
+      await updateRegistration(confirmingReg.id, { status: 'confirmed', seatNumber: Number(confirmSeat) });
+      setConfirmingReg(null);
+      setConfirmSeat('');
+    } catch (error) {
+      console.error('Error confirming registration:', error);
+      alert('Failed to confirm registration');
     }
   };
 
@@ -235,9 +249,10 @@ const TripView = () => {
     );
   }
 
-  const approvedRegistrations = registrations.filter(r => r.status !== 'pending');
   const pendingRegistrations = registrations.filter(r => r.status === 'pending');
-  const sortedRegistrations = [...approvedRegistrations].sort(
+  const formSentRegistrations = registrations.filter(r => r.status === 'form_sent');
+  const confirmedRegistrations = registrations.filter(r => ['approved', 'confirmed'].includes(r.status));
+  const sortedRegistrations = [...confirmedRegistrations].sort(
     (a, b) => (a.seatNumber || 999) - (b.seatNumber || 999)
   );
 
@@ -281,7 +296,7 @@ const TripView = () => {
                 <div className="flex items-center gap-2">
                   <Users className="w-5 h-5" style={{ color: colors.primary.teal }} />
                   <h2 className="text-xl font-bold" style={{ color: colors.primary.black }}>
-                    Participants ({approvedRegistrations.length})
+                    Participants ({confirmedRegistrations.length})
                   </h2>
                 </div>
                 <div className="flex gap-2">
@@ -416,7 +431,7 @@ const TripView = () => {
                       style={{ backgroundColor: colors.success }}
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      Approve
+                      Send Form
                     </button>
                     <button
                       onClick={() => handleRejectPending(reg)}
@@ -429,6 +444,102 @@ const TripView = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Awaiting Form Section */}
+      {formSentRegistrations.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-3 h-3 rounded-full bg-orange-400" />
+              <h2 className="text-xl font-bold text-gray-900">
+                Awaiting Form Completion ({formSentRegistrations.length})
+              </h2>
+            </div>
+            <div className="space-y-3">
+              {formSentRegistrations.map((reg) => (
+                <div key={reg.id} className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900">{reg.firstName} {reg.lastName}</p>
+                      <p className="text-sm text-gray-500 truncate">{reg.email}</p>
+                      {reg.pickupLocation && (
+                        <p className="text-xs text-gray-400 mt-0.5">📍 {reg.pickupLocation}</p>
+                      )}
+                    </div>
+                    {/* Phone contact tracker */}
+                    <button
+                      onClick={() => handleToggleContacted(reg.id, reg.contacted)}
+                      title={reg.contacted ? 'Contacted — click to unmark' : 'Not contacted yet — click to mark as contacted'}
+                      className="flex-shrink-0 flex flex-col items-center gap-0.5 p-2 rounded-lg transition-all hover:bg-orange-100"
+                    >
+                      <Phone className="w-5 h-5 transition-colors" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }} />
+                      <span className="text-[10px] font-medium" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }}>
+                        {reg.phone}
+                      </span>
+                    </button>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => { setConfirmingReg(reg); setConfirmSeat(''); }}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-semibold"
+                      style={{ backgroundColor: colors.primary.teal }}
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Confirm Manually
+                    </button>
+                    <button
+                      onClick={() => handleRejectPending(reg)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-semibold"
+                      style={{ backgroundColor: colors.button.danger }}
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Manually Modal */}
+      {confirmingReg && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setConfirmingReg(null)}>
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Confirm Registration</h2>
+            <p className="text-gray-500 text-sm mb-4">{confirmingReg.firstName} {confirmingReg.lastName}</p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Assign Seat</label>
+            <select
+              value={confirmSeat}
+              onChange={(e) => setConfirmSeat(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-teal-400"
+            >
+              <option value="">Select a seat...</option>
+              {Array.from({ length: getVehicleLayout(trip.vehicleLayout).totalSeats }, (_, i) => i + 1)
+                .filter(n => !registrations.find(r => r.seatNumber === n && r.id !== confirmingReg.id))
+                .map(n => <option key={n} value={n}>Seat {n}</option>)
+              }
+            </select>
+            <div className="flex gap-2">
+              <button
+                onClick={handleConfirmManually}
+                disabled={!confirmSeat}
+                className="flex-1 py-2 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40"
+                style={{ backgroundColor: colors.success }}
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setConfirmingReg(null)}
+                className="flex-1 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -520,8 +631,19 @@ const TripView = () => {
                 <div className="border-t pt-4">
                   <label className="text-sm font-medium text-gray-500">{t.registrationStatus}</label>
                   <div className="flex items-center gap-2 mt-1">
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    <span className="text-gray-900">{t.complete}</span>
+                    {selectedParticipant.status === 'form_sent' ? (
+                      <>
+                        <div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center">
+                          <span className="text-white text-[10px] font-bold">!</span>
+                        </div>
+                        <span className="text-orange-600 font-medium">Form Sent – Awaiting Completion</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        <span className="text-gray-900">{t.complete}</span>
+                      </>
+                    )}
                   </div>
                   {selectedParticipant.registrationDate && (
                     <p className="text-sm text-gray-500 mt-1">
@@ -552,6 +674,15 @@ const TripView = () => {
 
               {/* Actions */}
               <div className="mt-6 space-y-3">
+                {selectedParticipant.status === 'form_sent' && (
+                  <button
+                    onClick={() => { setConfirmingReg(selectedParticipant); setConfirmSeat(''); setSelectedParticipant(null); }}
+                    style={{ backgroundColor: colors.primary.teal }}
+                    className="w-full px-4 py-3 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                  >
+                    Confirm Manually
+                  </button>
+                )}
                 <button
                   onClick={() => handleTogglePaid(selectedParticipant.id, selectedParticipant.paid)}
                   style={{ backgroundColor: selectedParticipant.paid ? colors.button.danger : colors.success }}

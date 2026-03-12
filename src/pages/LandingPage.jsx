@@ -525,6 +525,9 @@ const LandingPage = () => {
   };
 
   return (
+    
+
+    
     <div className="min-h-screen bg-white" dir={language === 'he' ? 'rtl' : 'ltr'}>
       {showWelcome && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4 animate-fadeIn">
@@ -536,6 +539,88 @@ const LandingPage = () => {
           </div>
         </div>
       )}
+
+      
+
+      {/* Registration Modal */}
+      {selectedTrip && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-xl font-bold" style={{ color: colors.primary.teal }}>{selectedTrip.title}</h3>
+                <div className="flex items-center gap-3 mt-1">
+                  <p className="text-sm text-gray-500">
+                    {language === 'ru' ? 'Заявка будет рассмотрена администратором' : language === 'he' ? 'הבקשה תאושר על ידי המנהל' : 'Your request will be reviewed by an admin'}
+                  </p>
+                  {selectedTrip.price && (
+                    <span className="text-sm font-bold text-white px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.primary.teal }}>C${selectedTrip.price}</span>
+                  )}
+                </div>
+              </div>
+              <button onClick={closeRegisterModal} className="text-gray-400 hover:text-gray-600 ml-4 flex-shrink-0">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {regSuccess ? (
+              <div className="text-center py-8">
+                <CheckCircle2 className="w-16 h-16 mx-auto mb-4" style={{ color: colors.success }} />
+                <h4 className="text-xl font-bold text-gray-800 mb-2">
+                  {language === 'ru' ? 'Заявка отправлена!' : language === 'he' ? 'הבקשה נשלחה!' : 'Request Submitted!'}
+                </h4>
+                <p className="text-gray-500 mb-6">
+                  {language === 'ru' ? 'Мы свяжемся с вами после подтверждения.' : language === 'he' ? 'ניצור איתך קשר לאחר האישור.' : 'We will contact you once confirmed.'}
+                </p>
+                <button onClick={closeRegisterModal} className="px-6 py-2 text-white rounded-lg" style={{ backgroundColor: colors.primary.teal }}>
+                  {language === 'ru' ? 'Закрыть' : language === 'he' ? 'סגור' : 'Close'}
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      {language === 'ru' ? 'Имя *' : language === 'he' ? 'שם פרטי *' : 'First Name *'}
+                    </label>
+                    <input type="text" required value={regForm.firstName} onChange={(e) => setRegForm({ ...regForm, firstName: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      {language === 'ru' ? 'Фамилия *' : language === 'he' ? 'שם משפחה *' : 'Last Name *'}
+                    </label>
+                    <input type="text" required value={regForm.lastName} onChange={(e) => setRegForm({ ...regForm, lastName: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    {language === 'ru' ? 'Email *' : language === 'he' ? 'אימייל *' : 'Email *'}
+                  </label>
+                  <input type="email" required value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    {language === 'ru' ? 'Телефон *' : language === 'he' ? 'טלפון *' : 'Phone *'}
+                  </label>
+                  <input type="tel" required value={regForm.phone} onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    {language === 'ru' ? 'Место посадки' : language === 'he' ? 'נקודת איסוף' : 'Pickup Location'}
+                  </label>
+                  <input type="text" value={regForm.pickupLocation} onChange={(e) => setRegForm({ ...regForm, pickupLocation: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" placeholder={language === 'ru' ? 'Необязательно' : language === 'he' ? 'אופציונלי' : 'Optional'} />
+                </div>
+                <button type="submit" disabled={regSubmitting} className="w-full py-3 text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50" style={{ backgroundColor: colors.primary.teal }}>
+                  {regSubmitting
+                    ? (language === 'ru' ? 'Отправка...' : language === 'he' ? 'שולח...' : 'Submitting...')
+                    : (language === 'ru' ? 'Отправить заявку' : language === 'he' ? 'שלח בקשה' : 'Submit Request')}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
 
       <nav className="bg-white shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -565,47 +650,7 @@ const LandingPage = () => {
           <p className="text-xl sm:text-2xl opacity-95">{t.heroSubtitle}</p>
         </div>
       </section>
-
-      <section className="py-16 px-4 max-w-7xl mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-12" style={{ color: colors.primary.teal }}>{t.destinationsTitle}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {destinations.map((dest) => (
-            <div key={dest.key} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-              <div className="h-64 bg-cover bg-center" style={{ backgroundImage: `url(${dest.image})` }} />
-              <div className="p-6">
-                <h3 className="text-2xl font-bold mb-3" style={{ color: colors.primary.teal }}>{t.destinations[dest.key].title}</h3>
-                <p className="text-gray-600 leading-relaxed mb-4 text-sm">{t.destinations[dest.key].desc}</p>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                    <Clock className="w-4 h-4" style={{ color: colors.primary.teal }} />
-                    <span className="font-semibold">{t.duration}:</span> {t.destinations[dest.key].duration}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                    <Users className="w-4 h-4" style={{ color: colors.primary.teal }} />
-                    <span className="font-semibold">{t.groupSize}:</span> {t.destinations[dest.key].groupSize}
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <p className="text-xs font-semibold text-gray-700 mb-2">{t.highlights}:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {t.destinations[dest.key].highlights.map((highlight, idx) => (
-                      <span key={idx} className="inline-block px-2 py-1 rounded-full text-white text-xs" style={{ backgroundColor: colors.primary.teal }}>
-                        {highlight}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <span className="inline-block px-4 py-2 rounded-full text-white text-sm font-medium mt-2" style={{ backgroundColor: colors.primary.teal }}>🗣️ {t.multiLang}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Upcoming Trips Section */}
+       {/* Upcoming Trips Section */}
       <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-4" style={{ color: colors.primary.teal }}>
@@ -697,86 +742,46 @@ const LandingPage = () => {
           )}
         </div>
       </section>
+      <section className="py-16 px-4 max-w-7xl mx-auto">
+        <h2 className="text-4xl font-bold text-center mb-12" style={{ color: colors.primary.teal }}>{t.destinationsTitle}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {destinations.map((dest) => (
+            <div key={dest.key} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+              <div className="h-64 bg-cover bg-center" style={{ backgroundImage: `url(${dest.image})` }} />
+              <div className="p-6">
+                <h3 className="text-2xl font-bold mb-3" style={{ color: colors.primary.teal }}>{t.destinations[dest.key].title}</h3>
+                <p className="text-gray-600 leading-relaxed mb-4 text-sm">{t.destinations[dest.key].desc}</p>
 
-      {/* Registration Modal */}
-      {selectedTrip && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-xl font-bold" style={{ color: colors.primary.teal }}>{selectedTrip.title}</h3>
-                <div className="flex items-center gap-3 mt-1">
-                  <p className="text-sm text-gray-500">
-                    {language === 'ru' ? 'Заявка будет рассмотрена администратором' : language === 'he' ? 'הבקשה תאושר על ידי המנהל' : 'Your request will be reviewed by an admin'}
-                  </p>
-                  {selectedTrip.price && (
-                    <span className="text-sm font-bold text-white px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.primary.teal }}>C${selectedTrip.price}</span>
-                  )}
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <Clock className="w-4 h-4" style={{ color: colors.primary.teal }} />
+                    <span className="font-semibold">{t.duration}:</span> {t.destinations[dest.key].duration}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <Users className="w-4 h-4" style={{ color: colors.primary.teal }} />
+                    <span className="font-semibold">{t.groupSize}:</span> {t.destinations[dest.key].groupSize}
+                  </div>
                 </div>
+
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-gray-700 mb-2">{t.highlights}:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {t.destinations[dest.key].highlights.map((highlight, idx) => (
+                      <span key={idx} className="inline-block px-2 py-1 rounded-full text-white text-xs" style={{ backgroundColor: colors.primary.teal }}>
+                        {highlight}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <span className="inline-block px-4 py-2 rounded-full text-white text-sm font-medium mt-2" style={{ backgroundColor: colors.primary.teal }}>🗣️ {t.multiLang}</span>
               </div>
-              <button onClick={closeRegisterModal} className="text-gray-400 hover:text-gray-600 ml-4 flex-shrink-0">
-                <X className="w-6 h-6" />
-              </button>
             </div>
-
-            {regSuccess ? (
-              <div className="text-center py-8">
-                <CheckCircle2 className="w-16 h-16 mx-auto mb-4" style={{ color: colors.success }} />
-                <h4 className="text-xl font-bold text-gray-800 mb-2">
-                  {language === 'ru' ? 'Заявка отправлена!' : language === 'he' ? 'הבקשה נשלחה!' : 'Request Submitted!'}
-                </h4>
-                <p className="text-gray-500 mb-6">
-                  {language === 'ru' ? 'Мы свяжемся с вами после подтверждения.' : language === 'he' ? 'ניצור איתך קשר לאחר האישור.' : 'We will contact you once confirmed.'}
-                </p>
-                <button onClick={closeRegisterModal} className="px-6 py-2 text-white rounded-lg" style={{ backgroundColor: colors.primary.teal }}>
-                  {language === 'ru' ? 'Закрыть' : language === 'he' ? 'סגור' : 'Close'}
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleRegisterSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      {language === 'ru' ? 'Имя *' : language === 'he' ? 'שם פרטי *' : 'First Name *'}
-                    </label>
-                    <input type="text" required value={regForm.firstName} onChange={(e) => setRegForm({ ...regForm, firstName: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      {language === 'ru' ? 'Фамилия *' : language === 'he' ? 'שם משפחה *' : 'Last Name *'}
-                    </label>
-                    <input type="text" required value={regForm.lastName} onChange={(e) => setRegForm({ ...regForm, lastName: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    {language === 'ru' ? 'Email *' : language === 'he' ? 'אימייל *' : 'Email *'}
-                  </label>
-                  <input type="email" required value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    {language === 'ru' ? 'Телефон *' : language === 'he' ? 'טלפון *' : 'Phone *'}
-                  </label>
-                  <input type="tel" required value={regForm.phone} onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    {language === 'ru' ? 'Место посадки' : language === 'he' ? 'נקודת איסוף' : 'Pickup Location'}
-                  </label>
-                  <input type="text" value={regForm.pickupLocation} onChange={(e) => setRegForm({ ...regForm, pickupLocation: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" placeholder={language === 'ru' ? 'Необязательно' : language === 'he' ? 'אופציונלי' : 'Optional'} />
-                </div>
-                <button type="submit" disabled={regSubmitting} className="w-full py-3 text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50" style={{ backgroundColor: colors.primary.teal }}>
-                  {regSubmitting
-                    ? (language === 'ru' ? 'Отправка...' : language === 'he' ? 'שולח...' : 'Submitting...')
-                    : (language === 'ru' ? 'Отправить заявку' : language === 'he' ? 'שלח בקשה' : 'Submit Request')}
-                </button>
-              </form>
-            )}
-          </div>
+          ))}
         </div>
-      )}
+      </section>
 
+     
       <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-12" style={{ color: colors.primary.teal }}>{t.testimonialsTitle}</h2>

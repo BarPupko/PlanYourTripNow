@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import SignatureCanvas from 'react-signature-canvas';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
-import { getTrip, createRegistration, getRegistrationsByTrip } from '../utils/firestoreUtils';
+import { getTrip, createRegistration, getRegistrationsByTrip, updateRegistration } from '../utils/firestoreUtils';
 import Header from '../components/Header';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
@@ -34,6 +36,8 @@ I have read this waiver, fully understand its terms, and sign it freely and volu
 
 const RegistrationForm = () => {
   const { tripId } = useParams();
+  const [searchParams] = useSearchParams();
+  const regId = searchParams.get('regId');
   const navigate = useNavigate();
   const signatureRef = useRef(null);
   const { language } = useLanguage();
@@ -83,15 +87,28 @@ const RegistrationForm = () => {
 
   const loadTripData = async () => {
     try {
-      console.log('Loading trip with ID:', tripId);
       const [tripData, regsData] = await Promise.all([
         getTrip(tripId),
         getRegistrationsByTrip(tripId)
       ]);
-      console.log('Trip data loaded:', tripData);
-      console.log('Registrations loaded:', regsData);
       setTrip(tripData);
       setRegistrations(regsData);
+
+      // Pre-populate form if coming from an admin-sent form link
+      if (regId) {
+        const regSnap = await getDoc(doc(db, 'registrations', regId));
+        if (regSnap.exists()) {
+          const reg = regSnap.data();
+          setPassengers([{
+            firstName: reg.firstName || '',
+            lastName: reg.lastName || '',
+            email: reg.email || '',
+            phone: reg.phone || '',
+            preferredPickupPlace: reg.pickupLocation || reg.preferredPickupPlace || ''
+          }]);
+          setNumberOfSeats(1);
+        }
+      }
     } catch (error) {
       console.error('Error loading trip data:', error);
       alert('Error loading trip: ' + error.message);
@@ -134,7 +151,12 @@ const RegistrationForm = () => {
       const signatureData = signatureRef.current.toDataURL();
 
       // Calculate taken seats from existing registrations
-      const takenSeats = new Set(registrations.map(r => r.seatNumber).filter(Boolean));
+      const takenSeats = new Set(
+        registrations
+          .filter(r => !regId || r.id !== regId) // exclude current reg when updating
+          .map(r => r.seatNumber)
+          .filter(Boolean)
+      );
 
       // Find next available seat number
       const getNextSeat = () => {
@@ -144,11 +166,11 @@ const RegistrationForm = () => {
         return seat;
       };
 
-      // Create a registration for each passenger with auto-assigned seat
-      for (const passenger of passengers) {
+      if (regId) {
+        // Update existing registration (pre-registered via admin form-send)
         const assignedSeat = getNextSeat();
-        await createRegistration({
-          tripId,
+        const passenger = passengers[0];
+        await updateRegistration(regId, {
           firstName: passenger.firstName,
           lastName: passenger.lastName,
           email: passenger.email,
@@ -156,21 +178,40 @@ const RegistrationForm = () => {
           seatNumber: assignedSeat,
           preferredPickupPlace: passenger.preferredPickupPlace,
           paymentMethod,
-          paid: false,
           signatureData,
           signatureUrl: '',
           pdfUrl: '',
           agreedToCancellationPolicy: true,
           agreedToWaiver: true,
-          adminEmail: 'ivristats@gmail.com',
+          status: 'confirmed',
           registrationDate: new Date().toISOString()
         });
-        // Update local passengers state with assigned seat for success screen
         passenger.seatNumber = assignedSeat;
+      } else {
+        // Create a registration for each passenger with auto-assigned seat
+        for (const passenger of passengers) {
+          const assignedSeat = getNextSeat();
+          await createRegistration({
+            tripId,
+            firstName: passenger.firstName,
+            lastName: passenger.lastName,
+            email: passenger.email,
+            phone: passenger.phone,
+            seatNumber: assignedSeat,
+            preferredPickupPlace: passenger.preferredPickupPlace,
+            paymentMethod,
+            paid: false,
+            signatureData,
+            signatureUrl: '',
+            pdfUrl: '',
+            agreedToCancellationPolicy: true,
+            agreedToWaiver: true,
+            adminEmail: 'ivristats@gmail.com',
+            registrationDate: new Date().toISOString()
+          });
+          passenger.seatNumber = assignedSeat;
+        }
       }
-
-      // Note: Email sending will be handled by Firebase Cloud Functions
-      // The function will send confirmation emails to both user and admin
 
       setSubmitted(true);
     } catch (error) {
