@@ -326,7 +326,7 @@ exports.onRegistrationFormSent = functions.firestore
       }
       const trip = tripDoc.data();
 
-      const formLink = `https://planyourtrip-ed010.web.app/PlanYourTripNow/register/${registration.tripId}?regId=${registrationId}`;
+      const formLink = `https://barpupko.github.io/PlanYourTripNow/register/${registration.tripId}?regId=${registrationId}`;
 
       await transporter.sendMail({
         from: '"IVRI Tours" <noreply@ivritours.com>',
