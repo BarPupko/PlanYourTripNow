@@ -342,8 +342,8 @@ const RegistrationForm = () => {
       <div className="max-w-4xl mx-auto py-8 px-4">
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Number of Seats */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          {/* Number of Seats — hidden in pre-registration mode */}
+          {!regId && <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Number of Seats</h2>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -359,7 +359,7 @@ const RegistrationForm = () => {
                 ))}
               </select>
             </div>
-          </div>
+          </div>}
 
           {/* Passenger Information */}
           {passengers.map((passenger, index) => (

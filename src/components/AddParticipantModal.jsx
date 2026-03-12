@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, UserPlus } from 'lucide-react';
-import { createRegistration } from '../utils/firestoreUtils';
+import { createRegistration, getAllContacts, upsertContact } from '../utils/firestoreUtils';
 import { getVehicleLayout } from '../utils/vehicleLayouts';
 import colors from '../utils/colors';
 
@@ -18,6 +18,48 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [contacts, setContacts] = useState([]);
+  const [acQuery, setAcQuery] = useState('');
+  const [acField, setAcField] = useState(null); // 'firstName' | 'email' | null
+  const autocompleteRef = useRef(null);
+
+  useEffect(() => {
+    getAllContacts().then(setContacts);
+  }, []);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(e.target)) {
+        setAcField(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const filteredContacts = acQuery.trim().length > 0
+    ? contacts.filter(c => {
+        const q = acQuery.toLowerCase();
+        return (
+          c.firstName?.toLowerCase().includes(q) ||
+          c.lastName?.toLowerCase().includes(q) ||
+          c.email?.toLowerCase().includes(q)
+        );
+      }).slice(0, 8)
+    : [];
+
+  const selectContact = (contact) => {
+    setFormData(prev => ({
+      ...prev,
+      firstName: contact.firstName || '',
+      lastName: contact.lastName || '',
+      email: contact.email || '',
+      phone: contact.phone || '',
+      preferredPickupPlace: contact.preferredPickupPlace || ''
+    }));
+    setAcField(null);
+    setAcQuery('');
+  };
 
   const vehicleLayout = getVehicleLayout(trip.vehicleLayout);
   const occupiedSeats = registrations.map(r => r.seatNumber);
@@ -84,6 +126,15 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
 
       await Promise.all(registrationPromises);
 
+      // Save/update this person in contacts for future autocomplete
+      await upsertContact({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        preferredPickupPlace: formData.preferredPickupPlace
+      });
+
       onSuccess();
       onClose();
     } catch (err) {
@@ -113,18 +164,39 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
+          {/* First Name with autocomplete */}
+          <div className="relative" ref={acField === 'firstName' ? autocompleteRef : null}>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               First Name *
             </label>
             <input
               type="text"
               value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-              style={{ focusRing: colors.primary.teal }}
+              onChange={(e) => {
+                setFormData({ ...formData, firstName: e.target.value });
+                setAcQuery(e.target.value);
+                setAcField('firstName');
+              }}
+              onFocus={() => { setAcField('firstName'); setAcQuery(formData.firstName); }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
               required
+              autoComplete="off"
             />
+            {acField === 'firstName' && filteredContacts.length > 0 && (
+              <div className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                {filteredContacts.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onMouseDown={() => selectContact(c)}
+                    className="w-full text-left px-4 py-2 hover:bg-teal-50 transition-colors border-b border-gray-100 last:border-0"
+                  >
+                    <span className="font-medium text-gray-900">{c.firstName} {c.lastName}</span>
+                    <span className="text-xs text-gray-400 ml-2">{c.email}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -140,17 +212,39 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
             />
           </div>
 
-          <div>
+          {/* Email with autocomplete */}
+          <div className="relative" ref={acField === 'email' ? autocompleteRef : null}>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email *
             </label>
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                setAcQuery(e.target.value);
+                setAcField('email');
+              }}
+              onFocus={() => { setAcField('email'); setAcQuery(formData.email); }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
               required
+              autoComplete="off"
             />
+            {acField === 'email' && filteredContacts.length > 0 && (
+              <div className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                {filteredContacts.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onMouseDown={() => selectContact(c)}
+                    className="w-full text-left px-4 py-2 hover:bg-teal-50 transition-colors border-b border-gray-100 last:border-0"
+                  >
+                    <span className="font-medium text-gray-900">{c.firstName} {c.lastName}</span>
+                    <span className="text-xs text-gray-400 ml-2">{c.email}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

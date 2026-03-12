@@ -8,6 +8,7 @@ import {
   where,
   updateDoc,
   deleteDoc,
+  setDoc,
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -146,5 +147,27 @@ export const deleteRegistration = async (registrationId) => {
   } catch (error) {
     console.error('Error deleting registration:', error);
     throw error;
+  }
+};
+
+// Contact operations
+export const getAllContacts = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, 'contacts'));
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error('Error getting contacts:', error);
+    return [];
+  }
+};
+
+export const upsertContact = async ({ firstName, lastName, email, phone, preferredPickupPlace }) => {
+  if (!email) return;
+  try {
+    const emailKey = email.toLowerCase().replace(/[.#$[\]/]/g, '_');
+    const ref = doc(db, 'contacts', emailKey);
+    await setDoc(ref, { firstName, lastName, email, phone, preferredPickupPlace: preferredPickupPlace || '', updatedAt: Timestamp.now() }, { merge: true });
+  } catch (error) {
+    console.error('Error upserting contact:', error);
   }
 };

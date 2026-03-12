@@ -21,6 +21,11 @@ service cloud.firestore {
       allow update, delete: if request.auth != null;
     }
 
+    // Contacts collection - admin only
+    match /contacts/{contactId} {
+      allow read, write: if request.auth != null;
+    }
+
     // Gift Cards collection
     match /giftCards/{giftCardId} {
       // Anyone can read gift cards (public reveal page)
