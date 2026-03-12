@@ -34,7 +34,8 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
     websiteImage: trip.websiteImage || '',
     websiteDescription: trip.websiteDescription || '',
     price: trip.price || '',
-    showRegistrationCount: trip.showRegistrationCount || false
+    showRegistrationCount: trip.showRegistrationCount || false,
+    customInfo: trip.customInfo || ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -290,6 +291,24 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Custom Trip Information */}
+          <div className="border-2 rounded-lg p-4 space-y-2" style={{ borderColor: colors.primary.teal }}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">📋</span>
+              <div>
+                <p className="font-semibold text-gray-800">Custom Trip Information</p>
+                <p className="text-xs text-gray-500">Participants must read and agree to this before registering. Shown on the invoice.</p>
+              </div>
+            </div>
+            <textarea
+              value={formData.customInfo}
+              onChange={(e) => setFormData({ ...formData, customInfo: e.target.value })}
+              rows={5}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-sm resize-vertical"
+              placeholder="Enter any trip-specific requirements, important notices, or terms participants must agree to before registering…"
+            />
           </div>
 
           <div className="flex gap-3 pt-4">

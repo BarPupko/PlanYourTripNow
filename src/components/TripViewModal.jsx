@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2, Copy, Check, MessageCircle, Phone } from 'lucide-react';
+import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2, Copy, Check, MessageCircle, Phone, FileText } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getTrip, updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
@@ -7,6 +7,7 @@ import { getVehicleLayout } from '../utils/vehicleLayouts';
 import VehicleSeatingMap from './VehicleSeatingMap';
 import AddParticipantModal from './AddParticipantModal';
 import ParticipantDetailsModal from './ParticipantDetailsModal';
+import InvoiceModal from './InvoiceModal';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import colors from '../utils/colors';
@@ -27,6 +28,7 @@ const TripViewModal = ({ tripId, onClose }) => {
   const [viewingParticipant, setViewingParticipant] = useState(null);
   const [confirmingReg, setConfirmingReg] = useState(null);
   const [confirmSeat, setConfirmSeat] = useState('');
+  const [invoiceReg, setInvoiceReg] = useState(null);
 
   useEffect(() => {
     loadTrip();
@@ -243,7 +245,7 @@ const TripViewModal = ({ tripId, onClose }) => {
 
   const pendingRegistrations = registrations.filter(r => r.status === 'pending');
   const formSentRegistrations = registrations.filter(r => r.status === 'form_sent');
-  const confirmedRegistrations = registrations.filter(r => ['approved', 'confirmed'].includes(r.status));
+  const confirmedRegistrations = registrations.filter(r => !['pending', 'form_sent'].includes(r.status));
   const sortedRegistrations = [...confirmedRegistrations].sort(
     (a, b) => (a.seatNumber || 999) - (b.seatNumber || 999)
   );
@@ -292,8 +294,101 @@ const TripViewModal = ({ tripId, onClose }) => {
               />
             </div>
 
-            {/* Right Side - Participant List */}
-            <div className="lg:col-span-1">
+            {/* Right Side - Participant List + Pending/Awaiting */}
+            <div className="lg:col-span-1 flex flex-col gap-4">
+
+              {/* Pending Approvals Section */}
+              {pendingRegistrations.length > 0 && (
+                <div className="bg-white rounded-xl border-2 border-yellow-300 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse" />
+                    <h3 className="text-base font-bold text-gray-900">
+                      Pending Approvals ({pendingRegistrations.length})
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    {pendingRegistrations.map((reg) => (
+                      <div key={reg.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm">{reg.firstName} {reg.lastName}</p>
+                            <p className="text-xs text-gray-500 truncate">{reg.email}</p>
+                            {reg.pickupLocation && <p className="text-xs text-gray-400 mt-0.5">📍 {reg.pickupLocation}</p>}
+                          </div>
+                          <button
+                            onClick={() => handleToggleContacted(reg.id, reg.contacted)}
+                            title={reg.contacted ? 'Contacted — click to unmark' : 'Not contacted yet'}
+                            className="flex-shrink-0 flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-all hover:bg-yellow-100"
+                          >
+                            <Phone className="w-4 h-4" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }} />
+                            <span className="text-[9px] font-medium" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }}>
+                              {reg.phone}
+                            </span>
+                          </button>
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => handleSendForm(reg)}
+                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-white rounded-lg hover:opacity-90 text-xs font-semibold"
+                            style={{ backgroundColor: colors.success }}
+                          >
+                            <CheckCircle2 className="w-3 h-3" /> Send Form
+                          </button>
+                          <button
+                            onClick={() => handleRejectPending(reg)}
+                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-white rounded-lg hover:opacity-90 text-xs font-semibold"
+                            style={{ backgroundColor: colors.button.danger }}
+                          >
+                            <XCircle className="w-3 h-3" /> Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Awaiting Form Section */}
+              {formSentRegistrations.length > 0 && (
+                <div className="bg-white rounded-xl border-2 border-orange-300 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-orange-400" />
+                    <h3 className="text-base font-bold text-gray-900">
+                      Awaiting Form Completion ({formSentRegistrations.length})
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    {formSentRegistrations.map((reg) => (
+                      <div key={reg.id} className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm">{reg.firstName} {reg.lastName}</p>
+                            <p className="text-xs text-gray-500 truncate">{reg.email}</p>
+                          </div>
+                          <button
+                            onClick={() => handleToggleContacted(reg.id, reg.contacted)}
+                            title={reg.contacted ? 'Contacted — click to unmark' : 'Not contacted yet'}
+                            className="flex-shrink-0 flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-all hover:bg-orange-100"
+                          >
+                            <Phone className="w-4 h-4" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }} />
+                            <span className="text-[9px] font-medium" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }}>
+                              {reg.phone}
+                            </span>
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => { setConfirmingReg(reg); setConfirmSeat(''); }}
+                          className="w-full mt-2 flex items-center justify-center gap-1 px-2 py-1.5 text-white rounded-lg hover:opacity-90 text-xs font-semibold"
+                          style={{ backgroundColor: colors.primary.teal }}
+                        >
+                          <CheckCircle2 className="w-3 h-3" /> Confirm Manually
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="bg-gray-50 rounded-lg shadow-lg p-4 sm:p-6 border-2 border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -546,6 +641,18 @@ const TripViewModal = ({ tripId, onClose }) => {
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        setInvoiceReg(reg);
+                                      }}
+                                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium"
+                                      style={{ backgroundColor: '#6366F1' }}
+                                    >
+                                      <FileText className="w-4 h-4" />
+                                      <span>Invoice</span>
+                                    </button>
+
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         handleDeleteParticipant(reg.id);
                                       }}
                                       disabled={deletingId === reg.id}
@@ -566,106 +673,11 @@ const TripViewModal = ({ tripId, onClose }) => {
                   </div>
                 )}
               </div>
+
             </div>
           </div>
         </div>
       </div>
-
-      {/* Pending Approvals Section */}
-      {pendingRegistrations.length > 0 && (
-        <div className="mt-4 sm:mt-6 px-4 sm:px-6 pb-2">
-          <div className="bg-white rounded-xl border-2 border-yellow-300 p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse" />
-              <h3 className="text-base font-bold text-gray-900">
-                Pending Approvals ({pendingRegistrations.length})
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {pendingRegistrations.map((reg) => (
-                <div key={reg.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm">{reg.firstName} {reg.lastName}</p>
-                      <p className="text-xs text-gray-500 truncate">{reg.email}</p>
-                      {reg.pickupLocation && <p className="text-xs text-gray-400 mt-0.5">📍 {reg.pickupLocation}</p>}
-                    </div>
-                    <button
-                      onClick={() => handleToggleContacted(reg.id, reg.contacted)}
-                      title={reg.contacted ? 'Contacted — click to unmark' : 'Not contacted yet'}
-                      className="flex-shrink-0 flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-all hover:bg-yellow-100"
-                    >
-                      <Phone className="w-4 h-4" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }} />
-                      <span className="text-[9px] font-medium" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }}>
-                        {reg.phone}
-                      </span>
-                    </button>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => handleSendForm(reg)}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-white rounded-lg hover:opacity-90 text-xs font-semibold"
-                      style={{ backgroundColor: colors.success }}
-                    >
-                      <CheckCircle2 className="w-3 h-3" /> Send Form
-                    </button>
-                    <button
-                      onClick={() => handleRejectPending(reg)}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-white rounded-lg hover:opacity-90 text-xs font-semibold"
-                      style={{ backgroundColor: colors.button.danger }}
-                    >
-                      <XCircle className="w-3 h-3" /> Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Awaiting Form Section */}
-      {formSentRegistrations.length > 0 && (
-        <div className="mt-4 sm:mt-6 px-4 sm:px-6 pb-2">
-          <div className="bg-white rounded-xl border-2 border-orange-300 p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-3 h-3 rounded-full bg-orange-400" />
-              <h3 className="text-base font-bold text-gray-900">
-                Awaiting Form Completion ({formSentRegistrations.length})
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {formSentRegistrations.map((reg) => (
-                <div key={reg.id} className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm">{reg.firstName} {reg.lastName}</p>
-                      <p className="text-xs text-gray-500 truncate">{reg.email}</p>
-                    </div>
-                    <button
-                      onClick={() => handleToggleContacted(reg.id, reg.contacted)}
-                      title={reg.contacted ? 'Contacted — click to unmark' : 'Not contacted yet'}
-                      className="flex-shrink-0 flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-all hover:bg-orange-100"
-                    >
-                      <Phone className="w-4 h-4" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }} />
-                      <span className="text-[9px] font-medium" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }}>
-                        {reg.phone}
-                      </span>
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => { setConfirmingReg(reg); setConfirmSeat(''); }}
-                    className="w-full mt-2 flex items-center justify-center gap-1 px-2 py-1.5 text-white rounded-lg hover:opacity-90 text-xs font-semibold"
-                    style={{ backgroundColor: colors.primary.teal }}
-                  >
-                    <CheckCircle2 className="w-3 h-3" /> Confirm Manually
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Confirm Manually Modal */}
       {confirmingReg && (
@@ -719,6 +731,15 @@ const TripViewModal = ({ tripId, onClose }) => {
             setShowAddModal(false);
             setPreselectedSeat(null);
           }}
+        />
+      )}
+
+      {/* Invoice Modal */}
+      {invoiceReg && (
+        <InvoiceModal
+          registration={invoiceReg}
+          trip={trip}
+          onClose={() => setInvoiceReg(null)}
         />
       )}
 

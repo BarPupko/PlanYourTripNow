@@ -62,6 +62,7 @@ const RegistrationForm = () => {
 
   const [agreements, setAgreements] = useState({
     cancellationPolicy: false,
+    customInfo: false,
     waiver: false
   });
 
@@ -130,6 +131,7 @@ const RegistrationForm = () => {
     });
 
     if (!agreements.cancellationPolicy) newErrors.cancellationPolicy = 'You must agree to the cancellation policy';
+    if (trip?.customInfo && !agreements.customInfo) newErrors.customInfo = 'You must agree to the trip-specific information';
     if (!agreements.waiver) newErrors.waiver = 'You must sign the waiver';
     if (signatureRef.current?.isEmpty()) newErrors.signature = 'Signature is required';
 
@@ -182,6 +184,7 @@ const RegistrationForm = () => {
           signatureUrl: '',
           pdfUrl: '',
           agreedToCancellationPolicy: true,
+          agreedToCustomInfo: trip?.customInfo ? true : false,
           agreedToWaiver: true,
           status: 'confirmed',
           registrationDate: new Date().toISOString()
@@ -205,6 +208,7 @@ const RegistrationForm = () => {
             signatureUrl: '',
             pdfUrl: '',
             agreedToCancellationPolicy: true,
+            agreedToCustomInfo: trip?.customInfo ? true : false,
             agreedToWaiver: true,
             adminEmail: 'ivristats@gmail.com',
             registrationDate: new Date().toISOString()
@@ -564,6 +568,31 @@ const RegistrationForm = () => {
               <p className="text-red-500 text-sm mt-2">{errors.cancellationPolicy}</p>
             )}
           </div>
+
+          {/* Custom Trip Information (shown only if admin set it) */}
+          {trip?.customInfo && (
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Trip-Specific Information</h2>
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg max-h-56 overflow-y-auto mb-4">
+                <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">{trip.customInfo}</pre>
+              </div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreements.customInfo}
+                  onChange={(e) => setAgreements({ ...agreements, customInfo: e.target.checked })}
+                  className="mt-1 w-5 h-5 border-gray-300 rounded focus:ring-blue-500"
+                  style={{ accentColor: colors.primary.teal }}
+                />
+                <span className="text-sm text-gray-700">
+                  I have read and agree to the trip-specific information above *
+                </span>
+              </label>
+              {errors.customInfo && (
+                <p className="text-red-500 text-sm mt-2">{errors.customInfo}</p>
+              )}
+            </div>
+          )}
 
           {/* Waiver */}
           <div className="bg-white rounded-lg shadow-lg p-6">
