@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -rn \"status.*:\" /c/Projects/PlanYourTrip/tsms/src/pages/*.jsx)"
+      "Bash(grep -rn \"status.*:\" /c/Projects/PlanYourTrip/tsms/src/pages/*.jsx)",
+      "Read(//c/Projects//**)"
     ]
   }
 }
