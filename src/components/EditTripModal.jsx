@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Sparkles, Loader2 } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import colors from '../utils/colors';
 
@@ -35,9 +35,11 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
     websiteDescription: trip.websiteDescription || '',
     price: trip.price || '',
     showRegistrationCount: trip.showRegistrationCount || false,
-    customInfo: trip.customInfo || ''
+    customInfo: trip.customInfo || '',
+    itinerary: trip.itinerary || ''
   });
   const [loading, setLoading] = useState(false);
+  const [generatingItinerary, setGeneratingItinerary] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,6 +68,50 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     return diffDays;
+  };
+
+  const handleGenerateItinerary = async () => {
+    setGeneratingItinerary(true);
+    try {
+      const duration = getTripDuration();
+      const prompt = `You are a tour coordinator for IVRI Tours (a travel company). Generate a concise, WhatsApp-friendly day-by-day itinerary for this trip:
+
+Trip: ${formData.title}
+Start: ${formData.date}
+End: ${formData.endDate}
+Duration: ${duration} ${duration === 1 ? 'day' : 'days'}${formData.websiteDescription ? `\nDescription: ${formData.websiteDescription}` : ''}${formData.customInfo ? `\nNotes: ${formData.customInfo}` : ''}
+
+Format each day exactly like this:
+📅 Day X – [Weekday, Date]
+• [Activity 1]
+• [Activity 2]
+• [Activity 3]
+
+Keep it friendly, realistic and suitable for WhatsApp. Include relevant emojis. 3-4 bullet points per day max. Do not add extra commentary outside the day blocks.`;
+
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 900,
+          temperature: 0.7,
+        }),
+      });
+      const data = await res.json();
+      const text = data.choices?.[0]?.message?.content?.trim() || '';
+      if (!text) throw new Error('Empty response from OpenAI');
+      setFormData(prev => ({ ...prev, itinerary: text }));
+    } catch (error) {
+      console.error('Error generating itinerary:', error);
+      alert('Failed to generate itinerary. Please check the API key and try again.');
+    } finally {
+      setGeneratingItinerary(false);
+    }
   };
 
   return (
@@ -296,6 +342,39 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
               rows={5}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-sm resize-vertical"
               placeholder="Enter any trip-specific requirements, important notices, or terms participants must agree to before registering…"
+            />
+          </div>
+
+          {/* WhatsApp Message / Itinerary */}
+          <div className="border-2 rounded-lg p-4 space-y-3" style={{ borderColor: '#F59E0B' }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🗺️</span>
+                <div>
+                  <p className="font-semibold text-gray-800">WhatsApp Message / Itinerary</p>
+                  <p className="text-xs text-gray-500">Shown to participants on their personal itinerary page. Leave blank to show "In planning".</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleGenerateItinerary}
+                disabled={generatingItinerary}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed flex-shrink-0"
+                style={{ backgroundColor: '#F59E0B' }}
+              >
+                {generatingItinerary
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <Sparkles className="w-4 h-4" />
+                }
+                <span>{generatingItinerary ? 'Generating…' : 'Generate'}</span>
+              </button>
+            </div>
+            <textarea
+              value={formData.itinerary}
+              onChange={(e) => setFormData({ ...formData, itinerary: e.target.value })}
+              rows={8}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent text-sm resize-vertical font-mono"
+              placeholder="Itinerary will appear here after generating, or type manually…"
             />
           </div>
 
