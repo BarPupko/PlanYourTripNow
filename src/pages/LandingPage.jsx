@@ -35,6 +35,7 @@ const LandingPage = () => {
   const [regSubmitting, setRegSubmitting] = useState(false);
   const [regSuccess, setRegSuccess] = useState(false);
   const [tripRegistrationCounts, setTripRegistrationCounts] = useState({});
+  const [expandedItinerary, setExpandedItinerary] = useState(new Set());
 
   useEffect(() => {
     const fetchUpcomingTrips = async () => {
@@ -709,6 +710,34 @@ const LandingPage = () => {
                       {/* Description */}
                       {trip.websiteDescription && (
                         <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">{trip.websiteDescription}</p>
+                      )}
+
+                      {/* Itinerary toggle */}
+                      {trip.itinerary && (
+                        <div>
+                          <button
+                            onClick={() => setExpandedItinerary(prev => {
+                              const next = new Set(prev);
+                              next.has(trip.id) ? next.delete(trip.id) : next.add(trip.id);
+                              return next;
+                            })}
+                            className="flex items-center gap-1.5 text-sm font-medium transition-colors"
+                            style={{ color: colors.primary.teal }}
+                          >
+                            <span>📋</span>
+                            <span>
+                              {expandedItinerary.has(trip.id)
+                                ? (language === 'ru' ? 'Скрыть маршрут' : language === 'he' ? 'הסתר מסלול' : 'Hide Itinerary')
+                                : (language === 'ru' ? 'Посмотреть маршрут' : language === 'he' ? 'הצג מסלול' : 'View Itinerary')}
+                            </span>
+                            <span className="text-xs">{expandedItinerary.has(trip.id) ? '▲' : '▼'}</span>
+                          </button>
+                          {expandedItinerary.has(trip.id) && (
+                            <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                              <pre className="whitespace-pre-wrap text-xs text-gray-700 font-sans leading-relaxed">{trip.itinerary}</pre>
+                            </div>
+                          )}
+                        </div>
                       )}
 
                       {/* Registration count (only if showRegistrationCount is on) */}
