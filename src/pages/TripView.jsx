@@ -210,7 +210,7 @@ const TripView = () => {
     }
   };
 
-  const COMPANION_BASE_URL = 'https://barpupko.github.io/PlanYourTripNow/';
+  const COMPANION_BASE_URL = 'https://barpupko.github.io/PlanYourTripNow/companion/';
 
   const handleSendCompanionLink = async (reg) => {
     setCompanionLinkState({ loading: true, copied: false });
