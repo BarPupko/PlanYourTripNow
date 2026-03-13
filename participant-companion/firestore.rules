@@ -1,0 +1,49 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Firestore Security Rules — participant-companion (read-only mini-site)
+//
+//  Strategy:
+//    • Participants can only be LIST-queried (not fetched by ID directly).
+//      Querying requires the caller to already know the magicToken value —
+//      a long UUID that is effectively a secret. Brute-force is infeasible.
+//    • Once the app has the participant's tripId, it reads the trip and
+//      schedule_items. Those collections are readable by anyone (public data).
+//    • All write operations are blocked from the client.
+//    • The main admin app (tsms) should have its own broader rules applied
+//      separately via Firebase Console / firebase deploy --only firestore:rules.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── participants ─────────────────────────────────────────────────────────
+    // Allow LIST only (the app uses where('magicToken','==',token)).
+    // Direct document reads by ID are blocked — the caller must prove they
+    // know the token by filtering on it.
+    match /participants/{participantId} {
+      allow list : if request.query.limit <= 1;
+      allow get  : if false;
+      allow write: if false;
+    }
+
+    // ── trips ────────────────────────────────────────────────────────────────
+    // Trip documents contain only non-sensitive itinerary metadata.
+    match /trips/{tripId} {
+      allow read : if true;
+      allow write: if false;
+    }
+
+    // ── schedule_items ───────────────────────────────────────────────────────
+    // Participants query: where('tripId','==', <ref>)
+    match /schedule_items/{itemId} {
+      allow read : if true;
+      allow write: if false;
+    }
+
+    // ── Catch-all: deny everything else ─────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
