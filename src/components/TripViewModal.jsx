@@ -207,7 +207,7 @@ const TripViewModal = ({ tripId, onClose }) => {
     }
   };
 
-  const COMPANION_BASE_URL = 'https://ivritours.github.io/participant-companion';
+  const COMPANION_BASE_URL = 'https://ivritours.github.io/participant-companion/';
 
   const handleSendItineraryLink = async (e, reg) => {
     e.stopPropagation();
@@ -646,14 +646,14 @@ const TripViewModal = ({ tripId, onClose }) => {
                                     {reg.paid ? t.markAsNotPaid : t.markAsPaidBtn}
                                   </button>
 
-                                  <div className="flex gap-2">
+                                  <div className="grid grid-cols-2 gap-2">
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleEditParticipant(reg);
                                       }}
                                       style={{ backgroundColor: colors.primary.teal }}
-                                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium"
+                                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium"
                                     >
                                       <Edit2 className="w-4 h-4" />
                                       <span>Edit</span>
@@ -664,7 +664,7 @@ const TripViewModal = ({ tripId, onClose }) => {
                                         e.stopPropagation();
                                         setInvoiceReg(reg);
                                       }}
-                                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium"
+                                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium"
                                       style={{ backgroundColor: '#6366F1' }}
                                     >
                                       <FileText className="w-4 h-4" />
@@ -674,7 +674,7 @@ const TripViewModal = ({ tripId, onClose }) => {
                                     <button
                                       onClick={(e) => handleSendItineraryLink(e, reg)}
                                       disabled={itineraryLoadingId === reg.id}
-                                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-all font-medium disabled:opacity-50"
+                                      className="w-full flex items-center justify-center gap-1 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-all font-medium disabled:opacity-50"
                                       style={{ backgroundColor: itineraryCopiedId === reg.id ? colors.success : '#F59E0B' }}
                                       title="Copy itinerary link for this participant"
                                     >
@@ -691,7 +691,7 @@ const TripViewModal = ({ tripId, onClose }) => {
                                       }}
                                       disabled={deletingId === reg.id}
                                       style={{ backgroundColor: colors.button.danger }}
-                                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                       <Trash2 className="w-4 h-4" />
                                       <span>{deletingId === reg.id ? 'Deleting...' : 'Delete'}</span>

@@ -211,7 +211,7 @@ const TripView = () => {
   };
 
   // Change this to your deployed participant-companion GitHub Pages URL
-  const COMPANION_BASE_URL = 'https://ivritours.github.io/participant-companion';
+  const COMPANION_BASE_URL = 'https://ivritours.github.io/participant-companion/';
 
   const handleSendCompanionLink = async (reg) => {
     setCompanionLinkState({ loading: true, copied: false });
