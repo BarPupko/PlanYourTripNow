@@ -140,7 +140,19 @@ export default function ScheduleList({ items, participant, trip }) {
           </span>
         </div>
 
-        {sorted.map((item, idx) => (
+        {sorted.length === 0 ? (
+          trip.itinerary ? (
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans leading-relaxed">{trip.itinerary}</pre>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <span className="text-5xl mb-4">📋</span>
+              <p className="font-semibold text-gray-700 text-lg">In planning</p>
+              <p className="text-xs text-gray-400 mt-1">Your coordinator is putting the schedule together.</p>
+            </div>
+          )
+        ) : sorted.map((item, idx) => (
           <ScheduleItem
             key={item.id}
             item={item}

@@ -53,6 +53,7 @@ export default function App() {
           // Support both new startDate/endDate and legacy single 'date' field
           startDate: td.startDate?.toDate?.() ?? td.date?.toDate?.() ?? new Date(),
           endDate:   td.endDate?.toDate?.()   ?? td.date?.toDate?.() ?? new Date(),
+          itinerary: td.itinerary || null,
         };
 
         const scheduleItems = schedSnap.docs.map(d => ({
