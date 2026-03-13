@@ -69,154 +69,142 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-15 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border-4 border-teal-400 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()} style={{ borderColor: colors.primary.teal }}>
-        <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-4 rounded-t-xl flex justify-between items-center">
-          <h2 className="text-xl font-bold">Edit Trip</h2>
-          <button
-            onClick={onClose}
-            className="hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
-          >
+    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 z-50" onClick={onClose}>
+      <div
+        className="bg-white w-full sm:rounded-2xl shadow-2xl sm:max-w-2xl lg:max-w-4xl border-0 sm:border-4 max-h-[92vh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl"
+        onClick={(e) => e.stopPropagation()}
+        style={{ borderColor: colors.primary.teal }}
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-5 py-4 rounded-t-2xl flex justify-between items-center sticky top-0 z-10">
+          <div>
+            <h2 className="text-xl font-bold">Edit Trip</h2>
+            <p className="text-teal-100 text-sm truncate max-w-[220px] sm:max-w-none">{formData.title}</p>
+          </div>
+          <button onClick={onClose} className="hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Trip Title
-            </label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., Beach Trip, Museum Visit"
-              required
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="p-5 lg:p-6">
+          {/* ── Desktop: 2-column grid  |  Mobile: single column ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-8 gap-y-4">
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => {
-                  const newStartDate = e.target.value;
-                  // If new start date is after end date, update end date too
-                  const endDate = new Date(newStartDate) > new Date(formData.endDate) ? newStartDate : formData.endDate;
-                  setFormData({ ...formData, date: newStartDate, endDate });
-                }}
-                className="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors"
-                style={{ borderColor: colors.primary.teal }}
-                required
-              />
+            {/* ── Left column ── */}
+            <div className="space-y-4">
+              {/* Trip Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Trip Title</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                  placeholder="e.g., Beach Trip, Museum Visit"
+                  required
+                />
+              </div>
+
+              {/* Start + End dates */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Date</label>
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => {
+                      const newStart = e.target.value;
+                      const endDate = new Date(newStart) > new Date(formData.endDate) ? newStart : formData.endDate;
+                      setFormData({ ...formData, date: newStart, endDate });
+                    }}
+                    className="w-full px-3 py-2.5 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors"
+                    style={{ borderColor: colors.primary.teal }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">End Date</label>
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    min={formData.date}
+                    className="w-full px-3 py-2.5 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors"
+                    style={{ borderColor: colors.primary.teal }}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Duration badge */}
+              <div className="bg-teal-50 border-2 border-teal-200 rounded-lg px-4 py-2.5">
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold" style={{ color: colors.primary.teal }}>Trip Duration: </span>
+                  <span className="font-medium">{getTripDuration()} {getTripDuration() === 1 ? 'day' : 'days'}</span>
+                  {getTripDuration() === 1 && <span className="text-xs text-gray-500 ml-2">(Single-day trip)</span>}
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                End Date
-              </label>
-              <input
-                type="date"
-                value={formData.endDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, endDate: e.target.value })
-                }
-                min={formData.date}
-                className="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors"
-                style={{ borderColor: colors.primary.teal }}
-                required
-              />
+
+            {/* ── Right column ── */}
+            <div className="space-y-4">
+              {/* Driver Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Driver Name</label>
+                <input
+                  type="text"
+                  value={formData.driverName}
+                  onChange={(e) => setFormData({ ...formData, driverName: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                  placeholder="e.g., John Smith"
+                  required
+                />
+              </div>
+
+              {/* Vehicle Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Vehicle Type</label>
+                <select
+                  value={formData.vehicleLayout}
+                  onChange={(e) => setFormData({ ...formData, vehicleLayout: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                >
+                  <option value="sprinter_15">Mercedes Sprinter Black (14 Seats)</option>
+                  <option value="bus_30">Mercedes Sprinter White (11 Seats)</option>
+                  <option value="highlander_7">Toyota Highlander (7 Seats)</option>
+                </select>
+              </div>
+
+              {/* WhatsApp Link */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">WhatsApp Group Link <span className="font-normal text-gray-400">(optional)</span></label>
+                <input
+                  type="url"
+                  value={formData.whatsappGroupLink}
+                  onChange={(e) => setFormData({ ...formData, whatsappGroupLink: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                  placeholder="https://chat.whatsapp.com/..."
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Trip Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                >
+                  <option value="planned">Planned (Yellow)</option>
+                  <option value="scheduled">Scheduled (Purple)</option>
+                  <option value="done">Done (Green)</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Trip Duration Display */}
-          <div className="bg-teal-50 border-2 border-teal-200 rounded-lg p-3">
-            <p className="text-sm text-gray-700">
-              <span className="font-semibold" style={{ color: colors.primary.teal }}>
-                Trip Duration:
-              </span>{' '}
-              <span className="font-medium">
-                {getTripDuration()} {getTripDuration() === 1 ? 'day' : 'days'}
-              </span>
-              {getTripDuration() === 1 && (
-                <span className="text-xs text-gray-600 ml-2">(Single-day trip)</span>
-              )}
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Driver Name
-            </label>
-            <input
-              type="text"
-              value={formData.driverName}
-              onChange={(e) =>
-                setFormData({ ...formData, driverName: e.target.value })
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-              placeholder="e.g., John Smith"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Vehicle Type
-            </label>
-            <select
-              value={formData.vehicleLayout}
-              onChange={(e) =>
-                setFormData({ ...formData, vehicleLayout: e.target.value })
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-            >
-              <option value="sprinter_15">Mercedes Sprinter Black (14 Seats)</option>
-              <option value="bus_30">Mercedes Sprinter White (11 Seats)</option>
-              <option value="highlander_7">Toyota Highlander (7 Seats)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              WhatsApp Group Link (Optional)
-            </label>
-            <input
-              type="url"
-              value={formData.whatsappGroupLink}
-              onChange={(e) =>
-                setFormData({ ...formData, whatsappGroupLink: e.target.value })
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-              placeholder="https://chat.whatsapp.com/..."
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Add a WhatsApp group link for trip participants to join
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Trip Status
-            </label>
-            <select
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value })
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-            >
-              <option value="planned">Planned (Yellow)</option>
-              <option value="scheduled">Scheduled (Purple)</option>
-              <option value="done">Done (Green)</option>
-            </select>
-          </div>
+          {/* ── Full-width sections ── */}
+          <div className="mt-5 space-y-4">
 
           {/* Show on Website Toggle */}
           <div className="border-2 rounded-lg overflow-hidden" style={{ borderColor: formData.showOnWebsite ? colors.primary.teal : '#E5E7EB' }}>
@@ -315,7 +303,7 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
               Cancel
             </button>
@@ -323,11 +311,12 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
               type="submit"
               disabled={loading}
               style={{ backgroundColor: colors.primary.teal }}
-              className="flex-1 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               {loading ? 'Updating...' : 'Update Trip'}
             </button>
           </div>
+        </div>{/* end full-width sections */}
         </form>
       </div>
     </div>
