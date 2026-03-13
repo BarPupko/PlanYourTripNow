@@ -2,6 +2,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const PDFDocument = require('pdfkit');
 const nodemailer = require('nodemailer');
+const path = require('path');
 
 admin.initializeApp();
 
@@ -64,13 +65,18 @@ async function generateWaiverPDF(registration, trip) {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
+    // Register DejaVu Sans fonts (support Hebrew, Cyrillic, Latin)
+    const fontsDir = path.join(__dirname, 'fonts');
+    doc.registerFont('DejaVu', path.join(fontsDir, 'DejaVuSans.ttf'));
+    doc.registerFont('DejaVu-Bold', path.join(fontsDir, 'DejaVuSans-Bold.ttf'));
+
     // Header
-    doc.fontSize(20).font('Helvetica-Bold').text('TRIP WAIVER & REGISTRATION', { align: 'center' });
+    doc.fontSize(20).font('DejaVu-Bold').text('TRIP WAIVER & REGISTRATION', { align: 'center' });
     doc.moveDown();
 
     // Trip Information
-    doc.fontSize(14).font('Helvetica-Bold').text('Trip Information');
-    doc.fontSize(11).font('Helvetica');
+    doc.fontSize(14).font('DejaVu-Bold').text('Trip Information');
+    doc.fontSize(11).font('DejaVu');
     doc.text(`Trip: ${pdfSafe(trip.title)}`);
     doc.text(`Date: ${trip.date.toDate().toLocaleDateString()}`);
     if (trip.endDate && trip.endDate.toDate().toDateString() !== trip.date.toDate().toDateString()) {
@@ -80,29 +86,29 @@ async function generateWaiverPDF(registration, trip) {
     doc.moveDown();
 
     // Participant Information
-    doc.fontSize(14).font('Helvetica-Bold').text('Participant Information');
-    doc.fontSize(11).font('Helvetica');
-    doc.text(`Name: ${pdfSafe(registration.firstName)} ${pdfSafe(registration.lastName)}`);
+    doc.fontSize(14).font('DejaVu-Bold').text('Participant Information');
+    doc.fontSize(11).font('DejaVu');
+    doc.text(`Name: ${registration.firstName || ''} ${registration.lastName || ''}`);
     doc.text(`Email: ${registration.email || ''}`);
     doc.text(`Phone: ${registration.phone || ''}`);
-    if (registration.seatNumber) doc.text(`Seat Number: #${registration.seatNumber}`);
-    if (registration.preferredPickupPlace) doc.text(`Pickup: ${pdfSafe(registration.preferredPickupPlace)}`);
+    doc.text('Seat: Will be assigned upon arrival');
+    if (registration.preferredPickupPlace) doc.text(`Pickup: ${registration.preferredPickupPlace}`);
     doc.text(`Payment Method: ${registration.paymentMethod === 'card' ? 'Pay with Card' : 'Pay on Trip'}`);
     doc.moveDown();
 
     // Custom Trip Information (if set by admin)
     if (trip.customInfo) {
-      doc.fontSize(14).font('Helvetica-Bold').text('Trip-Specific Information');
-      doc.fontSize(10).font('Helvetica');
-      doc.text(pdfSafe(trip.customInfo), { lineGap: 2 });
+      doc.fontSize(14).font('DejaVu-Bold').text('Trip-Specific Information');
+      doc.fontSize(10).font('DejaVu');
+      doc.text(trip.customInfo, { lineGap: 2 });
       doc.moveDown(0.5);
-      doc.fontSize(10).font('Helvetica-Oblique').text('✓ Participant agreed to the above trip-specific information.');
+      doc.fontSize(10).font('DejaVu').text('✓ Participant agreed to the above trip-specific information.');
       doc.moveDown();
     }
 
     // Cancellation Policy
-    doc.fontSize(14).font('Helvetica-Bold').text('Cancellation Policy');
-    doc.fontSize(10).font('Helvetica');
+    doc.fontSize(14).font('DejaVu-Bold').text('Cancellation Policy');
+    doc.fontSize(10).font('DejaVu');
     doc.text(
       '1. Cancellations made 7 days or more before the trip date will receive a full refund.\n' +
       '2. Cancellations made 4 days before the trip date will receive a 50% refund.\n' +
@@ -114,8 +120,8 @@ async function generateWaiverPDF(registration, trip) {
     doc.moveDown();
 
     // Waiver of Liability
-    doc.fontSize(14).font('Helvetica-Bold').text('Waiver of Liability and Assumption of Risk');
-    doc.fontSize(10).font('Helvetica');
+    doc.fontSize(14).font('DejaVu-Bold').text('Waiver of Liability and Assumption of Risk');
+    doc.fontSize(10).font('DejaVu');
     doc.text(
       'I, the undersigned, hereby acknowledge that I am voluntarily participating in this trip and related activities. ' +
       'I understand that such participation involves inherent risks, including but not limited to personal injury, property damage, or death.\n\n' +
@@ -130,9 +136,9 @@ async function generateWaiverPDF(registration, trip) {
     doc.moveDown();
 
     // Signature Section
-    doc.fontSize(12).font('Helvetica-Bold').text('Digital Signature');
+    doc.fontSize(12).font('DejaVu-Bold').text('Digital Signature');
     doc.moveDown(0.5);
-    doc.fontSize(11).font('Helvetica');
+    doc.fontSize(11).font('DejaVu');
     doc.text(`Signed on: ${new Date(registration.registrationDate || Date.now()).toLocaleDateString()}`);
     doc.moveDown(0.5);
 
@@ -144,15 +150,15 @@ async function generateWaiverPDF(registration, trip) {
         doc.image(imgBuffer, { width: 250, height: 80 });
       } catch (imgErr) {
         console.warn('Could not embed signature image:', imgErr.message);
-        doc.fontSize(10).font('Helvetica-Oblique').text('[Digital signature on file]');
+        doc.fontSize(10).font('DejaVu').text('[Digital signature on file]');
       }
     } else {
-      doc.fontSize(10).font('Helvetica-Oblique').text('[Signature not provided]');
+      doc.fontSize(10).font('DejaVu').text('[Signature not provided]');
     }
 
     // Footer
     doc.moveDown(2);
-    doc.fontSize(8).font('Helvetica').text(
+    doc.fontSize(8).font('DejaVu').text(
       `Generated on ${new Date().toLocaleString()} | IVRI Tours`,
       { align: 'center' }
     );
@@ -424,7 +430,7 @@ exports.onRegistrationConfirmed = functions.firestore
                 ${trip.endDate && trip.endDate.toDate().toDateString() !== trip.date.toDate().toDateString()
                   ? `<p style="margin: 8px 0;"><strong>End Date:</strong> ${trip.endDate.toDate().toLocaleDateString()}</p>`
                   : ''}
-                ${registration.seatNumber ? `<p style="margin: 8px 0;"><strong>Your Seat:</strong> <span style="background-color: #00BCD4; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">#${registration.seatNumber}</span></p>` : ''}
+                <p style="margin: 8px 0;"><strong>Your Seat:</strong> Will be assigned upon arrival</p>
                 ${trip.price ? `<p style="margin: 8px 0;"><strong>Price:</strong> C$${trip.price} per person</p>` : ''}
               </div>
 

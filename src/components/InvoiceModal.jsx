@@ -144,7 +144,7 @@ const InvoiceModal = ({ registration, trip, onClose }) => {
               </div>
               <div>
                 <label className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold block mb-0.5">Seat</label>
-                <p className="text-sm font-semibold text-gray-900">#{registration.seatNumber || '—'}</p>
+                <p className="text-sm font-semibold text-gray-900">Will be assigned upon arrival</p>
               </div>
               <div>
                 <label className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold block mb-0.5">Email</label>
