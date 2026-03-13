@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2, Copy, Check, MessageCircle, Phone, FileText } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getTrip, updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
+import { getTrip, updateRegistration, deleteRegistration, ensureCompanionToken } from '../utils/firestoreUtils';
 import { getVehicleLayout } from '../utils/vehicleLayouts';
 import VehicleSeatingMap from './VehicleSeatingMap';
 import AddParticipantModal from './AddParticipantModal';
@@ -29,6 +29,8 @@ const TripViewModal = ({ tripId, onClose }) => {
   const [confirmingReg, setConfirmingReg] = useState(null);
   const [confirmSeat, setConfirmSeat] = useState('');
   const [invoiceReg, setInvoiceReg] = useState(null);
+  const [itineraryLoadingId, setItineraryLoadingId] = useState(null);
+  const [itineraryCopiedId, setItineraryCopiedId]   = useState(null);
 
   useEffect(() => {
     loadTrip();
@@ -202,6 +204,25 @@ const TripViewModal = ({ tripId, onClose }) => {
       await updateRegistration(regId, { contacted: !currentValue });
     } catch (error) {
       console.error('Error updating contacted status:', error);
+    }
+  };
+
+  const COMPANION_BASE_URL = 'https://ivritours.github.io/participant-companion';
+
+  const handleSendItineraryLink = async (e, reg) => {
+    e.stopPropagation();
+    setItineraryLoadingId(reg.id);
+    try {
+      const token = await ensureCompanionToken(reg.id);
+      const url   = `${COMPANION_BASE_URL}?token=${token}`;
+      const msg   = `Hi ${reg.firstName}! 👋\nHere is your personal IVRI Tours itinerary link:\n${url}\nOpen it on your phone to follow the live schedule. See you soon! 🚌`;
+      await navigator.clipboard.writeText(msg);
+      setItineraryLoadingId(null);
+      setItineraryCopiedId(reg.id);
+      setTimeout(() => setItineraryCopiedId(null), 3000);
+    } catch (err) {
+      console.error('Failed to generate itinerary link:', err);
+      setItineraryLoadingId(null);
     }
   };
 
@@ -648,6 +669,19 @@ const TripViewModal = ({ tripId, onClose }) => {
                                     >
                                       <FileText className="w-4 h-4" />
                                       <span>Invoice</span>
+                                    </button>
+
+                                    <button
+                                      onClick={(e) => handleSendItineraryLink(e, reg)}
+                                      disabled={itineraryLoadingId === reg.id}
+                                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-all font-medium disabled:opacity-50"
+                                      style={{ backgroundColor: itineraryCopiedId === reg.id ? colors.success : '#F59E0B' }}
+                                      title="Copy itinerary link for this participant"
+                                    >
+                                      {itineraryLoadingId === reg.id ? (
+                                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                      ) : itineraryCopiedId === reg.id ? '✅' : '🗺️'}
+                                      <span>{itineraryCopiedId === reg.id ? 'Copied!' : 'Itinerary'}</span>
                                     </button>
 
                                     <button

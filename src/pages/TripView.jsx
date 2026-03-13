@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, Copy, Check, MessageCircle, ArrowLeftRight, UserX, Phone } from 'lucide-react';
+import { Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, Copy, Check, MessageCircle, ArrowLeftRight, UserX, Phone, Link } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getTrip, updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
+import { getTrip, updateRegistration, deleteRegistration, ensureCompanionToken } from '../utils/firestoreUtils';
 import VehicleSeatingMap from '../components/VehicleSeatingMap';
 import { getVehicleLayout } from '../utils/vehicleLayouts';
 import AddParticipantModal from '../components/AddParticipantModal';
@@ -27,6 +27,7 @@ const TripView = () => {
   const [isChangingSeat, setIsChangingSeat] = useState(false);
   const [confirmingReg, setConfirmingReg] = useState(null);
   const [confirmSeat, setConfirmSeat] = useState('');
+  const [companionLinkState, setCompanionLinkState] = useState({ loading: false, copied: false });
 
   useEffect(() => {
     loadTrip();
@@ -206,6 +207,25 @@ const TripView = () => {
       await updateRegistration(regId, { contacted: !currentValue });
     } catch (error) {
       console.error('Error updating contacted status:', error);
+    }
+  };
+
+  // Change this to your deployed participant-companion GitHub Pages URL
+  const COMPANION_BASE_URL = 'https://ivritours.github.io/participant-companion';
+
+  const handleSendCompanionLink = async (reg) => {
+    setCompanionLinkState({ loading: true, copied: false });
+    try {
+      const token = await ensureCompanionToken(reg.id);
+      const url   = `${COMPANION_BASE_URL}?token=${token}`;
+      const msg   = `Hi ${reg.firstName}! 👋\nHere is your personal IVRI Tours companion link for the trip:\n${url}\nOpen it on your phone for your live itinerary. See you soon! 🚌`;
+      await navigator.clipboard.writeText(msg);
+      setCompanionLinkState({ loading: false, copied: true });
+      setTimeout(() => setCompanionLinkState({ loading: false, copied: false }), 3000);
+    } catch (err) {
+      console.error('Failed to generate companion link:', err);
+      setCompanionLinkState({ loading: false, copied: false });
+      alert('Failed to generate link. Please try again.');
     }
   };
 
@@ -689,6 +709,23 @@ const TripView = () => {
                   className="w-full px-4 py-3 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
                 >
                   {selectedParticipant.paid ? t.markAsNotPaid : t.markAsPaidBtn}
+                </button>
+
+                {/* Companion link */}
+                <button
+                  onClick={() => handleSendCompanionLink(selectedParticipant)}
+                  disabled={companionLinkState.loading}
+                  style={{ backgroundColor: companionLinkState.copied ? colors.success : colors.primary.teal }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium disabled:opacity-60"
+                >
+                  {companionLinkState.loading ? (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : companionLinkState.copied ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <Link className="w-4 h-4" />
+                  )}
+                  {companionLinkState.loading ? 'Generating…' : companionLinkState.copied ? 'Link Copied!' : 'Send Companion Link'}
                 </button>
 
                 <div className="flex gap-2">

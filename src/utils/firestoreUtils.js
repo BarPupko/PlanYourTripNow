@@ -150,6 +150,19 @@ export const deleteRegistration = async (registrationId) => {
   }
 };
 
+// Companion token — generates (once) and persists a UUID on a registration doc.
+// Returns the token string so the caller can build the magic link URL.
+export const ensureCompanionToken = async (registrationId) => {
+  const docRef = doc(db, 'registrations', registrationId);
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) return null;
+  const existing = snap.data().companionToken;
+  if (existing) return existing;
+  const token = crypto.randomUUID();
+  await updateDoc(docRef, { companionToken: token });
+  return token;
+};
+
 // Contact operations
 export const getAllContacts = async () => {
   try {
