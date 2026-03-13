@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Sparkles, Loader2 } from 'lucide-react';
+import { X, Sparkle, Loader2 } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import colors from '../utils/colors';
 
@@ -364,7 +364,7 @@ Keep it friendly, realistic and suitable for WhatsApp. Include relevant emojis. 
               >
                 {generatingItinerary
                   ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <Sparkles className="w-4 h-4" />
+                  : <Sparkle className="w-4 h-4" />
                 }
                 <span>{generatingItinerary ? 'Generating…' : 'Generate'}</span>
               </button>

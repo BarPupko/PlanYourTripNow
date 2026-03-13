@@ -207,7 +207,7 @@ const TripViewModal = ({ tripId, onClose }) => {
     }
   };
 
-  const COMPANION_BASE_URL = 'https://ivritours.github.io/participant-companion/';
+  const COMPANION_BASE_URL = 'https://barpupko.github.io/PlanYourTripNow/';
 
   const handleSendItineraryLink = async (e, reg) => {
     e.stopPropagation();
