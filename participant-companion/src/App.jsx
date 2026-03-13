@@ -1,13 +1,8 @@
 import { useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { collection, query, where, limit, getDocs, doc, getDoc } from 'firebase/firestore';
+import { db } from './firebase';
 import ScheduleList from './components/ScheduleList';
-import { getMockData, DEMO_TOKEN } from './data/mockData';
-
-// ─── Toggle ───────────────────────────────────────────────────────────────────
-// true  → use mock data (works offline, always shows past/current/future)
-// false → query real Firestore; uses the 'registrations' collection
-const USE_MOCK_DATA = true;
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [searchParams] = useSearchParams();
@@ -18,72 +13,63 @@ export default function App() {
   useEffect(() => {
     if (!token) { setState(s => ({ ...s, status: 'no_token' })); return; }
 
-    if (USE_MOCK_DATA) {
-      const timer = setTimeout(() => {
-        if (token === DEMO_TOKEN || token === 'demo') {
-          const { mockParticipant, mockTrip, mockScheduleItems } = getMockData();
-          setState({ status: 'ok', participant: mockParticipant, trip: mockTrip, scheduleItems: mockScheduleItems });
-        } else {
-          setState(s => ({ ...s, status: 'invalid_token' }));
-        }
-      }, 600);
-      return () => clearTimeout(timer);
-    }
+    let cancelled = false;
 
-    // ── Live Firestore ────────────────────────────────────────────────────────
-    // The participant-companion queries the SAME 'registrations' collection
-    // already used by the admin app. Each registration doc gets a
-    // 'companionToken' field (UUID) generated on first use via the admin UI.
-    //
-    // import { collection, query, where, limit, getDocs, doc, getDoc } from 'firebase/firestore';
-    // import { db } from './firebase';
-    //
-    // (async () => {
-    //   try {
-    //     // 1. Look up registration by companionToken
-    //     const regSnap = await getDocs(
-    //       query(collection(db, 'registrations'), where('companionToken', '==', token), limit(1))
-    //     );
-    //     if (regSnap.empty) { setState(s => ({ ...s, status: 'invalid_token' })); return; }
-    //
-    //     const regDoc  = regSnap.docs[0];
-    //     const reg     = { id: regDoc.id, ...regDoc.data() };
-    //     const participant = {
-    //       id:        reg.id,
-    //       firstName: reg.firstName,
-    //       lastName:  reg.lastName,
-    //       name:      `${reg.firstName} ${reg.lastName}`,
-    //     };
-    //
-    //     // 2. Fetch trip + schedule items in parallel
-    //     const [tripSnap, schedSnap] = await Promise.all([
-    //       getDoc(doc(db, 'trips', reg.tripId)),
-    //       getDocs(query(collection(db, 'schedule_items'), where('tripId', '==', reg.tripId))),
-    //     ]);
-    //
-    //     if (!tripSnap.exists()) { setState(s => ({ ...s, status: 'error' })); return; }
-    //
-    //     const tripData = tripSnap.data();
-    //     const trip = {
-    //       id:        tripSnap.id,
-    //       name:      tripData.title || tripData.name,
-    //       startDate: tripData.startDate?.toDate?.() ?? tripData.date?.toDate?.() ?? new Date(),
-    //       endDate:   tripData.endDate?.toDate?.()   ?? new Date(),
-    //     };
-    //
-    //     const scheduleItems = schedSnap.docs.map(d => ({
-    //       id: d.id, ...d.data(),
-    //       startTime: d.data().startTime.toDate(),
-    //       endTime:   d.data().endTime.toDate(),
-    //     }));
-    //
-    //     setState({ status: 'ok', participant, trip, scheduleItems });
-    //   } catch (err) {
-    //     console.error(err);
-    //     setState(s => ({ ...s, status: 'error' }));
-    //   }
-    // })();
-    // ─────────────────────────────────────────────────────────────────────────
+    (async () => {
+      try {
+        // 1. Find the registration that holds this companionToken
+        const regSnap = await getDocs(
+          query(collection(db, 'registrations'), where('companionToken', '==', token), limit(1))
+        );
+        if (cancelled) return;
+
+        if (regSnap.empty) { setState(s => ({ ...s, status: 'invalid_token' })); return; }
+
+        const regDoc = regSnap.docs[0];
+        const reg    = { id: regDoc.id, ...regDoc.data() };
+
+        const participant = {
+          id:        reg.id,
+          firstName: reg.firstName,
+          lastName:  reg.lastName,
+          name:      `${reg.firstName} ${reg.lastName}`,
+        };
+
+        // 2. Fetch trip + schedule items in parallel
+        const [tripSnap, schedSnap] = await Promise.all([
+          getDoc(doc(db, 'trips', reg.tripId)),
+          getDocs(query(collection(db, 'schedule_items'), where('tripId', '==', reg.tripId))),
+        ]);
+
+        if (cancelled) return;
+
+        if (!tripSnap.exists()) { setState(s => ({ ...s, status: 'error' })); return; }
+
+        const td = tripSnap.data();
+        const trip = {
+          id:        tripSnap.id,
+          // Existing trips use 'title'; new ones may use 'name'
+          name:      td.title || td.name || 'Your Trip',
+          // Support both new startDate/endDate and legacy single 'date' field
+          startDate: td.startDate?.toDate?.() ?? td.date?.toDate?.() ?? new Date(),
+          endDate:   td.endDate?.toDate?.()   ?? td.date?.toDate?.() ?? new Date(),
+        };
+
+        const scheduleItems = schedSnap.docs.map(d => ({
+          id: d.id,
+          ...d.data(),
+          startTime: d.data().startTime.toDate(),
+          endTime:   d.data().endTime.toDate(),
+        }));
+
+        setState({ status: 'ok', participant, trip, scheduleItems });
+      } catch (err) {
+        console.error('Failed to load itinerary:', err);
+        if (!cancelled) setState(s => ({ ...s, status: 'error' }));
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [token]);
 
   if (state.status === 'loading') return <LoadingScreen />;
