@@ -36,4 +36,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: participant-companion/dist
+          destination_dir: companion
           keep_files: true
