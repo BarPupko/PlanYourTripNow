@@ -29,6 +29,12 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
+    // Schedule items - used by participant companion app
+    match /schedule_items/{itemId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
     // Gift Cards collection
     match /giftCards/{giftCardId} {
       // Anyone can read gift cards (public reveal page)

@@ -74,20 +74,36 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
     setGeneratingItinerary(true);
     try {
       const duration = getTripDuration();
-      const prompt = `You are a tour coordinator for IVRI Tours (a travel company). Generate a concise, WhatsApp-friendly day-by-day itinerary for this trip:
+      const prompt = `You are a professional tour coordinator for IVRI Tours. Based on the trip description below, generate a detailed structured itinerary split into individual timed activity blocks.
 
 Trip: ${formData.title}
-Start: ${formData.date}
-End: ${formData.endDate}
-Duration: ${duration} ${duration === 1 ? 'day' : 'days'}${formData.websiteDescription ? `\nDescription: ${formData.websiteDescription}` : ''}${formData.customInfo ? `\nNotes: ${formData.customInfo}` : ''}
+Date: ${formData.date}${formData.endDate && formData.endDate !== formData.date ? `\nEnd date: ${formData.endDate}` : ''}
+Duration: ${duration} ${duration === 1 ? 'day' : 'days'}${formData.websiteDescription ? `\nDescription:\n${formData.websiteDescription}` : ''}${formData.customInfo ? `\nAdditional notes: ${formData.customInfo}` : ''}
 
-Format each day exactly like this:
-📅 Day X – [Weekday, Date]
-• [Activity 1]
-• [Activity 2]
-• [Activity 3]
+IMPORTANT: Write the entire itinerary in the SAME LANGUAGE as the trip description above.
 
-Keep it friendly, realistic and suitable for WhatsApp. Include relevant emojis. 3-4 bullet points per day max. Do not add extra commentary outside the day blocks.`;
+Structure the output EXACTLY like this (translate all labels into the language of the description):
+
+[Trip Program header line with date and day of week]
+[Total duration line with hours and time range]
+
+HH:MM – HH:MM | [Activity / Location Name with relevant emoji]
+[Duration label]: [X hours / X minutes].
+[Activities label]:
+• [specific activity or detail from the description]
+• [specific activity or detail from the description]
+• [specific activity or detail from the description]
+
+[Repeat block for every distinct activity]
+
+Rules:
+- Create a SEPARATE block for EACH distinct location, activity, or travel segment — never combine multiple venues into one block
+- Always include a departure/travel block at the start and a return journey block at the end
+- Minimum 4 blocks for a single-day trip; more if there are more activities described
+- For each block include 2–5 bullet points with specific details drawn from the description
+- Estimate realistic start/end times from any time clues in the description (e.g. "9:00–19:00", "$169", meal info)
+- Use relevant emojis in block headers only
+- Do not add any commentary, preamble, or text outside the formatted blocks`;
 
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -98,7 +114,7 @@ Keep it friendly, realistic and suitable for WhatsApp. Include relevant emojis. 
         body: JSON.stringify({
           model: 'gpt-4o',
           messages: [{ role: 'user', content: prompt }],
-          max_tokens: 900,
+          max_tokens: 2000,
           temperature: 0.7,
         }),
       });
