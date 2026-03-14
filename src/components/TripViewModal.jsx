@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2, Copy, Check, MessageCircle, Phone, FileText } from 'lucide-react';
+import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2, Copy, Check, MessageCircle, Phone, FileText, Printer } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getTrip, updateRegistration, deleteRegistration, ensureCompanionToken } from '../utils/firestoreUtils';
@@ -226,6 +226,61 @@ const TripViewModal = ({ tripId, onClose }) => {
     }
   };
 
+  const printAllInvoices = () => {
+    if (!trip || confirmedRegistrations.length === 0) return;
+
+    const fmt = (v) => {
+      if (!v) return '—';
+      try { const d = v?.toDate ? v.toDate() : new Date(v); return d.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }); }
+      catch { return '—'; }
+    };
+    const tripDate = fmt(trip.date);
+    const tripEnd  = trip.endDate ? fmt(trip.endDate) : null;
+    const dateLine = tripEnd && tripEnd !== tripDate ? `${tripDate} – ${tripEnd}` : tripDate;
+
+    const invoiceHTML = (reg) => {
+      const regDate = reg.registrationDate
+        ? new Date(reg.registrationDate).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+      return `<div style="padding:28px 32px;font-family:Arial,sans-serif;page-break-after:always;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
+          <div><div style="font-size:26px;font-weight:900;color:#00BCD4;">IVRI Tours</div><div style="font-size:12px;color:#9CA3AF;">ivritours.ca</div></div>
+          <div style="text-align:right;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#D1D5DB;">Invoice</div><div style="font-size:13px;font-weight:600;color:#374151;">${regDate}</div></div>
+        </div>
+        <hr style="border:none;border-top:2px solid #E5E7EB;margin:0 0 18px;">
+        <div style="margin-bottom:18px;"><p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#9CA3AF;margin:0 0 10px;">Trip Details</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;">
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Trip</span><strong style="font-size:14px;color:#111;">${trip.title}</strong></div>
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Date</span><strong style="font-size:14px;color:#111;">${dateLine}</strong></div>
+            ${trip.price ? `<div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Price</span><strong style="font-size:14px;color:#111;">C$${trip.price}</strong></div>` : ''}
+            ${trip.driverName ? `<div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Driver</span><strong style="font-size:14px;color:#111;">${trip.driverName}</strong></div>` : ''}
+          </div></div>
+        <hr style="border:none;border-top:1px solid #E5E7EB;margin:0 0 18px;">
+        <div style="margin-bottom:18px;"><p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#9CA3AF;margin:0 0 10px;">Passenger</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;">
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Name</span><strong style="font-size:14px;color:#111;">${reg.firstName} ${reg.lastName}</strong></div>
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Seat</span><span style="font-size:13px;color:#374151;">${reg.seatNumber ? `Seat ${reg.seatNumber}` : 'Assigned upon arrival'}</span></div>
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Email</span><span style="font-size:13px;color:#374151;">${reg.email || '—'}</span></div>
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Phone</span><span style="font-size:13px;color:#374151;">${reg.phone || '—'}</span></div>
+          </div></div>
+        <hr style="border:none;border-top:1px solid #E5E7EB;margin:0 0 18px;">
+        <div style="margin-bottom:18px;"><p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#9CA3AF;margin:0 0 10px;">Payment</p>
+          <div style="display:flex;gap:32px;">
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Method</span><span style="font-size:13px;color:#374151;">${reg.paymentMethod === 'card' ? '💳 Card' : '💵 Pay on Trip'}</span></div>
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Status</span><span style="display:inline-block;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;${reg.paid ? 'background:#D1FAE5;color:#065F46;' : 'background:#FEE2E2;color:#991B1B;'}">${reg.paid ? '✓ Paid' : '✗ Not Paid'}</span></div>
+          </div></div>
+        <hr style="border:none;border-top:1px solid #E5E7EB;margin:0 0 12px;">
+        <p style="font-size:10px;text-align:center;color:#9CA3AF;margin:0;">IVRI Tours · Official registration confirmation.</p>
+      </div>`;
+    };
+
+    const html = confirmedRegistrations.map(invoiceHTML).join('');
+    const win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head><title>All Invoices – ${trip.title}</title><style>body{margin:0;}@media print{@page{margin:8mm;}}</style></head><body>${html}</body></html>`);
+    win.document.close();
+    win.focus();
+    win.print();
+  };
+
   const handleConfirmManually = async () => {
     if (!confirmingReg || !confirmSeat) return;
     try {
@@ -411,22 +466,35 @@ const TripViewModal = ({ tripId, onClose }) => {
               )}
 
               <div className="bg-gray-50 rounded-lg shadow-lg p-4 sm:p-6 border-2 border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5" style={{ color: colors.primary.teal }} />
-                    <h3 className="text-lg sm:text-xl font-bold" style={{ color: colors.primary.black }}>
+                <div className="flex items-center justify-between mb-4 gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Users className="w-5 h-5 flex-shrink-0" style={{ color: colors.primary.teal }} />
+                    <h3 className="text-base sm:text-xl font-bold truncate" style={{ color: colors.primary.black }}>
                       {t.participants} ({confirmedRegistrations.length})
                     </h3>
                   </div>
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    style={{ backgroundColor: colors.primary.teal }}
-                    className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-                    title={t.addParticipant}
-                  >
-                    <UserPlus className="w-5 h-5" />
-                    <span className="hidden sm:inline">{t.add}</span>
-                  </button>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {confirmedRegistrations.length > 0 && (
+                      <button
+                        onClick={printAllInvoices}
+                        className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg border-2 text-xs font-semibold hover:bg-purple-50 transition-colors"
+                        style={{ borderColor: '#6366F1', color: '#6366F1' }}
+                        title="Print all invoices"
+                      >
+                        <Printer className="w-4 h-4" />
+                        <span className="hidden sm:inline">All Invoices</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      style={{ backgroundColor: colors.primary.teal }}
+                      className="flex items-center gap-1.5 px-2.5 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-xs sm:text-sm font-semibold"
+                      title={t.addParticipant}
+                    >
+                      <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="hidden sm:inline">{t.add}</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* WhatsApp Buttons */}

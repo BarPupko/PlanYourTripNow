@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { Plus, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle, CheckCircle2, Clock, XCircle, FileText } from 'lucide-react';
 import { getAllTrips, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import CreateTripModal from '../components/CreateTripModal';
+import BulkInvoicesModal from '../components/BulkInvoicesModal';
 import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
 import Header from '../components/Header';
@@ -28,6 +29,7 @@ const AdminDashboard = () => {
   const [viewingTripId, setViewingTripId] = useState(null);
   const [registrationCounts, setRegistrationCounts] = useState({}); // Map of tripId -> approved count
   const [pendingCounts, setPendingCounts] = useState({}); // Map of tripId -> pending count
+  const [showBulkInvoices, setShowBulkInvoices] = useState(false);
 
   useEffect(() => {
     loadTrips();
@@ -242,29 +244,39 @@ const AdminDashboard = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div className="flex-1">
-                <div className="flex justify-between items-center gap-4">
-                  <div className="flex-1">
-                    {/* Date Display */}
-                    <div className="text-sm text-gray-600 mb-2">
+                <div className="flex justify-between items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-gray-500 mb-1">
                       {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
                       {viewFilter === 'date' ? `${t.tripsOn || 'Trips on'} ${selectedDate.toLocaleDateString()}` :
                        viewFilter === 'all' ? t.allTrips :
                        viewFilter === 'upcoming' ? t.currentTrips :
                        t.oldTrips}
                     </h2>
                   </div>
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    style={{ backgroundColor: colors.primary.teal }}
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm sm:text-base whitespace-nowrap"
-                    title={t.createNewTrip}
-                  >
-                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="hidden sm:inline">{t.createTrip}</span>
-                    <span className="sm:hidden">New</span>
-                  </button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => setShowBulkInvoices(true)}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 text-sm font-semibold hover:bg-teal-50 transition-colors whitespace-nowrap"
+                      style={{ borderColor: colors.primary.teal, color: colors.primary.teal }}
+                      title="Download all invoices"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span className="hidden sm:inline">Invoices</span>
+                    </button>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      style={{ backgroundColor: colors.primary.teal }}
+                      className="flex items-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap"
+                      title={t.createNewTrip}
+                    >
+                      <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="hidden sm:inline">{t.createTrip}</span>
+                      <span className="sm:hidden">New</span>
+                    </button>
+                  </div>
                 </div>
                 <div className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
                   <button
@@ -467,60 +479,54 @@ const AdminDashboard = () => {
                         )}
                       </div>
 
-                      <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-                        {trip.whatsappGroupLink && (
-                          <a
-                            href={trip.whatsappGroupLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ backgroundColor: '#25D366' }}
-                            className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-                            title={t.joinWhatsappGroup}
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t.whatsapp}</span>
-                          </a>
-                        )}
-
-                        <button
-                          onClick={() => handleCopyLink(trip.id)}
-                          className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-                          style={{ backgroundColor: copiedId === trip.id ? colors.success : colors.primary.teal }}
-                          title={copiedId === trip.id ? t.linkCopied : t.shareTripLink}
-                        >
-                          {copiedId === trip.id ? (
-                            <>
-                              <Check className="w-4 h-4" />
-                              <span className="hidden sm:inline">{t.copied}</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-4 h-4" />
-                              <span className="hidden sm:inline">{t.share}</span>
-                            </>
+                      <div className="flex flex-col gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {/* Row 1: WhatsApp (optional) + Copy */}
+                        <div className="flex gap-1.5">
+                          {trip.whatsappGroupLink && (
+                            <a
+                              href={trip.whatsappGroupLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ backgroundColor: '#25D366' }}
+                              className="flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm min-w-[40px]"
+                              title={t.joinWhatsappGroup}
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span className="hidden sm:inline text-xs font-medium">{t.whatsapp}</span>
+                            </a>
                           )}
-                        </button>
-
-                        <button
-                          onClick={() => setEditingTrip(trip)}
-                          style={{ backgroundColor: colors.primary.teal }}
-                          className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-                          title={t.editTrip}
-                        >
-                          <Edit className="w-4 h-4" />
-                          <span className="hidden sm:inline">{t.edit}</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleDeleteTrip(trip.id)}
-                          disabled={deletingId === trip.id}
-                          style={{ backgroundColor: colors.button.danger }}
-                          className="flex items-center gap-2 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                          title={t.deleteTrip}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span className="hidden sm:inline">{deletingId === trip.id ? t.deleting : t.delete}</span>
-                        </button>
+                          <button
+                            onClick={() => handleCopyLink(trip.id)}
+                            className="flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm min-w-[40px]"
+                            style={{ backgroundColor: copiedId === trip.id ? colors.success : colors.primary.teal }}
+                            title={copiedId === trip.id ? t.linkCopied : t.shareTripLink}
+                          >
+                            {copiedId === trip.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            <span className="hidden sm:inline text-xs font-medium">{copiedId === trip.id ? t.copied : t.share}</span>
+                          </button>
+                        </div>
+                        {/* Row 2: Edit + Delete */}
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => setEditingTrip(trip)}
+                            style={{ backgroundColor: colors.primary.teal }}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                            title={t.editTrip}
+                          >
+                            <Edit className="w-4 h-4" />
+                            <span className="hidden sm:inline text-xs font-medium">{t.edit}</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTrip(trip.id)}
+                            disabled={deletingId === trip.id}
+                            style={{ backgroundColor: colors.button.danger }}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={t.deleteTrip}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span className="hidden sm:inline text-xs font-medium">{deletingId === trip.id ? t.deleting : t.delete}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -640,6 +646,14 @@ const AdminDashboard = () => {
         <TripViewModal
           tripId={viewingTripId}
           onClose={() => setViewingTripId(null)}
+        />
+      )}
+
+      {/* Bulk Invoices Modal */}
+      {showBulkInvoices && (
+        <BulkInvoicesModal
+          trips={allTrips}
+          onClose={() => setShowBulkInvoices(false)}
         />
       )}
     </div>
