@@ -47,13 +47,14 @@ export default function App() {
 
         const td = tripSnap.data();
         const trip = {
-          id:        tripSnap.id,
+          id:         tripSnap.id,
           // Existing trips use 'title'; new ones may use 'name'
-          name:      td.title || td.name || 'Your Trip',
+          name:       td.title || td.name || 'Your Trip',
           // Support both new startDate/endDate and legacy single 'date' field
-          startDate: td.startDate?.toDate?.() ?? td.date?.toDate?.() ?? new Date(),
-          endDate:   td.endDate?.toDate?.()   ?? td.date?.toDate?.() ?? new Date(),
-          itinerary: td.itinerary || null,
+          startDate:  td.startDate?.toDate?.() ?? td.date?.toDate?.() ?? new Date(),
+          endDate:    td.endDate?.toDate?.()   ?? td.date?.toDate?.() ?? new Date(),
+          itinerary:  td.itinerary  || null,
+          customInfo: td.customInfo || null,
         };
 
         const scheduleItems = schedSnap.docs.map(d => ({
