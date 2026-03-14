@@ -3,6 +3,15 @@ import { X, Sparkle, Loader2 } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import colors from '../utils/colors';
 
+const PRESET_PICKUP_LOCATIONS = [
+  'Yummy Market North',
+  'Bathurst/Centre — Walmart Store',
+  'Bathurst/Steeles — Metro Plaza',
+  'Bathurst/Finch — Shell Gas Station',
+  'Bathurst/Sheppard — Metro Plaza',
+  'Sheppard West',
+];
+
 const EditTripModal = ({ trip, onClose, onUpdate }) => {
   // Convert Firestore Timestamp to date string for input
   const getTripDate = () => {
@@ -36,7 +45,8 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
     price: trip.price || '',
     showRegistrationCount: trip.showRegistrationCount || false,
     customInfo: trip.customInfo || '',
-    itinerary: trip.itinerary || ''
+    itinerary: trip.itinerary || '',
+    pickupLocations: trip.pickupLocations || [],
   });
   const [loading, setLoading] = useState(false);
   const [generatingItinerary, setGeneratingItinerary] = useState(false);
@@ -340,6 +350,51 @@ Rules:
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Pickup Locations */}
+          <div className="border-2 rounded-lg p-4 space-y-3" style={{ borderColor: colors.primary.teal }}>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🚌</span>
+              <div>
+                <p className="font-semibold text-gray-800">Pickup Locations</p>
+                <p className="text-xs text-gray-500">Select which stops are available for this trip. Participants must choose one when registering.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {PRESET_PICKUP_LOCATIONS.map(loc => {
+                const checked = formData.pickupLocations.includes(loc);
+                return (
+                  <label
+                    key={loc}
+                    className="flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors text-sm"
+                    style={{
+                      borderColor: checked ? colors.primary.teal : '#E5E7EB',
+                      backgroundColor: checked ? '#E0F7FA' : '#F9FAFB',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        const next = checked
+                          ? formData.pickupLocations.filter(l => l !== loc)
+                          : [...formData.pickupLocations, loc];
+                        setFormData({ ...formData, pickupLocations: next });
+                      }}
+                      className="w-4 h-4 rounded flex-shrink-0"
+                      style={{ accentColor: colors.primary.teal }}
+                    />
+                    <span className={checked ? 'font-medium text-gray-900' : 'text-gray-600'}>{loc}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {formData.pickupLocations.length === 0 && (
+              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                ⚠️ No locations selected — participants won't see a pickup field during registration.
+              </p>
             )}
           </div>
 

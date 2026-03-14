@@ -128,6 +128,8 @@ const RegistrationForm = () => {
       if (!passenger.email.trim()) newErrors[`passenger${index}Email`] = 'Email is required';
       else if (!/\S+@\S+\.\S+/.test(passenger.email)) newErrors[`passenger${index}Email`] = 'Email is invalid';
       if (!passenger.phone.trim()) newErrors[`passenger${index}Phone`] = 'Phone number is required';
+      if (trip?.pickupLocations?.length > 0 && !passenger.preferredPickupPlace)
+        newErrors[`passenger${index}Pickup`] = 'Please select a pickup location';
     });
 
     if (!agreements.cancellationPolicy) newErrors.cancellationPolicy = 'You must agree to the cancellation policy';
@@ -291,14 +293,13 @@ const RegistrationForm = () => {
             </div>
           </div>
 
-          {/* Seat Information */}
-          <div className="p-4 rounded-lg" style={{ backgroundColor: '#E0F7FA' }}>
-            <p className="font-semibold mb-2" style={{ color: colors.primary.teal }}>
-              {passengers.length === 1 ? 'Your Seat:' : 'Your Seats:'}
-            </p>
-            <p className="text-lg font-bold">
-              {passengers.map(p => `#${p.seatNumber}`).join(', ')}
-            </p>
+          {/* Seat notice */}
+          <div className="p-4 rounded-lg flex items-start gap-3" style={{ backgroundColor: '#E0F7FA' }}>
+            <span className="text-2xl flex-shrink-0">🪑</span>
+            <div className="text-left">
+              <p className="font-semibold" style={{ color: colors.primary.teal }}>Seat Assignment</p>
+              <p className="text-sm text-gray-700 mt-0.5">Your seat will be designated at the start of the tour.</p>
+            </div>
           </div>
 
           {/* Additional Info */}
@@ -488,22 +489,32 @@ const RegistrationForm = () => {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Preferred Pickup Place
-                  </label>
-                  <input
-                    type="text"
-                    value={passenger.preferredPickupPlace}
-                    onChange={(e) => {
-                      const newPassengers = [...passengers];
-                      newPassengers[index].preferredPickupPlace = e.target.value;
-                      setPassengers(newPassengers);
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Central Station, Hotel Name"
-                  />
-                </div>
+                {trip?.pickupLocations?.length > 0 && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Pickup Location *
+                    </label>
+                    <select
+                      value={passenger.preferredPickupPlace}
+                      onChange={(e) => {
+                        const newPassengers = [...passengers];
+                        newPassengers[index].preferredPickupPlace = e.target.value;
+                        setPassengers(newPassengers);
+                      }}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        errors[`passenger${index}Pickup`] ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">— Select your pickup stop —</option>
+                      {trip.pickupLocations.map(loc => (
+                        <option key={loc} value={loc}>{loc}</option>
+                      ))}
+                    </select>
+                    {errors[`passenger${index}Pickup`] && (
+                      <p className="text-red-500 text-sm mt-1">{errors[`passenger${index}Pickup`]}</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))}
