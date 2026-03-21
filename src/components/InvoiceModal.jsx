@@ -123,6 +123,18 @@ const InvoiceModal = ({ registration, trip, onClose }) => {
                   <p className="text-sm font-semibold text-gray-900">C${trip.price}</p>
                 </div>
               )}
+              {trip?.deposit && (
+                <div>
+                  <label className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold block mb-0.5">Deposit Required</label>
+                  <p className="text-sm font-semibold text-gray-900">C${trip.deposit}</p>
+                </div>
+              )}
+              {trip?.price && trip?.deposit && Number(trip.deposit) < Number(trip.price) && (
+                <div>
+                  <label className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold block mb-0.5">Balance Due on Trip</label>
+                  <p className="text-sm font-semibold text-gray-900">C${Number(trip.price) - Number(trip.deposit)}</p>
+                </div>
+              )}
               {trip?.driverName && (
                 <div>
                   <label className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold block mb-0.5">Driver</label>
