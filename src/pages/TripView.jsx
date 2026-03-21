@@ -98,7 +98,9 @@ const TripView = () => {
       }
     } else {
       if (occupant) {
+        // Clicking an occupied seat directly enters seat-change mode
         setSelectedParticipant(occupant);
+        setIsChangingSeat(true);
       } else {
         setPreselectedSeat(seatNumber);
         setShowAddModal(true);
@@ -289,14 +291,28 @@ const TripView = () => {
           {/* Left Side - Seating Map */}
           <div className="lg:col-span-2">
             {isChangingSeat && selectedParticipant && (
-              <div className="mb-3 p-3 rounded-lg border-2 flex items-center justify-between"
+              <div className="mb-3 p-3 rounded-lg border-2 flex items-center justify-between gap-2"
                 style={{ backgroundColor: '#FFF3CD', borderColor: colors.warning }}>
                 <span className="font-medium text-sm" style={{ color: '#856404' }}>
-                  Moving <strong>{selectedParticipant.firstName} {selectedParticipant.lastName}</strong> from seat #{selectedParticipant.seatNumber} — tap a seat to move, or tap their current seat to cancel
+                  Moving <strong>{selectedParticipant.firstName} {selectedParticipant.lastName}</strong> from seat #{selectedParticipant.seatNumber ?? '—'} — tap a seat to move
                 </span>
-                <button onClick={() => setIsChangingSeat(false)} className="ml-3 text-xs underline" style={{ color: '#856404' }}>
-                  Cancel
-                </button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={async () => {
+                      await updateRegistration(selectedParticipant.id, { seatNumber: null });
+                      setSelectedParticipant(null);
+                      setIsChangingSeat(false);
+                    }}
+                    className="text-xs px-2 py-1 rounded font-medium"
+                    style={{ backgroundColor: '#6B7280', color: 'white' }}
+                    title="Remove from seat (assign later)"
+                  >
+                    No Seat
+                  </button>
+                  <button onClick={() => { setIsChangingSeat(false); setSelectedParticipant(null); }} className="text-xs underline" style={{ color: '#856404' }}>
+                    Cancel
+                  </button>
+                </div>
               </div>
             )}
             <VehicleSeatingMap
@@ -376,8 +392,12 @@ const TripView = () => {
                       onClick={() => setSelectedParticipant(reg)}
                       className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                     >
-                      <div className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: colors.seat.occupied }}>
-                        {reg.seatNumber}
+                      <div
+                        className="flex-shrink-0 w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm"
+                        style={{ backgroundColor: reg.seatNumber ? colors.seat.occupied : '#9CA3AF' }}
+                        title={reg.seatNumber ? `Seat ${reg.seatNumber}` : 'No seat assigned'}
+                      >
+                        {reg.seatNumber ?? '?'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900 truncate">

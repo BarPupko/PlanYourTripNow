@@ -12,10 +12,10 @@ const ADMIN_EMAIL = 'ivristats@gmail.com';
 // Configure email transporter
 // IMPORTANT: Replace with your email service credentials
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // or your email service
+  service: 'gmail',
   auth: {
-    user: functions.config().email?.user || 'your-email@gmail.com',
-    pass: functions.config().email?.pass || 'your-app-password'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
@@ -66,7 +66,7 @@ async function generateWaiverPDF(registration, trip) {
     doc.on('error', reject);
 
     // Register DejaVu Sans fonts (support Hebrew, Cyrillic, Latin)
-    const fontsDir = path.join(__dirname, 'fonts');
+    const fontsDir = path.join(__dirname, 'node_modules/dejavu-fonts-ttf/ttf');
     doc.registerFont('DejaVu', path.join(fontsDir, 'DejaVuSans.ttf'));
     doc.registerFont('DejaVu-Bold', path.join(fontsDir, 'DejaVuSans-Bold.ttf'));
 
@@ -1301,7 +1301,7 @@ async function createBooking(trip, details, language) {
 
 async function sendSimpleConfirmationEmail(trip, registration, language) {
   const mailOptions = {
-    from: `IVRI Tours <${functions.config().email?.user || 'ivristats@gmail.com'}>`,
+    from: `IVRI Tours <${process.env.EMAIL_USER}>`,
     to: [registration.email, ADMIN_EMAIL],
     subject: language === 'ru'
       ? `Подтверждение бронирования - ${trip.title}`
@@ -1809,7 +1809,7 @@ exports.sendContactEmail = functions.https.onCall(async (data, context) => {
   }
 
   const mailOptions = {
-    from: `IVRI Tours Contact Form <${functions.config().email?.user || 'your-email@gmail.com'}>`,
+    from: `IVRI Tours Contact Form <${process.env.EMAIL_USER}>`,
     to: toEmail || 'pupko@mail.com',
     replyTo: email,
     subject: `New Contact Form Submission from ${name}`,

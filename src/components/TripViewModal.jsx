@@ -160,13 +160,30 @@ const TripViewModal = ({ tripId, onClose }) => {
       firstName: registration.firstName,
       lastName: registration.lastName,
       email: registration.email,
-      phone: registration.phone
+      phone: registration.phone,
+      seatNumber: registration.seatNumber ?? ''
     });
   };
 
   const handleSaveEdit = async (registrationId) => {
     try {
-      await updateRegistration(registrationId, editFormData);
+      const currentReg = registrations.find(r => r.id === registrationId);
+      const newSeat = editFormData.seatNumber === '' ? null : Number(editFormData.seatNumber);
+      const { seatNumber: _seat, ...contactFields } = editFormData;
+
+      const occupant = newSeat
+        ? registrations.find(r => r.seatNumber === newSeat && r.id !== registrationId)
+        : null;
+
+      if (occupant) {
+        await Promise.all([
+          updateRegistration(registrationId, { ...contactFields, seatNumber: newSeat }),
+          updateRegistration(occupant.id, { seatNumber: currentReg?.seatNumber ?? null })
+        ]);
+      } else {
+        await updateRegistration(registrationId, { ...contactFields, seatNumber: newSeat });
+      }
+
       setEditingParticipant(null);
       setEditFormData({});
     } catch (error) {
@@ -612,6 +629,24 @@ const TripViewModal = ({ tripId, onClose }) => {
                                     className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                                   />
                                 </div>
+                                <div>
+                                  <label className="text-xs font-medium text-gray-500">Seat Number</label>
+                                  <select
+                                    value={editFormData.seatNumber}
+                                    onChange={(e) => setEditFormData({ ...editFormData, seatNumber: e.target.value })}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                                  >
+                                    <option value="">No Seat</option>
+                                    {trip && Array.from({ length: getVehicleLayout(trip.vehicleLayout).totalSeats }, (_, i) => i + 1).map(n => {
+                                      const occupant = registrations.find(r => r.seatNumber === n && r.id !== reg.id);
+                                      return (
+                                        <option key={n} value={n}>
+                                          Seat {n}{occupant ? ` (swap with ${occupant.firstName} ${occupant.lastName})` : ''}
+                                        </option>
+                                      );
+                                    })}
+                                  </select>
+                                </div>
                                 <div className="flex gap-2 pt-2">
                                   <button
                                     onClick={() => handleSaveEdit(reg.id)}
@@ -849,6 +884,8 @@ const TripViewModal = ({ tripId, onClose }) => {
       {viewingParticipant && (
         <ParticipantDetailsModal
           participant={viewingParticipant}
+          registrations={registrations}
+          totalSeats={trip ? getVehicleLayout(trip.vehicleLayout).totalSeats : 0}
           onClose={() => setViewingParticipant(null)}
           onUpdate={() => {
             // Refresh is handled by the real-time listener

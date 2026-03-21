@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { X, CheckCircle2, XCircle, CreditCard, Banknote, Edit2, Trash2 } from 'lucide-react';
+import { X, CheckCircle2, XCircle, CreditCard, Banknote, Edit2, Trash2, ArrowLeftRight } from 'lucide-react';
 import { updateRegistration, deleteRegistration } from '../utils/firestoreUtils';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import colors from '../utils/colors';
 
-const ParticipantDetailsModal = ({ participant, onClose, onUpdate }) => {
+const ParticipantDetailsModal = ({ participant, onClose, onUpdate, registrations = [], totalSeats = 0 }) => {
   const { language } = useLanguage();
   const t = translations[language];
   const [isEditing, setIsEditing] = useState(false);
@@ -13,7 +13,8 @@ const ParticipantDetailsModal = ({ participant, onClose, onUpdate }) => {
     firstName: participant.firstName,
     lastName: participant.lastName,
     email: participant.email,
-    phone: participant.phone
+    phone: participant.phone,
+    seatNumber: participant.seatNumber ?? ''
   });
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -21,7 +22,24 @@ const ParticipantDetailsModal = ({ participant, onClose, onUpdate }) => {
   const handleSaveEdit = async () => {
     setLoading(true);
     try {
-      await updateRegistration(participant.id, editFormData);
+      const newSeat = editFormData.seatNumber === '' ? null : Number(editFormData.seatNumber);
+      const { seatNumber: _seat, ...contactFields } = editFormData;
+
+      // Check if another participant already occupies the target seat
+      const occupant = newSeat
+        ? registrations.find(r => r.seatNumber === newSeat && r.id !== participant.id)
+        : null;
+
+      if (occupant) {
+        // Swap: move occupant to current participant's old seat
+        await Promise.all([
+          updateRegistration(participant.id, { ...contactFields, seatNumber: newSeat }),
+          updateRegistration(occupant.id, { seatNumber: participant.seatNumber ?? null })
+        ]);
+      } else {
+        await updateRegistration(participant.id, { ...contactFields, seatNumber: newSeat });
+      }
+
       setIsEditing(false);
       onUpdate();
     } catch (error) {
@@ -139,6 +157,26 @@ const ParticipantDetailsModal = ({ participant, onClose, onUpdate }) => {
                   onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Seat Number
+                </label>
+                <select
+                  value={editFormData.seatNumber}
+                  onChange={(e) => setEditFormData({ ...editFormData, seatNumber: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                >
+                  <option value="">No Seat</option>
+                  {Array.from({ length: totalSeats }, (_, i) => i + 1).map(n => {
+                    const occupant = registrations.find(r => r.seatNumber === n && r.id !== participant.id);
+                    return (
+                      <option key={n} value={n}>
+                        Seat {n}{occupant ? ` (occupied by ${occupant.firstName} ${occupant.lastName} — will swap)` : ''}
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
               <div className="flex gap-2 pt-2">
                 <button
