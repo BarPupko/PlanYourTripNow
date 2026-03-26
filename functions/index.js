@@ -78,9 +78,11 @@ async function generateWaiverPDF(registration, trip) {
     doc.fontSize(14).font('DejaVu-Bold').text('Trip Information');
     doc.fontSize(11).font('DejaVu');
     doc.text(`Trip: ${pdfSafe(trip.title)}`);
-    doc.text(`Date: ${trip.date.toDate().toLocaleDateString()}`);
-    if (trip.endDate && trip.endDate.toDate().toDateString() !== trip.date.toDate().toDateString()) {
-      doc.text(`End Date: ${trip.endDate.toDate().toLocaleDateString()}`);
+    doc.text(`Date: ${trip.startDateTime?.toDate().toLocaleDateString() || trip.date?.toDate().toLocaleDateString()}`);
+    doc.text(`Time: ${trip.startDateTime?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || trip.date?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`);
+    if (trip.endDate && trip.endDate.toDate().toDateString() !== trip.startDateTime?.toDate().toDateString()) {
+      doc.text(`End Date: ${trip.endDateTime?.toDate().toLocaleDateString() || trip.endDate?.toDate().toLocaleDateString()}`);
+      doc.text(`End Time: ${trip.endDateTime?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || trip.endDate?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`);
     }
     if (trip.price) doc.text(`Price: C$${trip.price} per person`);
     doc.moveDown();
@@ -236,9 +238,10 @@ exports.onRegistrationCreated = functions.firestore
 
               <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #00BCD4; margin-top: 0;">📅 Trip Details</h3>
-                <p style="margin: 8px 0;"><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
-                <p style="margin: 8px 0;"><strong>Time:</strong> ${trip.date.toDate().toLocaleTimeString()}</p>
+                <p style="margin: 8px 0;"><strong>Date:</strong> ${trip.startDateTime?.toDate().toLocaleDateString() || trip.date?.toDate().toLocaleDateString()}</p>
+                <p style="margin: 8px 0;"><strong>Time:</strong> ${trip.startDateTime?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || trip.date?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                 <p style="margin: 8px 0;"><strong>Your Seat:</strong> <span style="background-color: #00BCD4; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">Seat will be placed upon arrival</span></p>
+                <p style="margin: 8px 0;"><strong>Itinerary Link:</strong> <a href="https://ivritours.com/trip/${registration.tripId}" style="color: #00BCD4;">View Trip Details</a></p>
               </div>
 
               <div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #00BCD4; margin: 20px 0;">
@@ -272,8 +275,8 @@ exports.onRegistrationCreated = functions.firestore
             <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #333; margin-top: 0;">Trip Details</h3>
               <p><strong>Trip:</strong> ${trip.title}</p>
-              <p><strong>Date:</strong> ${trip.date.toDate().toLocaleDateString()}</p>
-              <p><strong>Time:</strong> ${trip.date.toDate().toLocaleTimeString()}</p>
+              <p><strong>Date:</strong> ${trip.startDateTime?.toDate().toLocaleDateString() || trip.date?.toDate().toLocaleDateString()}</p>
+              <p><strong>Time:</strong> ${trip.startDateTime?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || trip.date?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
             </div>
             <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #333; margin-top: 0;">Participant Information</h3>

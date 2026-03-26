@@ -125,7 +125,8 @@ const TripView = () => {
 
     // Create formatted message
     let message = `🚌 *${trip.title}*\n`;
-    message += `📅 Date: ${trip.date?.toDate().toLocaleDateString()}\n`;
+    message += `📅 Date: ${trip.startDateTime?.toDate().toLocaleDateString() || trip.date?.toDate().toLocaleDateString()}\n`;
+    message += `⏰ Time: ${trip.startDateTime?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || 'TBD'}\n`;
     if (trip.driverName) {
       message += `🚗 Driver: ${trip.driverName}\n`;
     }
@@ -282,7 +283,7 @@ const TripView = () => {
       <Header
         showBackButton={true}
         title={trip.title}
-        subtitle={trip.date?.toDate().toLocaleDateString()}
+        subtitle={`${trip.startDateTime?.toDate().toLocaleDateString() || trip.date?.toDate().toLocaleDateString()} ${trip.startDateTime?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || ''}`}
       />
 
       {/* Main Content */}

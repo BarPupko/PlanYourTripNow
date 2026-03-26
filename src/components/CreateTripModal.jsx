@@ -13,6 +13,8 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     status: 'planned',
     date: selectedDate,
     endDate: selectedDate, // Add end date
+    startTime: '08:00', // Default start time
+    endTime: '18:00', // Default end time
     customSeats: [],
     showOnWebsite: false,
     websiteImage: '',
@@ -31,11 +33,27 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     setLoading(true);
 
     try {
+      // Combine date and time for start and end
+      const [startHour, startMinute] = formData.startTime.split(':').map(Number);
+      const [endHour, endMinute] = formData.endTime.split(':').map(Number);
+      
+      const startDateTime = new Date(formData.date);
+      startDateTime.setHours(startHour, startMinute, 0, 0);
+      
+      const endDateTime = new Date(formData.endDate);
+      endDateTime.setHours(endHour, endMinute, 0, 0);
+
       const tripData = {
         ...formData,
-        date: Timestamp.fromDate(formData.date),
-        endDate: Timestamp.fromDate(formData.endDate)
+        startDateTime: Timestamp.fromDate(startDateTime),
+        endDateTime: Timestamp.fromDate(endDateTime)
       };
+
+      // Remove the old date fields
+      delete tripData.date;
+      delete tripData.endDate;
+      delete tripData.startTime;
+      delete tripData.endTime;
 
       // If custom layout is selected, use customSeats
       if (formData.vehicleLayout === 'custom' && formData.customSeats.length > 0) {
@@ -156,6 +174,22 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Start Time
+              </label>
+              <input
+                type="time"
+                value={formData.startTime}
+                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                className="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors cursor-pointer"
+                style={{ borderColor: colors.primary.teal }}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 End Date
               </label>
               <input
@@ -163,6 +197,19 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
                 value={formatDateForInput(formData.endDate)}
                 onChange={handleEndDateChange}
                 min={formatDateForInput(formData.date)}
+                className="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors cursor-pointer"
+                style={{ borderColor: colors.primary.teal }}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                End Time
+              </label>
+              <input
+                type="time"
+                value={formData.endTime}
+                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                 className="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors cursor-pointer"
                 style={{ borderColor: colors.primary.teal }}
                 required

@@ -61,7 +61,7 @@ const AdminDashboard = () => {
       let newStatus = trip.status || 'planned';
 
       // Get the end date (or use start date if no end date exists)
-      const tripEndDate = trip.endDate?.toDate?.() || trip.date?.toDate?.() || new Date(trip.date);
+      const tripEndDate = trip.endDateTime?.toDate?.() || trip.endDate?.toDate?.() || trip.startDateTime?.toDate?.() || trip.date?.toDate?.() || new Date(trip.date);
       tripEndDate.setHours(0, 0, 0, 0);
 
       // Fetch registration count for this trip
@@ -175,11 +175,11 @@ const AdminDashboard = () => {
     if (viewFilter === 'date') {
       // Filter by specific selected date - includes trips within date range
       filtered = allTrips.filter(trip => {
-        const tripStartDate = trip.date?.toDate?.() || new Date(trip.date);
+        const tripStartDate = trip.startDateTime?.toDate?.() || trip.date?.toDate?.() || new Date(trip.date);
         tripStartDate.setHours(0, 0, 0, 0);
 
-        const tripEndDate = trip.endDate?.toDate?.()
-          ? new Date(trip.endDate.toDate())
+        const tripEndDate = trip.endDateTime?.toDate?.() || trip.endDate?.toDate?.()
+          ? new Date(trip.endDateTime?.toDate?.() || trip.endDate.toDate())
           : new Date(tripStartDate);
         tripEndDate.setHours(0, 0, 0, 0);
 
@@ -191,13 +191,13 @@ const AdminDashboard = () => {
       });
     } else if (viewFilter === 'upcoming') {
       filtered = allTrips.filter(trip => {
-        const tripDate = trip.date?.toDate?.() || new Date(trip.date);
+        const tripDate = trip.startDateTime?.toDate?.() || trip.date?.toDate?.() || new Date(trip.date);
         tripDate.setHours(0, 0, 0, 0);
         return tripDate >= today;
       });
     } else if (viewFilter === 'past') {
       filtered = allTrips.filter(trip => {
-        const tripDate = trip.date?.toDate?.() || new Date(trip.date);
+        const tripDate = trip.startDateTime?.toDate?.() || trip.date?.toDate?.() || new Date(trip.date);
         tripDate.setHours(0, 0, 0, 0);
         return tripDate < today;
       });
@@ -447,11 +447,12 @@ const AdminDashboard = () => {
                         </div>
                         <p className="text-[10px] sm:text-sm text-gray-600 mt-1">
                           {(() => {
-                            const startDate = trip.date?.toDate?.() || new Date(trip.date);
-                            const endDate = trip.endDate?.toDate?.();
+                            const startDate = trip.startDateTime?.toDate?.() || trip.date?.toDate?.() || new Date(trip.date);
+                            const endDate = trip.endDateTime?.toDate?.() || trip.endDate?.toDate?.();
                             const dateStr = endDate && endDate.getTime() !== startDate.getTime()
                               ? `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`
                               : startDate.toLocaleDateString();
+                            const timeStr = trip.startDateTime?.toDate?.().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || '';
 
                             // Get vehicle name without seat count
                             let vehicleName = '';
@@ -469,7 +470,7 @@ const AdminDashboard = () => {
                             const registeredCount = registrationCounts[trip.id] || 0;
                             const capacity = getVehicleCapacity(trip.vehicleLayout);
 
-                            return `${dateStr} - ${vehicleName} (${registeredCount}/${capacity} Seats)`;
+                            return `${dateStr}${timeStr ? ` at ${timeStr}` : ''} - ${vehicleName} (${registeredCount}/${capacity} Seats)`;
                           })()}
                         </p>
                         {trip.driverName && (
@@ -558,11 +559,11 @@ const AdminDashboard = () => {
 
                       // Find the first trip that includes this date (in order of the trips array)
                       const tripOnDate = allTrips.find(trip => {
-                        const tripStartDate = trip.date?.toDate?.() || new Date(trip.date);
+                        const tripStartDate = trip.startDateTime?.toDate?.() || trip.date?.toDate?.() || new Date(trip.date);
                         tripStartDate.setHours(0, 0, 0, 0);
 
-                        const tripEndDate = trip.endDate?.toDate?.()
-                          ? new Date(trip.endDate.toDate())
+                        const tripEndDate = trip.endDateTime?.toDate?.() || trip.endDate?.toDate?.()
+                          ? new Date(trip.endDateTime?.toDate?.() || trip.endDate.toDate())
                           : new Date(tripStartDate);
                         tripEndDate.setHours(0, 0, 0, 0);
 

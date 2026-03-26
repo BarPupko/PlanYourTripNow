@@ -65,8 +65,8 @@ export const getTripsByDate = async (date) => {
 
     const q = query(
       collection(db, 'trips'),
-      where('date', '>=', Timestamp.fromDate(startOfDay)),
-      where('date', '<=', Timestamp.fromDate(endOfDay))
+      where('startDateTime', '>=', Timestamp.fromDate(startOfDay)),
+      where('startDateTime', '<=', Timestamp.fromDate(endOfDay))
     );
 
     const querySnapshot = await getDocs(q);
