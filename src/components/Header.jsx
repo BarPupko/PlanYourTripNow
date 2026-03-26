@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, ArrowLeft, Gift, MessageCircle } from 'lucide-react';
+import { LogOut, ArrowLeft, Gift, MessageCircle, HelpCircle } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import IVRILogo from './IrviLogo';
@@ -8,6 +8,7 @@ import WeatherWidget from './WeatherWidget';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import colors from '../utils/colors';
+import { startTour } from '../utils/tour';
 
 const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout = true }) => {
   const navigate = useNavigate();
@@ -107,15 +108,27 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
             {!isPublicPage && (
               <>
                 {isAdminDashboard && (
-                  <button
-                    onClick={() => navigate('/gift-cards')}
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    style={{ color: colors.primary.teal }}
-                    title="Gift Cards"
-                  >
-                    <Gift className="w-4 h-4" />
-                    <span className="hidden sm:inline">Gift Cards</span>
-                  </button>
+                  <>
+                    <button
+                      id="tour-gift-cards"
+                      onClick={() => navigate('/gift-cards')}
+                      className="flex items-center gap-2 px-3 sm:px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      style={{ color: colors.primary.teal }}
+                      title="Gift Cards"
+                    >
+                      <Gift className="w-4 h-4" />
+                      <span className="hidden sm:inline">Gift Cards</span>
+                    </button>
+                    <button
+                      id="tour-help-btn"
+                      onClick={() => startTour(t)}
+                      className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+                      style={{ color: colors.primary.teal }}
+                      title="Take a tour"
+                    >
+                      <HelpCircle className="w-5 h-5" />
+                    </button>
+                  </>
                 )}
 
                 {isGiftCardsPage && (

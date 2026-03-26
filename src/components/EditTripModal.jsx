@@ -1,8 +1,11 @@
-import { useState } from 'react';
-import { X, Sparkle, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Sparkle, Loader2, HelpCircle } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import colors from '../utils/colors';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../utils/translations';
+import { hasSeenEditTripTour, startEditTripTour } from '../utils/tour';
 
 const PRESET_PICKUP_LOCATIONS = [
   'Yummy Market North',
@@ -14,6 +17,17 @@ const PRESET_PICKUP_LOCATIONS = [
 ];
 
 const EditTripModal = ({ trip, onClose, onUpdate }) => {
+  const { language } = useLanguage();
+  const t = translations[language];
+
+  useEffect(() => {
+    if (!hasSeenEditTripTour()) {
+      const timer = setTimeout(() => startEditTripTour(t), 400);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Convert Firestore Timestamp to date string for input
   const getTripDate = () => {
     if (trip.date?.toDate) {
@@ -63,6 +77,7 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
   });
   const [loading, setLoading] = useState(false);
   const [generatingItinerary, setGeneratingItinerary] = useState(false);
+  const [customPickupInput, setCustomPickupInput] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -165,9 +180,19 @@ Rules:
             <h2 className="text-xl font-bold">Edit Trip</h2>
             <p className="text-teal-100 text-sm truncate max-w-[220px] sm:max-w-none">{formData.title}</p>
           </div>
-          <button onClick={onClose} className="hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors">
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => startEditTripTour(t)}
+              className="hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+              title="Take a tour"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+            <button onClick={onClose} className="hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 lg:p-6">
@@ -190,7 +215,7 @@ Rules:
               </div>
 
               {/* Start + End dates */}
-              <div className="grid grid-cols-2 gap-3">
+              <div id="edit-tour-dates" className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Date</label>
                   <input
@@ -255,7 +280,7 @@ Rules:
             </div>
 
             {/* ── Right column ── */}
-            <div className="space-y-4">
+            <div id="edit-tour-right-col" className="space-y-4">
               {/* Driver Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Driver Name</label>
@@ -446,6 +471,55 @@ Rules:
                   </label>
                 );
               })}
+              {formData.pickupLocations.filter(l => !PRESET_PICKUP_LOCATIONS.includes(l)).map(loc => (
+                <div
+                  key={loc}
+                  className="flex items-center justify-between gap-2 p-2.5 rounded-lg border text-sm"
+                  style={{ borderColor: colors.primary.teal, backgroundColor: '#E0F7FA' }}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <input type="checkbox" checked readOnly className="w-4 h-4 rounded flex-shrink-0" style={{ accentColor: colors.primary.teal }} />
+                    <span className="font-medium text-gray-900 truncate">{loc}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, pickupLocations: formData.pickupLocations.filter(l => l !== loc) })}
+                    className="flex-shrink-0 text-gray-400 hover:text-red-500 transition-colors text-lg leading-none"
+                  >×</button>
+                </div>
+              ))}
+            </div>
+            {/* Custom pickup input */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customPickupInput}
+                onChange={e => setCustomPickupInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = customPickupInput.trim();
+                    if (val && !formData.pickupLocations.includes(val)) {
+                      setFormData({ ...formData, pickupLocations: [...formData.pickupLocations, val] });
+                    }
+                    setCustomPickupInput('');
+                  }
+                }}
+                placeholder="Custom pickup place…"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const val = customPickupInput.trim();
+                  if (val && !formData.pickupLocations.includes(val)) {
+                    setFormData({ ...formData, pickupLocations: [...formData.pickupLocations, val] });
+                  }
+                  setCustomPickupInput('');
+                }}
+                className="px-4 py-2 text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: colors.primary.teal }}
+              >Add</button>
             </div>
             {formData.pickupLocations.length === 0 && (
               <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
@@ -455,7 +529,7 @@ Rules:
           </div>
 
           {/* Custom Trip Information */}
-          <div className="border-2 rounded-lg p-4 space-y-2" style={{ borderColor: colors.primary.teal }}>
+          <div id="edit-tour-custom-info" className="border-2 rounded-lg p-4 space-y-2" style={{ borderColor: colors.primary.teal }}>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">📋</span>
               <div>
@@ -473,7 +547,7 @@ Rules:
           </div>
 
           {/* WhatsApp Message / Itinerary */}
-          <div className="border-2 rounded-lg p-4 space-y-3" style={{ borderColor: '#F59E0B' }}>
+          <div id="edit-tour-itinerary" className="border-2 rounded-lg p-4 space-y-3" style={{ borderColor: '#F59E0B' }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🗺️</span>
@@ -514,6 +588,7 @@ Rules:
               Cancel
             </button>
             <button
+              id="edit-tour-submit"
               type="submit"
               disabled={loading}
               style={{ backgroundColor: colors.primary.teal }}

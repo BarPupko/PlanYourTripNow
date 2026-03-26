@@ -13,6 +13,7 @@ import Header from '../components/Header';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import colors from '../utils/colors';
+import { hasSeenTour, startTour } from '../utils/tour';
 
 const AdminDashboard = () => {
   const { language } = useLanguage();
@@ -34,6 +35,13 @@ const AdminDashboard = () => {
   useEffect(() => {
     loadTrips();
   }, [selectedDate, viewFilter]);
+
+  useEffect(() => {
+    if (!hasSeenTour()) {
+      const timer = setTimeout(() => startTour(t), 800);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const loadTrips = async () => {
     setLoading(true);
@@ -267,6 +275,7 @@ const AdminDashboard = () => {
                       <span className="hidden sm:inline">Invoices</span>
                     </button>
                     <button
+                      id="tour-create-trip"
                       onClick={() => setShowCreateModal(true)}
                       style={{ backgroundColor: colors.primary.teal }}
                       className="flex items-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap"
@@ -278,7 +287,7 @@ const AdminDashboard = () => {
                     </button>
                   </div>
                 </div>
-                <div className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
+                <div id="tour-view-filters" className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
                   <button
                     onClick={() => setViewFilter('all')}
                     className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
@@ -324,7 +333,7 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Status Filter Buttons */}
-                <div className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
+                <div id="tour-status-filters" className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
                   <button
                     onClick={() => setStatusFilter('all')}
                     className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
@@ -416,7 +425,7 @@ const AdminDashboard = () => {
                 </button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div id="tour-trip-list" className="space-y-3">
                 {filteredTrips.map((trip) => (
                   <div
                     key={trip.id}
@@ -540,7 +549,7 @@ const AdminDashboard = () => {
           <div className="lg:col-span-1">
             <div className="space-y-4 sticky top-4">
               {/* Calendar */}
-              <div className="bg-white rounded-lg shadow p-4">
+              <div id="tour-calendar" className="bg-white rounded-lg shadow p-4">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   {t.calendar}
                 </h2>
