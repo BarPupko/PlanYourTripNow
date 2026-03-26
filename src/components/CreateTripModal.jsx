@@ -20,6 +20,7 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
     websiteImage: '',
     websiteDescription: '',
     price: '',
+    deposit: '',
     showRegistrationCount: false
   });
   const [loading, setLoading] = useState(false);
@@ -372,6 +373,37 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
             </select>
           </div>
 
+          {/* Price & Deposit */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Price per Person (C$)</label>
+              <input
+                type="number"
+                min="0"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                placeholder="e.g. 120"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Deposit Amount (C$)</label>
+              <input
+                type="number"
+                min="0"
+                value={formData.deposit}
+                onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                placeholder="e.g. 40"
+              />
+            </div>
+          </div>
+          {formData.price && formData.deposit && Number(formData.deposit) < Number(formData.price) && (
+            <p className="text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">
+              Deposit: C${formData.deposit} · Balance due on trip: C${Number(formData.price) - Number(formData.deposit)}
+            </p>
+          )}
+
           {/* Show on Website Toggle */}
           <div className="border-2 rounded-lg overflow-hidden" style={{ borderColor: formData.showOnWebsite ? colors.primary.teal : '#E5E7EB' }}>
             <button
@@ -416,17 +448,6 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-sm resize-vertical"
                     placeholder="Describe this trip for website visitors..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Price per Person (C$)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-sm"
-                    placeholder="e.g. 120"
                   />
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">

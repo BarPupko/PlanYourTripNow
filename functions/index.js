@@ -3,6 +3,23 @@ const admin = require('firebase-admin');
 const PDFDocument = require('pdfkit');
 const nodemailer = require('nodemailer');
 const path = require('path');
+const crypto = require('crypto');
+
+const COMPANION_BASE_URL = 'https://barpupko.github.io/PlanYourTripNow/companion/';
+
+// Format a Firestore Timestamp (or Date) as "h:mm AM/PM" in Toronto time
+const formatTime = (ts) => {
+  if (!ts) return null;
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return new Intl.DateTimeFormat('en-CA', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'America/Toronto',
+    }).format(d);
+  } catch { return null; }
+};
 
 admin.initializeApp();
 
@@ -196,6 +213,14 @@ exports.onRegistrationCreated = functions.firestore
 
       const trip = tripDoc.data();
 
+      // Generate or reuse companion token so the email can include the itinerary link
+      let companionToken = registration.companionToken;
+      if (!companionToken) {
+        companionToken = crypto.randomUUID();
+        await snap.ref.update({ companionToken });
+      }
+      const itineraryUrl = `${COMPANION_BASE_URL}?token=${companionToken}`;
+
       // Generate PDF
       console.log('Generating PDF for registration:', registrationId);
       const pdfBuffer = await generateWaiverPDF(registration, trip);
@@ -238,10 +263,15 @@ exports.onRegistrationCreated = functions.firestore
 
               <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #00BCD4; margin-top: 0;">📅 Trip Details</h3>
-                <p style="margin: 8px 0;"><strong>Date:</strong> ${trip.startDateTime?.toDate().toLocaleDateString() || trip.date?.toDate().toLocaleDateString()}</p>
-                <p style="margin: 8px 0;"><strong>Time:</strong> ${trip.startDateTime?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || trip.date?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                <p style="margin: 8px 0;"><strong>Date:</strong> ${(trip.startDateTime || trip.date)?.toDate().toLocaleDateString()}</p>
+                ${formatTime(trip.startDateTime || trip.date) ? `<p style="margin: 8px 0;"><strong>Time:</strong> ${formatTime(trip.startDateTime || trip.date)}${formatTime(trip.endDateTime) ? ` – ${formatTime(trip.endDateTime)}` : ''}</p>` : ''}
+                ${registration.pickupLocation ? `<p style="margin: 8px 0;"><strong>📍 Pickup:</strong> ${registration.pickupLocation}</p>` : ''}
                 <p style="margin: 8px 0;"><strong>Your Seat:</strong> <span style="background-color: #00BCD4; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">Seat will be placed upon arrival</span></p>
-                <p style="margin: 8px 0;"><strong>Itinerary Link:</strong> <a href="https://ivritours.com/trip/${registration.tripId}" style="color: #00BCD4;">View Trip Details</a></p>
+              </div>
+
+              <div style="background-color: #FFF8E1; border: 2px solid #FFD54F; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+                <p style="margin: 0 0 12px; font-size: 15px; color: #5D4037;">🗺️ Already excited for the trip? Check out your personal <strong>${trip.title}</strong> itinerary!</p>
+                <a href="${itineraryUrl}" style="display: inline-block; background-color: #00BCD4; color: white; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 15px;">View My Itinerary →</a>
               </div>
 
               <div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #00BCD4; margin: 20px 0;">
@@ -275,8 +305,8 @@ exports.onRegistrationCreated = functions.firestore
             <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #333; margin-top: 0;">Trip Details</h3>
               <p><strong>Trip:</strong> ${trip.title}</p>
-              <p><strong>Date:</strong> ${trip.startDateTime?.toDate().toLocaleDateString() || trip.date?.toDate().toLocaleDateString()}</p>
-              <p><strong>Time:</strong> ${trip.startDateTime?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || trip.date?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+              <p><strong>Date:</strong> ${(trip.startDateTime || trip.date)?.toDate().toLocaleDateString()}</p>
+              ${formatTime(trip.startDateTime || trip.date) ? `<p><strong>Time:</strong> ${formatTime(trip.startDateTime || trip.date)}${formatTime(trip.endDateTime) ? ` – ${formatTime(trip.endDateTime)}` : ''}</p>` : ''}
             </div>
             <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #333; margin-top: 0;">Participant Information</h3>

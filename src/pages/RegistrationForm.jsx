@@ -522,6 +522,28 @@ const RegistrationForm = () => {
           {/* Payment Method */}
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Payment Method</h2>
+            {(trip.price || trip.deposit) && (
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-4 space-y-1">
+                {trip.price && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Trip Price</span>
+                    <span className="font-semibold text-gray-900">C${trip.price}</span>
+                  </div>
+                )}
+                {trip.deposit && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Deposit Amount</span>
+                    <span className="font-semibold" style={{ color: colors.primary.teal }}>C${trip.deposit}</span>
+                  </div>
+                )}
+                {trip.price && trip.deposit && Number(trip.deposit) < Number(trip.price) && (
+                  <div className="flex justify-between text-sm border-t border-teal-200 pt-1 mt-1">
+                    <span className="text-gray-600">Balance Due on Trip</span>
+                    <span className="font-semibold text-gray-900">C${Number(trip.price) - Number(trip.deposit)}</span>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="space-y-2">
               <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors" style={{ borderColor: paymentMethod === 'card' ? colors.primary.teal : '#D1D5DB' }}>
                 <input

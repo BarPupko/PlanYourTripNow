@@ -31,10 +31,21 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
     return getTripDate();
   };
 
+  const getTripTime = (field) => {
+    const ts = trip[field] || (field === 'startDateTime' ? trip.date : trip.endDate);
+    if (ts?.toDate) {
+      const d = ts.toDate();
+      return d.toTimeString().slice(0, 5);
+    }
+    return field === 'startDateTime' ? '08:00' : '18:00';
+  };
+
   const [formData, setFormData] = useState({
     title: trip.title || '',
     date: getTripDate(),
     endDate: getTripEndDate(),
+    startTime: getTripTime('startDateTime'),
+    endTime: getTripTime('endDateTime'),
     vehicleLayout: trip.vehicleLayout || 'sprinter_15',
     driverName: trip.driverName || '',
     whatsappGroupLink: trip.whatsappGroupLink || '',
@@ -57,12 +68,22 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
     setLoading(true);
 
     try {
+      const [sh, sm] = formData.startTime.split(':').map(Number);
+      const [eh, em] = formData.endTime.split(':').map(Number);
+      const startDate = new Date(formData.date);
+      startDate.setHours(sh, sm, 0, 0);
+      const endDate = new Date(formData.endDate);
+      endDate.setHours(eh, em, 0, 0);
       // Convert date string to Firestore Timestamp
       const updatedData = {
         ...formData,
         date: Timestamp.fromDate(new Date(formData.date)),
-        endDate: Timestamp.fromDate(new Date(formData.endDate))
+        endDate: Timestamp.fromDate(new Date(formData.endDate)),
+        startDateTime: Timestamp.fromDate(startDate),
+        endDateTime: Timestamp.fromDate(endDate),
       };
+      delete updatedData.startTime;
+      delete updatedData.endTime;
       await onUpdate(trip.id, updatedData);
     } catch (error) {
       console.error('Error updating trip:', error);
@@ -209,6 +230,30 @@ Rules:
                 </div>
               </div>
 
+              {/* Start + End times */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Time</label>
+                  <input
+                    type="time"
+                    value={formData.startTime}
+                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                    className="w-full px-3 py-2.5 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors"
+                    style={{ borderColor: colors.primary.teal }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">End Time</label>
+                  <input
+                    type="time"
+                    value={formData.endTime}
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                    className="w-full px-3 py-2.5 border-2 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent hover:border-[#00BCD4] transition-colors"
+                    style={{ borderColor: colors.primary.teal }}
+                  />
+                </div>
+              </div>
+
               {/* Duration badge */}
               <div className="bg-teal-50 border-2 border-teal-200 rounded-lg px-4 py-2.5">
                 <p className="text-sm text-gray-700">
@@ -273,6 +318,37 @@ Rules:
                   <option value="done">Done (Green)</option>
                 </select>
               </div>
+
+              {/* Price & Deposit */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Price per Person (C$)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                    placeholder="e.g. 120"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Deposit Amount (C$)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.deposit}
+                    onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                    placeholder="e.g. 40"
+                  />
+                </div>
+              </div>
+              {formData.price && formData.deposit && Number(formData.deposit) < Number(formData.price) && (
+                <p className="text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">
+                  Deposit: C${formData.deposit} · Balance due on trip: C${Number(formData.price) - Number(formData.deposit)}
+                </p>
+              )}
             </div>
           </div>
 
@@ -325,35 +401,6 @@ Rules:
                     placeholder="Describe this trip for website visitors..."
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Price per Person (C$)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-sm"
-                      placeholder="e.g. 120"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Deposit Amount (C$)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.deposit}
-                      onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-sm"
-                      placeholder="e.g. 50"
-                    />
-                  </div>
-                </div>
-                {formData.price && formData.deposit && Number(formData.deposit) < Number(formData.price) && (
-                  <p className="text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">
-                    Deposit: C${formData.deposit} · Balance due on trip: C${Number(formData.price) - Number(formData.deposit)}
-                  </p>
-                )}
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div>
                     <p className="text-sm font-medium text-gray-700">Show registration count</p>

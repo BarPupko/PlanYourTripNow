@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { X, Users, UserPlus, CheckCircle2, XCircle, CreditCard, Banknote, ChevronDown, ChevronUp, Edit2, Trash2, Copy, Check, MessageCircle, Phone, FileText, Printer } from 'lucide-react';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getTrip, updateRegistration, deleteRegistration, ensureCompanionToken } from '../utils/firestoreUtils';
+import { getTrip, updateRegistration, deleteRegistration, ensureCompanionToken, updateTrip } from '../utils/firestoreUtils';
 import { getVehicleLayout } from '../utils/vehicleLayouts';
 import VehicleSeatingMap from './VehicleSeatingMap';
 import AddParticipantModal from './AddParticipantModal';
@@ -31,6 +31,8 @@ const TripViewModal = ({ tripId, onClose }) => {
   const [invoiceReg, setInvoiceReg] = useState(null);
   const [itineraryLoadingId, setItineraryLoadingId] = useState(null);
   const [itineraryCopiedId, setItineraryCopiedId]   = useState(null);
+  const [editingTime, setEditingTime] = useState(false);
+  const [timeFormData, setTimeFormData] = useState({ startTime: '', endTime: '' });
 
   useEffect(() => {
     loadTrip();
@@ -197,6 +199,42 @@ const TripViewModal = ({ tripId, onClose }) => {
     setEditFormData({});
   };
 
+  const handleOpenTimeEdit = () => {
+    const getTime = (ts) => {
+      if (!ts) return '';
+      try {
+        const d = ts?.toDate ? ts.toDate() : new Date(ts);
+        return d.toTimeString().slice(0, 5);
+      } catch { return ''; }
+    };
+    setTimeFormData({
+      startTime: getTime(trip.startDateTime) || getTime(trip.date) || '08:00',
+      endTime: getTime(trip.endDateTime) || '18:00'
+    });
+    setEditingTime(true);
+  };
+
+  const handleSaveTime = async () => {
+    try {
+      const baseDate = (trip.startDateTime || trip.date)?.toDate?.() ?? new Date();
+      const [sh, sm] = timeFormData.startTime.split(':').map(Number);
+      const [eh, em] = timeFormData.endTime.split(':').map(Number);
+      const start = new Date(baseDate);
+      start.setHours(sh, sm, 0, 0);
+      const end = new Date(baseDate);
+      end.setHours(eh, em, 0, 0);
+      await updateTrip(tripId, {
+        startDateTime: Timestamp.fromDate(start),
+        endDateTime: Timestamp.fromDate(end)
+      });
+      await loadTrip();
+      setEditingTime(false);
+    } catch (error) {
+      console.error('Error updating trip time:', error);
+      alert('Failed to update time. Please try again.');
+    }
+  };
+
   const handleSendForm = async (reg) => {
     try {
       await updateRegistration(reg.id, { status: 'form_sent' });
@@ -354,9 +392,46 @@ const TripViewModal = ({ tripId, onClose }) => {
         <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-4 sm:px-6 py-4 flex justify-between items-center">
           <div className="flex-1 min-w-0">
             <h2 className="text-xl sm:text-2xl font-bold truncate">{trip.title}</h2>
-            <p className="text-sm text-teal-100">
-              {trip.date?.toDate().toLocaleDateString()}
-            </p>
+            {editingTime ? (
+              <div className="flex items-center gap-2 mt-1" onClick={e => e.stopPropagation()}>
+                <input
+                  type="time"
+                  value={timeFormData.startTime}
+                  onChange={e => setTimeFormData(p => ({ ...p, startTime: e.target.value }))}
+                  className="text-gray-800 text-sm rounded px-1 py-0.5"
+                />
+                <span className="text-teal-200 text-xs">–</span>
+                <input
+                  type="time"
+                  value={timeFormData.endTime}
+                  onChange={e => setTimeFormData(p => ({ ...p, endTime: e.target.value }))}
+                  className="text-gray-800 text-sm rounded px-1 py-0.5"
+                />
+                <button onClick={handleSaveTime} className="text-xs bg-white text-teal-700 font-semibold px-2 py-0.5 rounded hover:bg-teal-50">Save</button>
+                <button onClick={() => setEditingTime(false)} className="text-xs text-teal-200 hover:text-white">Cancel</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-teal-100">
+                  {(() => {
+                    const d = (trip.startDateTime || trip.date)?.toDate?.();
+                    if (!d) return '';
+                    const dateStr = d.toLocaleDateString();
+                    const timeStr = trip.startDateTime
+                      ? ` · ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${trip.endDateTime ? ` – ${trip.endDateTime.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}`
+                      : '';
+                    return dateStr + timeStr;
+                  })()}
+                </p>
+                <button
+                  onClick={handleOpenTimeEdit}
+                  className="p-0.5 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
+                  title="Edit trip time"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-teal-200" />
+                </button>
+              </div>
+            )}
           </div>
           <button
             onClick={onClose}
