@@ -7,17 +7,23 @@ const crypto = require('crypto');
 
 const COMPANION_BASE_URL = 'https://barpupko.github.io/PlanYourTripNow/companion/';
 
-// Format a Firestore Timestamp (or Date) as "h:mm AM/PM" in Toronto time
+const TZ = 'America/Toronto';
+
+// Format a Firestore Timestamp as "h:mm AM/PM" in Toronto time
 const formatTime = (ts) => {
   if (!ts) return null;
   try {
     const d = ts.toDate ? ts.toDate() : new Date(ts);
-    return new Intl.DateTimeFormat('en-CA', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'America/Toronto',
-    }).format(d);
+    return new Intl.DateTimeFormat('en-CA', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: TZ }).format(d);
+  } catch { return null; }
+};
+
+// Format a Firestore Timestamp as a date string in Toronto time
+const formatDate = (ts) => {
+  if (!ts) return null;
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: 'numeric', day: 'numeric', timeZone: TZ }).format(d);
   } catch { return null; }
 };
 
@@ -263,9 +269,9 @@ exports.onRegistrationCreated = functions.firestore
 
               <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #00BCD4; margin-top: 0;">📅 Trip Details</h3>
-                <p style="margin: 8px 0;"><strong>Date:</strong> ${(trip.startDateTime || trip.date)?.toDate().toLocaleDateString()}</p>
+                <p style="margin: 8px 0;"><strong>Date:</strong> ${formatDate(trip.startDateTime || trip.date)}</p>
                 ${formatTime(trip.startDateTime || trip.date) ? `<p style="margin: 8px 0;"><strong>Time:</strong> ${formatTime(trip.startDateTime || trip.date)}${formatTime(trip.endDateTime) ? ` – ${formatTime(trip.endDateTime)}` : ''}</p>` : ''}
-                ${registration.pickupLocation ? `<p style="margin: 8px 0;"><strong>📍 Pickup:</strong> ${registration.pickupLocation}</p>` : ''}
+                ${(registration.preferredPickupPlace || registration.pickupLocation) ? `<p style="margin: 8px 0;"><strong>📍 Pickup:</strong> ${registration.preferredPickupPlace || registration.pickupLocation}</p>` : ''}
                 <p style="margin: 8px 0;"><strong>Your Seat:</strong> <span style="background-color: #00BCD4; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">Seat will be placed upon arrival</span></p>
               </div>
 
@@ -305,7 +311,7 @@ exports.onRegistrationCreated = functions.firestore
             <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #333; margin-top: 0;">Trip Details</h3>
               <p><strong>Trip:</strong> ${trip.title}</p>
-              <p><strong>Date:</strong> ${(trip.startDateTime || trip.date)?.toDate().toLocaleDateString()}</p>
+              <p><strong>Date:</strong> ${formatDate(trip.startDateTime || trip.date)}</p>
               ${formatTime(trip.startDateTime || trip.date) ? `<p><strong>Time:</strong> ${formatTime(trip.startDateTime || trip.date)}${formatTime(trip.endDateTime) ? ` – ${formatTime(trip.endDateTime)}` : ''}</p>` : ''}
             </div>
             <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">

@@ -105,6 +105,7 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
 
   const handleGenerateItinerary = async () => {
     setGeneratingItinerary(true);
+    
     try {
       const duration = getTripDuration();
       const prompt = `You are a professional tour coordinator for IVRI Tours. Based on the trip description below, generate a detailed structured itinerary split into individual timed activity blocks in RUSSIAN.
