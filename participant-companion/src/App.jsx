@@ -29,10 +29,11 @@ export default function App() {
         const reg    = { id: regDoc.id, ...regDoc.data() };
 
         const participant = {
-          id:        reg.id,
-          firstName: reg.firstName,
-          lastName:  reg.lastName,
-          name:      `${reg.firstName} ${reg.lastName}`,
+          id:             reg.id,
+          firstName:      reg.firstName,
+          lastName:       reg.lastName,
+          name:           `${reg.firstName} ${reg.lastName}`,
+          pickupLocation: reg.pickupLocation || null,
         };
 
         // 2. Fetch trip + schedule items in parallel
@@ -50,9 +51,9 @@ export default function App() {
           id:         tripSnap.id,
           // Existing trips use 'title'; new ones may use 'name'
           name:       td.title || td.name || 'Your Trip',
-          // Support both new startDate/endDate and legacy single 'date' field
-          startDate:  td.startDate?.toDate?.() ?? td.date?.toDate?.() ?? new Date(),
-          endDate:    td.endDate?.toDate?.()   ?? td.date?.toDate?.() ?? new Date(),
+          // Support startDateTime (new) → startDate (old) → date (legacy)
+          startDate:  td.startDateTime?.toDate?.() ?? td.startDate?.toDate?.() ?? td.date?.toDate?.() ?? new Date(),
+          endDate:    td.endDateTime?.toDate?.()   ?? td.endDate?.toDate?.()   ?? td.date?.toDate?.() ?? new Date(),
           itinerary:  td.itinerary  || null,
           customInfo: td.customInfo || null,
         };

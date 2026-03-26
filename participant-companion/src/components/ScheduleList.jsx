@@ -253,6 +253,15 @@ export default function ScheduleList({ items, participant, trip }) {
             </div>
           ))}
         </div>
+        {participant?.pickupLocation && (
+          <div style={{ margin: '0 18px 14px', background: T_LIGHT, borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>📍</span>
+            <div>
+              <div style={{ fontSize: 10, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.5 }}>Your Pickup</div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: INK }}>{participant.pickupLocation}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── ALL DONE BANNER ────────────────────────────────────────── */}
