@@ -33,7 +33,7 @@ export default function App() {
           firstName:      reg.firstName,
           lastName:       reg.lastName,
           name:           `${reg.firstName} ${reg.lastName}`,
-          pickupLocation: reg.pickupLocation || null,
+          pickupLocation: reg.preferredPickupPlace || reg.pickupLocation || null,
         };
 
         // 2. Fetch trip + schedule items in parallel

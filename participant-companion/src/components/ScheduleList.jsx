@@ -217,15 +217,27 @@ export default function ScheduleList({ items, participant, trip }) {
             </span>
           </div>
         </div>
-        {/* Progress strip — only for Firestore mode */}
-        {!textMode && (
-          <div style={{ background: 'rgba(255,255,255,0.06)', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12, marginLeft: -24, marginRight: -24 }}>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 300, whiteSpace: 'nowrap' }}>Trip progress</span>
-            <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: T, borderRadius: 2, width: `${progressPct}%`, transition: 'width 1.2s cubic-bezier(0.4,0,0.2,1)' }} />
-            </div>
-            <span style={{ color: T_MID, fontSize: 12, fontWeight: 500 }}>{progressPct}%</span>
-          </div>
+        {/* Time-based progress strip — always shown when trip times are known */}
+        {tripStart && tripEnd && (
+          (() => {
+            const total = tripEnd - tripStart;
+            const elapsed = Math.min(Math.max(now - tripStart, 0), total);
+            const timePct = total > 0 ? Math.round((elapsed / total) * 100) : 0;
+            const startLabel = tripStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            const endLabel   = tripEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            return (
+              <div style={{ background: 'rgba(255,255,255,0.06)', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '12px 24px', marginLeft: -24, marginRight: -24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>{startLabel}</span>
+                  <span style={{ color: T_MID, fontSize: 11, fontWeight: 500 }}>Trip progress · {timePct}%</span>
+                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>{endLabel}</span>
+                </div>
+                <div style={{ height: 5, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: `linear-gradient(90deg, ${T}, ${T_MID})`, borderRadius: 3, width: `${timePct}%`, transition: 'width 1.2s cubic-bezier(0.4,0,0.2,1)' }} />
+                </div>
+              </div>
+            );
+          })()
         )}
       </div>
 
