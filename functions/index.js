@@ -615,6 +615,47 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
 });
 
 /**
+ * Callable function to generate AI itinerary via OpenAI (keeps API key server-side)
+ */
+exports.generateItinerary = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+  }
+
+  const { prompt } = data;
+  if (!prompt) throw new functions.https.HttpsError('invalid-argument', 'prompt is required');
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new functions.https.HttpsError('internal', 'OpenAI API key not configured');
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 2000,
+      temperature: 0.7,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    console.error('OpenAI error:', err);
+    throw new functions.https.HttpsError('internal', 'OpenAI request failed');
+  }
+
+  const json = await response.json();
+  const text = json.choices?.[0]?.message?.content?.trim() || '';
+  if (!text) throw new functions.https.HttpsError('internal', 'Empty response from OpenAI');
+
+  return { text };
+});
+
+/**
  * Callable function to resend confirmation email
  */
 exports.resendConfirmationEmail = functions.https.onCall(async (data, context) => {

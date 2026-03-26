@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Sparkle, Loader2 } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import colors from '../utils/colors';
 
 const PRESET_PICKUP_LOCATIONS = [
@@ -106,7 +107,7 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
     setGeneratingItinerary(true);
     try {
       const duration = getTripDuration();
-      const prompt = `You are a professional tour coordinator for IVRI Tours. Based on the trip description below, generate a detailed structured itinerary split into individual timed activity blocks.
+      const prompt = `You are a professional tour coordinator for IVRI Tours. Based on the trip description below, generate a detailed structured itinerary split into individual timed activity blocks in RUSSIAN.
 
 Trip: ${formData.title}
 Date: ${formData.date}${formData.endDate && formData.endDate !== formData.date ? `\nEnd date: ${formData.endDate}` : ''}
@@ -137,22 +138,10 @@ Rules:
 - Use relevant emojis in block headers only
 - Do not add any commentary, preamble, or text outside the formatted blocks`;
 
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 2000,
-          temperature: 0.7,
-        }),
-      });
-      const data = await res.json();
-      const text = data.choices?.[0]?.message?.content?.trim() || '';
-      if (!text) throw new Error('Empty response from OpenAI');
+      const generateItinerary = httpsCallable(getFunctions(), 'generateItinerary');
+      const result = await generateItinerary({ prompt });
+      const text = result.data.text;
+      if (!text) throw new Error('Empty response');
       setFormData(prev => ({ ...prev, itinerary: text }));
     } catch (error) {
       console.error('Error generating itinerary:', error);
