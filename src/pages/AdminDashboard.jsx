@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle, CheckCircle2, Clock, XCircle, FileText } from 'lucide-react';
+import { Plus, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle, CheckCircle2, Clock, XCircle, FileText, Settings } from 'lucide-react';
 import { getAllTrips, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import CreateTripModal from '../components/CreateTripModal';
 import BulkInvoicesModal from '../components/BulkInvoicesModal';
+import MigrationModal from '../components/MigrationModal';
 import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
 import Header from '../components/Header';
@@ -31,6 +32,7 @@ const AdminDashboard = () => {
   const [registrationCounts, setRegistrationCounts] = useState({}); // Map of tripId -> approved count
   const [pendingCounts, setPendingCounts] = useState({}); // Map of tripId -> pending count
   const [showBulkInvoices, setShowBulkInvoices] = useState(false);
+  const [showMigration, setShowMigration] = useState(false);
 
   useEffect(() => {
     loadTrips();
@@ -265,6 +267,14 @@ const AdminDashboard = () => {
                     </h2>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => setShowMigration(true)}
+                      className="flex items-center justify-center p-2 rounded-lg border-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                      style={{ borderColor: '#D1D5DB' }}
+                      title="Data migration settings"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => setShowBulkInvoices(true)}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 text-sm font-semibold hover:bg-teal-50 transition-colors whitespace-nowrap"
@@ -665,6 +675,11 @@ const AdminDashboard = () => {
           trips={allTrips}
           onClose={() => setShowBulkInvoices(false)}
         />
+      )}
+
+      {/* Migration Modal */}
+      {showMigration && (
+        <MigrationModal onClose={() => setShowMigration(false)} />
       )}
     </div>
   );
