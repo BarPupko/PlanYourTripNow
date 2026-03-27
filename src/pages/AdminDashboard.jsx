@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, ExternalLink, Trash2, Calendar as CalendarIcon, Archive, Edit, MessageCircle, CheckCircle2, Clock, XCircle, FileText, Settings } from 'lucide-react';
+import { Plus, Copy, Check, Trash2, Edit, MessageCircle, FileText } from 'lucide-react';
 import { getAllTrips, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -245,7 +245,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Header />
+      <Header onOpenMigration={() => setShowMigration(true)} />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -268,14 +268,6 @@ const AdminDashboard = () => {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
-                      onClick={() => setShowMigration(true)}
-                      className="flex items-center justify-center p-2 rounded-lg border-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-                      style={{ borderColor: '#D1D5DB' }}
-                      title="Data migration settings"
-                    >
-                      <Settings className="w-4 h-4" />
-                    </button>
-                    <button
                       onClick={() => setShowBulkInvoices(true)}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 text-sm font-semibold hover:bg-teal-50 transition-colors whitespace-nowrap"
                       style={{ borderColor: colors.primary.teal, color: colors.primary.teal }}
@@ -297,121 +289,51 @@ const AdminDashboard = () => {
                     </button>
                   </div>
                 </div>
-                <div id="tour-view-filters" className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
-                  <button
-                    onClick={() => setViewFilter('all')}
-                    className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
-                      viewFilter === 'all'
-                        ? 'text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                    style={viewFilter === 'all' ? { backgroundColor: colors.primary.teal } : {}}
-                    title={t.showAllTrips}
-                  >
-                    <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">{t.allTrips}</span>
-                    <span className="sm:hidden">All</span>
-                  </button>
-                  <button
-                    onClick={() => setViewFilter('upcoming')}
-                    className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
-                      viewFilter === 'upcoming'
-                        ? 'text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                    style={viewFilter === 'upcoming' ? { backgroundColor: colors.primary.teal } : {}}
-                    title={t.showCurrentTrips}
-                  >
-                    <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">{t.currentTrips}</span>
-                    <span className="sm:hidden">Upcoming</span>
-                  </button>
-                  <button
-                    onClick={() => setViewFilter('past')}
-                    className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
-                      viewFilter === 'past'
-                        ? 'text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                    style={viewFilter === 'past' ? { backgroundColor: colors.primary.teal } : {}}
-                    title={t.showOldTrips}
-                  >
-                    <Archive className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">{t.oldTrips}</span>
-                    <span className="sm:hidden">Past</span>
-                  </button>
+                {/* View segmented control */}
+                <div id="tour-view-filters" className="flex mt-3 bg-gray-200 rounded-lg p-0.5">
+                  {[
+                    { key: 'all', label: t.allTrips || 'All' },
+                    { key: 'upcoming', label: t.currentTrips || 'Upcoming' },
+                    { key: 'past', label: t.oldTrips || 'Past' },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setViewFilter(key)}
+                      className={`flex-1 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                        viewFilter === key
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Status Filter Buttons */}
-                <div id="tour-status-filters" className="flex gap-2 mt-3 flex-wrap overflow-x-auto">
-                  <button
-                    onClick={() => setStatusFilter('all')}
-                    className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-                      statusFilter === 'all'
-                        ? 'text-white'
-                        : 'text-gray-700 hover:opacity-100'
-                    }`}
-                    style={statusFilter === 'all'
-                      ? { backgroundColor: colors.primary.teal }
-                      : { backgroundColor: colors.primary.teal, opacity: 0.3 }
-                    }
-                    title="Show all statuses"
-                  >
-                    <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="sm:hidden">A</span>
-                    <span className="hidden sm:inline">All Status</span>
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter('planned')}
-                    className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-                      statusFilter === 'planned'
-                        ? 'text-white'
-                        : 'text-gray-700 hover:opacity-100'
-                    }`}
-                    style={statusFilter === 'planned'
-                      ? { backgroundColor: '#92400E' }
-                      : { backgroundColor: '#FEF3C7', color: '#92400E' }
-                    }
-                    title="Show planned trips"
-                  >
-                    <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="sm:hidden">P</span>
-                    <span className="hidden sm:inline">Planned</span>
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter('scheduled')}
-                    className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-                      statusFilter === 'scheduled'
-                        ? 'text-white'
-                        : 'text-gray-700 hover:opacity-100'
-                    }`}
-                    style={statusFilter === 'scheduled'
-                      ? { backgroundColor: '#6B21A8' }
-                      : { backgroundColor: '#E9D5FF', color: '#6B21A8' }
-                    }
-                    title="Show scheduled trips"
-                  >
-                    <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="sm:hidden">S</span>
-                    <span className="hidden sm:inline">Scheduled</span>
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter('done')}
-                    className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-                      statusFilter === 'done'
-                        ? 'text-white'
-                        : 'text-gray-700 hover:opacity-100'
-                    }`}
-                    style={statusFilter === 'done'
-                      ? { backgroundColor: '#065F46' }
-                      : { backgroundColor: '#D1FAE5', color: '#065F46' }
-                    }
-                    title="Show completed trips"
-                  >
-                    <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="sm:hidden">D</span>
-                    <span className="hidden sm:inline">Done</span>
-                  </button>
+                {/* Status filter pills */}
+                <div id="tour-status-filters" className="flex gap-1.5 mt-2 flex-wrap">
+                  {[
+                    { key: 'all',       label: 'All',       dot: colors.primary.teal, activeBg: colors.primary.teal, inactiveBg: '#E6F7F8', inactiveText: colors.primary.teal },
+                    { key: 'planned',   label: 'Planned',   dot: '#F59E0B',            activeBg: '#92400E',           inactiveBg: '#FEF3C7', inactiveText: '#92400E' },
+                    { key: 'scheduled', label: 'Scheduled', dot: '#7C3AED',            activeBg: '#6B21A8',           inactiveBg: '#E9D5FF', inactiveText: '#6B21A8' },
+                    { key: 'done',      label: 'Done',      dot: '#10B981',            activeBg: '#065F46',           inactiveBg: '#D1FAE5', inactiveText: '#065F46' },
+                  ].map(({ key, label, dot, activeBg, inactiveBg, inactiveText }) => (
+                    <button
+                      key={key}
+                      onClick={() => setStatusFilter(key)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
+                      style={statusFilter === key
+                        ? { backgroundColor: activeBg, color: 'white' }
+                        : { backgroundColor: inactiveBg, color: inactiveText }
+                      }
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: statusFilter === key ? 'rgba(255,255,255,0.7)' : dot }}
+                      />
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

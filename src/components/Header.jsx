@@ -1,5 +1,6 @@
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, ArrowLeft, Gift, MessageCircle, HelpCircle } from 'lucide-react';
+import { LogOut, ArrowLeft, Gift, MessageCircle, HelpCircle, Settings, Menu, X } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import IVRILogo from './IrviLogo';
@@ -10,11 +11,23 @@ import { translations } from '../utils/translations';
 import colors from '../utils/colors';
 import { startTour } from '../utils/tour';
 
-const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout = true }) => {
+const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout = true, onOpenMigration }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
   const t = translations[language];
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -146,14 +159,38 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
             )}
 
             {showLogout && !isPublicPage && (
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                title={t.logout}
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">{t.logout}</span>
-              </button>
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setShowMenu(prev => !prev)}
+                  className="flex items-center justify-center p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                  title="Menu"
+                >
+                  {showMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+                {showMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                    {onOpenMigration && (
+                      <>
+                        <button
+                          onClick={() => { onOpenMigration(); setShowMenu(false); }}
+                          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          <Settings className="w-4 h-4 text-gray-500" />
+                          Data Migration
+                        </button>
+                        <div className="border-t border-gray-100 my-1" />
+                      </>
+                    )}
+                    <button
+                      onClick={() => { handleLogout(); setShowMenu(false); }}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      {t.logout}
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
