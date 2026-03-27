@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, UserPlus } from 'lucide-react';
 import { createRegistration, getAllContacts, upsertContact } from '../utils/firestoreUtils';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 import { getVehicleLayout } from '../utils/vehicleLayouts';
 import colors from '../utils/colors';
 
@@ -24,7 +26,27 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
   const autocompleteRef = useRef(null);
 
   useEffect(() => {
-    getAllContacts().then(setContacts);
+    const loadContacts = async () => {
+      try {
+        const contactsList = await getAllContacts();
+        const seen = new Set(contactsList.map(c => `${c.firstName?.toLowerCase()}_${c.lastName?.toLowerCase()}`));
+        const merged = [...contactsList];
+
+        const snapshot = await getDocs(collection(db, 'registrations'));
+        snapshot.docs.forEach(d => {
+          const r = d.data();
+          if (!r.firstName || !r.lastName) return;
+          const key = `${r.firstName.toLowerCase()}_${r.lastName.toLowerCase()}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            merged.push({ id: key, firstName: r.firstName, lastName: r.lastName, email: r.email || '', phone: r.phone || '', preferredPickupPlace: r.preferredPickupPlace || '' });
+          }
+        });
+
+        setContacts(merged);
+      } catch (_) {}
+    };
+    loadContacts();
   }, []);
 
   useEffect(() => {

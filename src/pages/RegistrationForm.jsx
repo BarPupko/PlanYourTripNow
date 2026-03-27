@@ -346,7 +346,7 @@ const RegistrationForm = () => {
 
       <div className="max-w-4xl mx-auto py-8 px-4">
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} autoComplete="on" className="space-y-6">
           {/* Number of Seats — hidden in pre-registration mode */}
           {!regId && <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Number of Seats</h2>
@@ -379,6 +379,8 @@ const RegistrationForm = () => {
                   </label>
                   <input
                     type="text"
+                    name={index === 0 ? 'given-name' : `given-name-${index}`}
+                    autoComplete={index === 0 ? 'given-name' : 'off'}
                     value={passenger.firstName}
                     onChange={(e) => {
                       const newPassengers = [...passengers];
@@ -400,6 +402,8 @@ const RegistrationForm = () => {
                   </label>
                   <input
                     type="text"
+                    name={index === 0 ? 'family-name' : `family-name-${index}`}
+                    autoComplete={index === 0 ? 'family-name' : 'off'}
                     value={passenger.lastName}
                     onChange={(e) => {
                       const newPassengers = [...passengers];
@@ -421,6 +425,9 @@ const RegistrationForm = () => {
                   </label>
                   <input
                     type="email"
+                    name={index === 0 ? 'email' : `email-${index}`}
+                    autoComplete={index === 0 ? 'email' : 'off'}
+                    inputMode="email"
                     value={index === 0 || !useSameEmail ? passenger.email : passengers[0].email}
                     onChange={(e) => {
                       const newPassengers = [...passengers];
@@ -474,6 +481,9 @@ const RegistrationForm = () => {
                   </label>
                   <input
                     type="tel"
+                    name={index === 0 ? 'tel' : `tel-${index}`}
+                    autoComplete={index === 0 ? 'tel' : 'off'}
+                    inputMode="tel"
                     value={passenger.phone}
                     onChange={(e) => {
                       const newPassengers = [...passengers];
