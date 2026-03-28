@@ -78,6 +78,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ─── Questions ──────────────────────────────────────────────────────────
+    // Visitors (unauthenticated) can submit questions from the landing page.
+    // Only admins can read, update (mark read), or delete.
+    match /questions/{questionId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
     // ─── Gift Cards ─────────────────────────────────────────────────────────
     match /giftCards/{giftCardId} {
       // Public reveal page needs to read the gift card

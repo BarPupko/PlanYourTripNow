@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, ArrowLeft, Gift, MessageCircle, HelpCircle, Settings, Menu, X, FileText, Star } from 'lucide-react';
+import { LogOut, ArrowLeft, Gift, MessageCircle, HelpCircle, Settings, Menu, X, FileText, Star, Bell, MessageSquare } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import IVRILogo from './IrviLogo';
@@ -11,7 +11,7 @@ import { translations } from '../utils/translations';
 import colors from '../utils/colors';
 import { startTour } from '../utils/tour';
 
-const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout = true, onOpenMigration, onDownloadInvoices }) => {
+const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout = true, onOpenMigration, onDownloadInvoices, questionCount = 0, onOpenQuestions }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
@@ -120,6 +120,19 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                       <span className="hidden sm:inline">Gift Cards</span>
                     </button>
                     <button
+                      onClick={onOpenQuestions}
+                      className="relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+                      style={{ color: colors.primary.teal }}
+                      title="Visitor Questions"
+                    >
+                      <Bell className="w-5 h-5" />
+                      {questionCount > 0 && (
+                        <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
+                          {questionCount > 9 ? '9+' : questionCount}
+                        </span>
+                      )}
+                    </button>
+                    <button
                       id="tour-help-btn"
                       onClick={() => startTour(t)}
                       className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
@@ -156,6 +169,20 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                 </button>
                 {showMenu && (
                   <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                    {onOpenQuestions && (
+                      <button
+                        onClick={() => { onOpenQuestions(); setShowMenu(false); }}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <MessageSquare className="w-4 h-4" style={{ color: colors.primary.teal }} />
+                        Questions
+                        {questionCount > 0 && (
+                          <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                            {questionCount}
+                          </span>
+                        )}
+                      </button>
+                    )}
                     <button
                       onClick={() => { navigate('/admin/feedbacks'); setShowMenu(false); }}
                       className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"

@@ -3,11 +3,12 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { Plus, Copy, Check, Trash2, Edit, MessageCircle } from 'lucide-react';
 import { getAllTrips, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import CreateTripModal from '../components/CreateTripModal';
 import BulkInvoicesModal from '../components/BulkInvoicesModal';
 import MigrationModal from '../components/MigrationModal';
+import QuestionsModal from '../components/QuestionsModal';
 import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
 import Header from '../components/Header';
@@ -36,6 +37,8 @@ const AdminDashboard = () => {
   const [pendingCounts, setPendingCounts] = useState({}); // Map of tripId -> pending count
   const [showBulkInvoices, setShowBulkInvoices] = useState(false);
   const [showMigration, setShowMigration] = useState(false);
+  const [showQuestions, setShowQuestions] = useState(false);
+  const [questionCount, setQuestionCount] = useState(0);
 
   useEffect(() => {
     loadTrips();
@@ -46,6 +49,15 @@ const AdminDashboard = () => {
       const timer = setTimeout(() => startTour(t), 800);
       return () => clearTimeout(timer);
     }
+  }, []);
+
+  // Real-time listener for unread questions count
+  useEffect(() => {
+    const q = query(collection(db, 'questions'), where('read', '==', false));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setQuestionCount(snapshot.size);
+    });
+    return () => unsubscribe();
   }, []);
 
   const loadTrips = async () => {
@@ -251,6 +263,8 @@ const AdminDashboard = () => {
       <Header
         onOpenMigration={isAdmin ? () => setShowMigration(true) : undefined}
         onDownloadInvoices={isAdmin ? () => setShowBulkInvoices(true) : undefined}
+        questionCount={questionCount}
+        onOpenQuestions={() => setShowQuestions(true)}
       />
 
       {/* Main Content */}
@@ -600,6 +614,14 @@ const AdminDashboard = () => {
       {/* Migration Modal */}
       {showMigration && (
         <MigrationModal onClose={() => setShowMigration(false)} />
+      )}
+
+      {/* Questions Modal */}
+      {showQuestions && (
+        <QuestionsModal
+          onClose={() => setShowQuestions(false)}
+          onCountChange={(delta) => setQuestionCount(prev => Math.max(0, prev + delta))}
+        />
       )}
     </div>
   );

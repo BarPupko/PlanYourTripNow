@@ -2169,3 +2169,66 @@ exports.sendFeedbackReminder = functions.https.onCall(async (data, context) => {
   console.log(`[sendFeedbackReminder] Sent ${sent} reminder(s) for trip ${tripId}`);
   return { sent };
 });
+
+// ── onQuestionCreated ────────────────────────────────────────────────────────
+// Fires when a visitor submits a question from the landing page.
+// Sends a notification email to the admin.
+exports.onQuestionCreated = functions.firestore
+  .document('questions/{questionId}')
+  .onCreate(async (snap) => {
+    const data = snap.data();
+    const { name, email, phone, destination, message, language } = data;
+    const langLabels = { en: 'English', ru: 'Russian', he: 'Hebrew' };
+    const langLabel = langLabels[language] || language || 'Unknown';
+    const createdAt = new Date().toLocaleString('en-CA', { timeZone: TZ });
+
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: ADMIN_EMAIL,
+        subject: `❓ New Question from ${name} about ${destination}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #00BCD4, #0097A7); padding: 24px 32px; border-radius: 12px 12px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 22px;">❓ New Question Received</h1>
+              <p style="color: rgba(255,255,255,0.85); margin: 6px 0 0; font-size: 14px;">${createdAt}</p>
+            </div>
+            <div style="background: white; padding: 28px 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #6B7280; font-size: 13px; width: 130px;">Destination</td>
+                  <td style="padding: 8px 0; font-weight: 600; color: #00BCD4;">${destination}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6B7280; font-size: 13px;">Name</td>
+                  <td style="padding: 8px 0; font-weight: 600;">${name}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6B7280; font-size: 13px;">Email</td>
+                  <td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #00BCD4;">${email}</a></td>
+                </tr>
+                ${phone ? `<tr>
+                  <td style="padding: 8px 0; color: #6B7280; font-size: 13px;">Phone</td>
+                  <td style="padding: 8px 0;">${phone}</td>
+                </tr>` : ''}
+                <tr>
+                  <td style="padding: 8px 0; color: #6B7280; font-size: 13px;">Language</td>
+                  <td style="padding: 8px 0;">${langLabel}</td>
+                </tr>
+              </table>
+              <div style="margin-top: 20px; background: #f8fafc; border-left: 4px solid #00BCD4; padding: 16px 20px; border-radius: 0 8px 8px 0;">
+                <p style="margin: 0; color: #6B7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Question</p>
+                <p style="margin: 8px 0 0; color: #1f2937; font-size: 15px; line-height: 1.6;">${message}</p>
+              </div>
+            </div>
+            <div style="background: #1f2937; padding: 16px 32px; text-align: center; border-radius: 0 0 12px 12px; margin-top: -12px;">
+              <p style="color: #9CA3AF; margin: 0; font-size: 12px;">IVRI Tours · Visitor Question Notification</p>
+            </div>
+          </div>
+        `
+      });
+      console.log(`[onQuestionCreated] Email sent to admin for question from ${name}`);
+    } catch (err) {
+      console.error('[onQuestionCreated] Failed to send email:', err);
+    }
+  });

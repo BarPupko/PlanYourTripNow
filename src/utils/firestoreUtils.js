@@ -213,3 +213,38 @@ export const getFeedbackByToken = async (token) => {
     return null;
   }
 };
+
+// Question operations
+export const createQuestion = async (data) => {
+  try {
+    const docRef = await addDoc(collection(db, 'questions'), {
+      ...data,
+      read: false,
+      createdAt: Timestamp.now()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating question:', error);
+    throw error;
+  }
+};
+
+export const getAllQuestions = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, 'questions'));
+    return snapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } catch (error) {
+    console.error('Error getting questions:', error);
+    return [];
+  }
+};
+
+export const markQuestionRead = async (questionId) => {
+  try {
+    await updateDoc(doc(db, 'questions', questionId), { read: true });
+  } catch (error) {
+    console.error('Error marking question as read:', error);
+  }
+};
