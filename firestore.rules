@@ -8,15 +8,10 @@ service cloud.firestore {
     }
 
     // ─── Trips ──────────────────────────────────────────────────────────────
-    // Public can read only non-sensitive fields needed for registration (title,
-    // dates, seats, status). Full document read is admin-only.
+    // Trips are public information — needed by the landing page and registration
+    // form, both of which are accessible without authentication.
     match /trips/{tripId} {
-      allow read: if isAdmin()
-                  || resource.data.keys().hasOnly([
-                       'title', 'startDateTime', 'returnDateTime',
-                       'totalSeats', 'confirmedCount', 'status',
-                       'description', 'image', 'price'
-                     ]);
+      allow read: if true;
       allow write: if isAdmin();
     }
 
@@ -25,8 +20,10 @@ service cloud.firestore {
       // Public can create a new registration (open booking form)
       allow create: if true;
 
-      // Only admins can read full registration data (has PII: email, phone, etc.)
-      allow read: if isAdmin();
+      // Public read is required for:
+      //   - The registration form (checks taken seat numbers before assigning)
+      //   - The landing page (counts registrations per trip for availability display)
+      allow read: if true;
 
       // Admin can update/delete
       allow update, delete: if isAdmin();
