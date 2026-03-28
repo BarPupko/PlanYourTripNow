@@ -923,7 +923,7 @@ const LandingPage = () => {
       <footer className="bg-gray-900 text-white py-8 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <div className="text-2xl font-bold mb-4" style={{ color: colors.primary.teal }}>IVRI Tours</div>
-          <p className="text-gray-400 mb-4">© 2025 IVRI Tours. {t.footerText}</p>
+          <p className="text-gray-400 mb-4">© 2026 IVRI Tours. {t.footerText}</p>
           <button onClick={() => navigate('/login')} className="text-sm hover:underline" style={{ color: colors.primary.teal }}>{t.adminLogin}</button>
         </div>
       </footer>
