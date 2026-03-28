@@ -72,7 +72,9 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
       const tripData = {
         ...formData,
         startDateTime: Timestamp.fromDate(startDateTime),
-        endDateTime: Timestamp.fromDate(endDateTime)
+        endDateTime: Timestamp.fromDate(endDateTime),
+        startTimeStr: formData.startTime,  // raw "HH:MM" — timezone-safe for email display
+        endTimeStr: formData.endTime,
       };
 
       // Remove the old date fields

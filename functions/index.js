@@ -18,6 +18,16 @@ const formatTime = (ts) => {
   } catch { return null; }
 };
 
+// Format a raw "HH:MM" string (e.g. "08:00") as "8:00 AM" — no timezone conversion needed
+const formatTimeStr = (timeStr) => {
+  if (!timeStr) return null;
+  const [h, m] = timeStr.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+};
+
 // Format a Firestore Timestamp as a date string in Toronto time
 const formatDate = (ts) => {
   if (!ts) return null;
@@ -270,7 +280,7 @@ exports.onRegistrationCreated = functions.firestore
               <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #00BCD4; margin-top: 0;">📅 Trip Details</h3>
                 <p style="margin: 8px 0;"><strong>Date:</strong> ${formatDate(trip.startDateTime || trip.date)}</p>
-                ${formatTime(trip.startDateTime || trip.date) ? `<p style="margin: 8px 0;"><strong>Time:</strong> ${formatTime(trip.startDateTime || trip.date)}${formatTime(trip.endDateTime) ? ` – ${formatTime(trip.endDateTime)}` : ''}</p>` : ''}
+                ${(trip.startTimeStr || formatTime(trip.startDateTime || trip.date)) ? `<p style="margin: 8px 0;"><strong>Time:</strong> ${trip.startTimeStr ? formatTimeStr(trip.startTimeStr) : formatTime(trip.startDateTime || trip.date)}${(trip.endTimeStr || trip.endDateTime) ? ` – ${trip.endTimeStr ? formatTimeStr(trip.endTimeStr) : formatTime(trip.endDateTime)}` : ''}</p>` : ''}
                 ${(registration.preferredPickupPlace || registration.pickupLocation) ? `<p style="margin: 8px 0;"><strong>📍 Pickup:</strong> ${registration.preferredPickupPlace || registration.pickupLocation}</p>` : ''}
                 <p style="margin: 8px 0;"><strong>Your Seat:</strong> <span style="background-color: #00BCD4; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">Seat will be placed upon arrival</span></p>
               </div>
@@ -437,6 +447,14 @@ exports.onRegistrationConfirmed = functions.firestore
       }
       const trip = tripDoc.data();
 
+      // Generate or reuse companion token (pending registrations skip onCreate, so token may be missing)
+      let companionToken = registration.companionToken;
+      if (!companionToken) {
+        companionToken = crypto.randomUUID();
+        await change.after.ref.update({ companionToken });
+      }
+      const itineraryUrl = `${COMPANION_BASE_URL}?token=${companionToken}`;
+
       // Generate PDF
       const pdfBuffer = await generateWaiverPDF(registration, trip);
 
@@ -488,6 +506,11 @@ exports.onRegistrationConfirmed = functions.firestore
                 <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; font-size: 13px; color: #78350F; margin: 0;">${trip.customInfo}</pre>
                 <p style="margin: 8px 0 0; font-size: 12px; color: #92400E;">✓ You agreed to the above terms during registration.</p>
               </div>` : ''}
+
+              <div style="background-color: #FFF8E1; border: 2px solid #FFD54F; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+                <p style="margin: 0 0 12px; font-size: 15px; color: #5D4037;">🗺️ Check out your personal <strong>${trip.title}</strong> itinerary!</p>
+                <a href="${itineraryUrl}" style="display: inline-block; background-color: #00BCD4; color: white; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 15px;">View My Itinerary →</a>
+              </div>
 
               <div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #00BCD4; margin: 20px 0;">
                 <p style="margin: 0; font-size: 14px;"><strong>📎 Note:</strong> Your signed waiver PDF is attached to this email for your records.</p>
