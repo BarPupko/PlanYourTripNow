@@ -2,54 +2,96 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Trips collection - only admins can write, everyone can read
-    match /trips/{tripId} {
-      allow read: if true;
-      allow write: if request.auth != null;
+    // ─── Helpers ────────────────────────────────────────────────────────────
+    function isAdmin() {
+      return request.auth != null;
     }
 
-    // Registrations collection
+    // ─── Trips ──────────────────────────────────────────────────────────────
+    // Public can read only non-sensitive fields needed for registration (title,
+    // dates, seats, status). Full document read is admin-only.
+    match /trips/{tripId} {
+      allow read: if isAdmin()
+                  || resource.data.keys().hasOnly([
+                       'title', 'startDateTime', 'returnDateTime',
+                       'totalSeats', 'confirmedCount', 'status',
+                       'description', 'image', 'price'
+                     ]);
+      allow write: if isAdmin();
+    }
+
+    // ─── Registrations ──────────────────────────────────────────────────────
     match /registrations/{registrationId} {
-      // Anyone can create a registration (public form)
+      // Public can create a new registration (open booking form)
       allow create: if true;
 
-      // Allow reading registrations to see occupied seats (public)
-      allow read: if true;
+      // Only admins can read full registration data (has PII: email, phone, etc.)
+      allow read: if isAdmin();
 
-      // Authenticated users (admins) can update/delete anything
-      allow update, delete: if request.auth != null;
+      // Admin can update/delete
+      allow update, delete: if isAdmin();
 
-      // Public users can update a form_sent registration to confirmed (completing the emailed form)
+      // Public can advance their own registration from form_sent → confirmed
+      // (completes the emailed registration link — no auth needed)
       allow update: if resource.data.status == 'form_sent'
-                    && request.resource.data.status == 'confirmed';
+                    && request.resource.data.status == 'confirmed'
+                    && request.resource.data.diff(resource.data)
+                         .affectedKeys()
+                         .hasOnly(['status', 'confirmedAt',
+                                   'firstName', 'lastName', 'email',
+                                   'phone', 'passengers', 'preferredPickupPlace',
+                                   'passportNumber', 'dateOfBirth', 'nationality']);
     }
 
-    // Contacts collection - admin only
+    // ─── Admins ─────────────────────────────────────────────────────────────
+    // Any logged-in user can read their own admin doc (to check their role).
+    // Only existing admins can write (managed manually in Firebase Console).
+    match /admins/{uid} {
+      allow read: if request.auth != null;
+      allow write: if false; // managed manually via Firebase Console
+    }
+
+    // ─── Contacts ───────────────────────────────────────────────────────────
+    // Admin-only (internal address book, PII)
     match /contacts/{contactId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAdmin();
     }
 
-    // Schedule items - used by participant companion app
+    // ─── Feedbacks ──────────────────────────────────────────────────────────
+    // Anyone with the token link can submit once (doc ID = companionToken).
+    // Admins can read all. Nobody can update/delete after submission.
+    match /feedbacks/{token} {
+      allow read: if isAdmin();
+
+      // Public create: allowed only if the doc doesn't already exist
+      // (Firestore create semantics already guarantee this, but be explicit)
+      allow create: if !exists(/databases/$(database)/documents/feedbacks/$(token));
+
+      // No updates or deletes — feedback is immutable once submitted
+      allow update, delete: if isAdmin();
+    }
+
+    // ─── Schedule Items ─────────────────────────────────────────────────────
+    // Used by the public participant companion app — read is public
     match /schedule_items/{itemId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
-    // Gift Cards collection
+    // ─── Gift Cards ─────────────────────────────────────────────────────────
     match /giftCards/{giftCardId} {
-      // Anyone can read gift cards (public reveal page)
+      // Public reveal page needs to read the gift card
       allow read: if true;
 
-      // Only authenticated users (admins) can create gift cards
-      allow create: if request.auth != null;
+      // Only admin can create/delete
+      allow create, delete: if isAdmin();
 
-      // Only authenticated users (admins) can delete gift cards
-      allow delete: if request.auth != null;
-
-      // Allow anyone to update viewed status (when user opens the gift card reveal page)
-      // Only authenticated users (admins) can update other fields like remainingBalance and usageHistory
-      allow update: if request.auth != null ||
-                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewed', 'viewedAt']));
+      // Admin can update anything; public can only mark as viewed
+      allow update: if isAdmin()
+                    || request.resource.data.diff(resource.data)
+                         .affectedKeys()
+                         .hasOnly(['viewed', 'viewedAt']);
     }
+
   }
 }

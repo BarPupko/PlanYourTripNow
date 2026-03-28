@@ -1952,3 +1952,220 @@ exports.sendContactEmail = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', 'Failed to send email');
   }
 });
+
+/**
+ * Automatically sends thank-you + feedback emails to all confirmed participants
+ * when a trip's status transitions to 'done'.
+ */
+exports.onTripStatusDone = functions.firestore
+  .document('trips/{tripId}')
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+
+    // Only act on the exact transition to 'done', and only once
+    if (before.status === 'done' || after.status !== 'done') return null;
+    if (after.feedbackEmailSentAt) return null;
+
+    const tripId = context.params.tripId;
+
+    // Mark as sent immediately to prevent race conditions on repeated dashboard loads
+    await admin.firestore().collection('trips').doc(tripId)
+      .update({ feedbackEmailSentAt: admin.firestore.Timestamp.now() });
+
+    const regsSnapshot = await admin.firestore()
+      .collection('registrations')
+      .where('tripId', '==', tripId)
+      .where('status', '==', 'confirmed')
+      .get();
+
+    if (regsSnapshot.empty) return null;
+
+    const BASE_URL = 'https://barpupko.github.io/PlanYourTripNow';
+
+    const sends = regsSnapshot.docs.map(async (regDoc) => {
+      const reg = regDoc.data();
+      if (!reg.email) return;
+
+      // Ensure companionToken exists — generate if missing (admin-added participants)
+      let token = reg.companionToken;
+      if (!token) {
+        token = require('crypto').randomUUID();
+        await admin.firestore().collection('registrations').doc(regDoc.id).update({ companionToken: token });
+      }
+
+      const feedbackUrl = `${BASE_URL}/feedback/${tripId}/${token}`;
+
+      const mailOptions = {
+        from: `IVRI Tours <${process.env.EMAIL_USER}>`,
+        to: reg.email,
+        subject: `Thank You for Joining ${after.title}! Share Your Feedback ⭐`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <div style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); padding: 40px 32px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: bold;">Thank You, ${reg.firstName}!</h1>
+              <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 15px;">${after.title}</p>
+            </div>
+
+            <div style="background: white; padding: 36px 32px;">
+              <p style="color: #374151; font-size: 16px; line-height: 1.7; margin-top: 0;">
+                What a wonderful journey! We're so glad you were part of <strong>${after.title}</strong>.
+                Your presence made the trip even more special, and we hope you had an incredible time.
+              </p>
+              <p style="color: #374151; font-size: 16px; line-height: 1.7;">
+                We'd love to hear your thoughts — your feedback helps us make every future tour even better.
+                It only takes a minute! 🙏
+              </p>
+
+              <div style="text-align: center; margin: 36px 0;">
+                <a href="${feedbackUrl}"
+                   style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;
+                          padding: 16px 40px; border-radius: 50px; text-decoration: none;
+                          font-weight: bold; font-size: 17px; display: inline-block;
+                          box-shadow: 0 4px 12px rgba(245,158,11,0.4);">
+                  ⭐ Rate Your Experience
+                </a>
+              </div>
+
+              <div style="background: #f8fafc; border-radius: 8px; padding: 16px 20px; margin-top: 8px;">
+                <p style="margin: 0; color: #6B7280; font-size: 13px; text-align: center;">
+                  This link is personal to you · Takes less than 1 minute
+                </p>
+              </div>
+            </div>
+
+            <div style="background: #1f2937; padding: 20px 32px; text-align: center;">
+              <p style="color: #9CA3AF; margin: 0; font-size: 12px;">
+                IVRI Tours · Thank you for travelling with us
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+      return transporter.sendMail(mailOptions);
+    });
+
+    await Promise.allSettled(sends);
+    console.log(`[onTripStatusDone] Sent feedback emails for trip ${tripId}`);
+    return null;
+  });
+
+/**
+ * Manually resend feedback emails to confirmed participants who haven't submitted yet.
+ * Called from the TripViewModal "Send Reminder" button (admin only).
+ */
+exports.sendFeedbackReminder = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be logged in.');
+  }
+
+  const { tripId } = data;
+  if (!tripId) {
+    throw new functions.https.HttpsError('invalid-argument', 'tripId is required.');
+  }
+
+  const tripDoc = await admin.firestore().collection('trips').doc(tripId).get();
+  if (!tripDoc.exists) {
+    throw new functions.https.HttpsError('not-found', 'Trip not found.');
+  }
+  const trip = tripDoc.data();
+
+  // Get confirmed registrations (also include admin-added ones with no status field)
+  const regsSnapshot = await admin.firestore()
+    .collection('registrations')
+    .where('tripId', '==', tripId)
+    .get();
+
+  const eligibleDocs = regsSnapshot.docs.filter(d => {
+    const s = d.data().status;
+    return s === 'confirmed' || s === undefined || s === null;
+  });
+
+  if (eligibleDocs.length === 0) {
+    console.log(`[sendFeedbackReminder] No eligible registrations for trip ${tripId}`);
+    return { sent: 0 };
+  }
+  console.log(`[sendFeedbackReminder] Found ${eligibleDocs.length} eligible registration(s) for trip ${tripId}`);
+
+  const BASE_URL = 'https://barpupko.github.io/PlanYourTripNow';
+  let sent = 0;
+
+  const sends = eligibleDocs.map(async (regDoc) => {
+    const reg = regDoc.data();
+    if (!reg.email) {
+      console.log(`[sendFeedbackReminder] Skipping ${reg.firstName} ${reg.lastName} — no email`);
+      return;
+    }
+
+    // Ensure companionToken exists — generate one if missing (admin-added participants)
+    let token = reg.companionToken;
+    if (!token) {
+      token = require('crypto').randomUUID();
+      await admin.firestore().collection('registrations').doc(regDoc.id).update({ companionToken: token });
+      console.log(`[sendFeedbackReminder] Generated companionToken for ${reg.firstName} ${reg.lastName}`);
+    }
+
+    // Skip if they already submitted feedback
+    const feedbackDoc = await admin.firestore()
+      .collection('feedbacks')
+      .doc(token)
+      .get();
+    if (feedbackDoc.exists) {
+      console.log(`[sendFeedbackReminder] Skipping ${reg.firstName} — already submitted`);
+      return;
+    }
+
+    const feedbackUrl = `${BASE_URL}/feedback/${tripId}/${token}`;
+
+    await transporter.sendMail({
+      from: `IVRI Tours <${process.env.EMAIL_USER}>`,
+      to: reg.email,
+      subject: `Reminder: Share Your Feedback for ${trip.title} ⭐`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+          <div style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); padding: 40px 32px; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 12px;">🌟</div>
+            <h1 style="color: white; margin: 0; font-size: 26px; font-weight: bold;">We'd love your feedback, ${reg.firstName}!</h1>
+            <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 15px;">${trip.title}</p>
+          </div>
+
+          <div style="background: white; padding: 36px 32px;">
+            <p style="color: #374151; font-size: 16px; line-height: 1.7; margin-top: 0;">
+              Just a quick reminder — we'd really appreciate hearing about your experience on <strong>${trip.title}</strong>.
+              Your feedback helps us improve every future tour. It only takes a minute! 🙏
+            </p>
+
+            <div style="text-align: center; margin: 36px 0;">
+              <a href="${feedbackUrl}"
+                 style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;
+                        padding: 16px 40px; border-radius: 50px; text-decoration: none;
+                        font-weight: bold; font-size: 17px; display: inline-block;
+                        box-shadow: 0 4px 12px rgba(245,158,11,0.4);">
+                ⭐ Rate Your Experience
+              </a>
+            </div>
+
+            <div style="background: #f8fafc; border-radius: 8px; padding: 16px 20px; margin-top: 8px;">
+              <p style="margin: 0; color: #6B7280; font-size: 13px; text-align: center;">
+                This link is personal to you · Takes less than 1 minute
+              </p>
+            </div>
+          </div>
+
+          <div style="background: #1f2937; padding: 20px 32px; text-align: center;">
+            <p style="color: #9CA3AF; margin: 0; font-size: 12px;">
+              IVRI Tours · Thank you for travelling with us
+            </p>
+          </div>
+        </div>
+      `
+    });
+    sent += 1;
+  });
+
+  await Promise.allSettled(sends);
+  console.log(`[sendFeedbackReminder] Sent ${sent} reminder(s) for trip ${tripId}`);
+  return { sent };
+});

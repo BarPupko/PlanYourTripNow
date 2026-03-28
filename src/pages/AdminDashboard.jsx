@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, Trash2, Edit, MessageCircle, FileText } from 'lucide-react';
+import { Plus, Copy, Check, Trash2, Edit, MessageCircle } from 'lucide-react';
 import { getAllTrips, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -11,6 +11,8 @@ import MigrationModal from '../components/MigrationModal';
 import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
 import Header from '../components/Header';
+import TypewriterGreeting from '../components/TypewriterGreeting';
+import useAdmin from '../hooks/useAdmin';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import colors from '../utils/colors';
@@ -19,6 +21,7 @@ import { hasSeenTour, startTour } from '../utils/tour';
 const AdminDashboard = () => {
   const { language } = useLanguage();
   const t = translations[language];
+  const { isAdmin, adminData } = useAdmin();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [allTrips, setAllTrips] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -245,7 +248,10 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Header onOpenMigration={() => setShowMigration(true)} />
+      <Header
+        onOpenMigration={isAdmin ? () => setShowMigration(true) : undefined}
+        onDownloadInvoices={isAdmin ? () => setShowBulkInvoices(true) : undefined}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -254,43 +260,23 @@ const AdminDashboard = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div className="flex-1">
-                <div className="flex justify-between items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-gray-500 mb-1">
-                      {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                    </div>
-                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
-                      {viewFilter === 'date' ? `${t.tripsOn || 'Trips on'} ${selectedDate.toLocaleDateString()}` :
-                       viewFilter === 'all' ? t.allTrips :
-                       viewFilter === 'upcoming' ? t.currentTrips :
-                       t.oldTrips}
-                    </h2>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-gray-500 mb-1">
+                    {adminData?.displayName
+                      ? <TypewriterGreeting name={adminData.displayName} />
+                      : new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                    }
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => setShowBulkInvoices(true)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 text-sm font-semibold hover:bg-teal-50 transition-colors whitespace-nowrap"
-                      style={{ borderColor: colors.primary.teal, color: colors.primary.teal }}
-                      title="Download all invoices"
-                    >
-                      <FileText className="w-4 h-4" />
-                      <span className="hidden sm:inline">Invoices</span>
-                    </button>
-                    <button
-                      id="tour-create-trip"
-                      onClick={() => setShowCreateModal(true)}
-                      style={{ backgroundColor: colors.primary.teal }}
-                      className="flex items-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap"
-                      title={t.createNewTrip}
-                    >
-                      <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="hidden sm:inline">{t.createTrip}</span>
-                      <span className="sm:hidden">New</span>
-                    </button>
-                  </div>
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                    {viewFilter === 'date' ? `${t.tripsOn || 'Trips on'} ${selectedDate.toLocaleDateString()}` :
+                     viewFilter === 'all' ? t.allTrips :
+                     viewFilter === 'upcoming' ? t.currentTrips :
+                     t.oldTrips}
+                  </h2>
                 </div>
-                {/* View segmented control */}
-                <div id="tour-view-filters" className="flex mt-3 bg-gray-200 rounded-lg p-0.5">
+                {/* View segmented control + New button on the same row */}
+                <div id="tour-view-filters" className="flex items-center gap-2 mt-3">
+                  <div className="flex flex-1 bg-gray-200 rounded-lg p-0.5">
                   {[
                     { key: 'all', label: t.allTrips || 'All' },
                     { key: 'upcoming', label: t.currentTrips || 'Upcoming' },
@@ -308,6 +294,18 @@ const AdminDashboard = () => {
                       {label}
                     </button>
                   ))}
+                  </div>
+                  <button
+                    id="tour-create-trip"
+                    onClick={() => setShowCreateModal(true)}
+                    style={{ backgroundColor: colors.primary.teal }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap flex-shrink-0"
+                    title={t.createNewTrip}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">{t.createTrip}</span>
+                    <span className="sm:hidden">New</span>
+                  </button>
                 </div>
 
                 {/* Status filter pills */}

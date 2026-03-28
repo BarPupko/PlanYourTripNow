@@ -139,6 +139,7 @@ const AddParticipantModal = ({ trip, registrations, preselectedSeat = null, onCl
             pdfUrl: '',
             agreedToCancellationPolicy: true,
             agreedToWaiver: true,
+            status: 'confirmed',
             addedByAdmin: true,
             isMultiSeat: formData.seatCount > 1, // Flag to indicate multi-seat booking
             seatCount: formData.seatCount // Store total seats booked

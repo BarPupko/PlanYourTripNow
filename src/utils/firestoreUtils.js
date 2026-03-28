@@ -184,3 +184,32 @@ export const upsertContact = async ({ firstName, lastName, email, phone, preferr
     console.error('Error upserting contact:', error);
   }
 };
+
+// Feedback operations
+
+export const createFeedback = async ({ token, ...data }) => {
+  const ref = doc(db, 'feedbacks', token);
+  const existing = await getDoc(ref);
+  if (existing.exists()) throw new Error('already_submitted');
+  await setDoc(ref, { ...data, submittedAt: Timestamp.now() });
+};
+
+export const getFeedbackByTrip = async (tripId) => {
+  try {
+    const snap = await getDocs(query(collection(db, 'feedbacks'), where('tripId', '==', tripId)));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error('Error getting feedbacks:', error);
+    return [];
+  }
+};
+
+export const getFeedbackByToken = async (token) => {
+  try {
+    const snap = await getDoc(doc(db, 'feedbacks', token));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  } catch (error) {
+    console.error('Error getting feedback by token:', error);
+    return null;
+  }
+};

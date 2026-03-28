@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, ArrowLeft, Gift, MessageCircle, HelpCircle, Settings, Menu, X } from 'lucide-react';
+import { LogOut, ArrowLeft, Gift, MessageCircle, HelpCircle, Settings, Menu, X, FileText, Star } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import IVRILogo from './IrviLogo';
@@ -11,7 +11,7 @@ import { translations } from '../utils/translations';
 import colors from '../utils/colors';
 import { startTour } from '../utils/tour';
 
-const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout = true, onOpenMigration }) => {
+const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout = true, onOpenMigration, onDownloadInvoices }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
@@ -83,19 +83,6 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                 <>
                   <div className="flex items-center gap-1 sm:gap-2">
                     <WeatherWidget compact={true} />
-
-                    {/* WhatsApp Bot Assistant */}
-                    <a
-                      href="https://wa.me/14155238886"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-white rounded-full shadow-lg p-1.5 sm:p-2 hover:shadow-xl transition-all hover:scale-105"
-                      title="WhatsApp Assistant - Get trip info, check participants, and more!"
-                      style={{ backgroundColor: '#25D366' }}
-                    >
-                      <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                    </a>
-
                     <p className="hidden sm:block text-sm text-gray-500">{t.IVRITours}</p>
                   </div>
                 </>
@@ -168,19 +155,43 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                   {showMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
                 {showMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
-                    {onOpenMigration && (
-                      <>
-                        <button
-                          onClick={() => { onOpenMigration(); setShowMenu(false); }}
-                          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        >
-                          <Settings className="w-4 h-4 text-gray-500" />
-                          Data Migration
-                        </button>
-                        <div className="border-t border-gray-100 my-1" />
-                      </>
+                  <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                    <button
+                      onClick={() => { navigate('/admin/feedbacks'); setShowMenu(false); }}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <Star className="w-4 h-4 text-amber-400" />
+                      Feedbacks
+                    </button>
+                    <a
+                      href="https://wa.me/14155238886"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setShowMenu(false)}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" style={{ color: '#25D366' }} />
+                      WhatsApp Assistant
+                    </a>
+                    {onDownloadInvoices && (
+                      <button
+                        onClick={() => { onDownloadInvoices(); setShowMenu(false); }}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <FileText className="w-4 h-4 text-gray-500" />
+                        Download Invoices
+                      </button>
                     )}
+                    {onOpenMigration && (
+                      <button
+                        onClick={() => { onOpenMigration(); setShowMenu(false); }}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <Settings className="w-4 h-4 text-gray-500" />
+                        Data Migration
+                      </button>
+                    )}
+                    <div className="border-t border-gray-100 my-1" />
                     <button
                       onClick={() => { handleLogout(); setShowMenu(false); }}
                       className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
