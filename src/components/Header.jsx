@@ -17,6 +17,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
   const { language } = useLanguage();
   const t = translations[language];
   const [showMenu, setShowMenu] = useState(false);
+  const [showHomeConfirm, setShowHomeConfirm] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -47,6 +48,16 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
   const isGiftCardsPage = location.pathname === '/gift-cards';
   const isPublicPage = location.pathname.includes('/register/');
 
+  // Pages where clicking the logo should warn before leaving
+  const isAdminArea = isAdminDashboard || isGiftCardsPage || location.pathname.startsWith('/admin');
+  const handleLogoClick = () => {
+    if (isAdminArea) {
+      navigate('/admin');
+    } else {
+      setShowHomeConfirm(true);
+    }
+  };
+
   return (
     <div className="bg-white shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -62,18 +73,18 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
               </button>
             )}
 
-            {/* Make logo clickable to return to admin dashboard */}
+            {/* Logo — goes to admin dashboard on admin pages, or shows home confirmation elsewhere */}
             <button
-              onClick={() => navigate('/admin')}
+              onClick={handleLogoClick}
               className="hidden sm:block hover:opacity-80 transition-opacity"
-              title="Go to Admin Dashboard"
+              title={isAdminArea ? 'Go to Dashboard' : 'Go to Home Page'}
             >
               <IVRILogo size="md" />
             </button>
             <button
-              onClick={() => navigate('/admin')}
+              onClick={handleLogoClick}
               className="sm:hidden hover:opacity-80 transition-opacity"
-              title="Go to Admin Dashboard"
+              title={isAdminArea ? 'Go to Dashboard' : 'Go to Home Page'}
             >
               <IVRILogo size="xs" />
             </button>
@@ -233,6 +244,38 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
           </div>
         </div>
       </div>
+      {/* Home navigation confirmation dialog */}
+      {showHomeConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+            <div className="text-center mb-5">
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
+                style={{ backgroundColor: '#E6F7F8' }}
+              >
+                <span className="text-2xl">🏠</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Leave this page?</h3>
+              <p className="text-sm text-gray-500">Any unsaved progress will be lost.</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowHomeConfirm(false)}
+                className="flex-1 py-2.5 border-2 border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
+              >
+                Stay
+              </button>
+              <button
+                onClick={() => { setShowHomeConfirm(false); navigate('/'); }}
+                className="flex-1 py-2.5 text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: colors.primary.teal }}
+              >
+                Go to Home
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
