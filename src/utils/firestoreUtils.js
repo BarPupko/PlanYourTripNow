@@ -27,6 +27,13 @@ export const createTrip = async (tripData) => {
   }
 };
 
+export const publishTrip = async (tripId) => {
+  await updateDoc(doc(db, 'trips', tripId), {
+    status: 'planned',
+    showOnWebsite: true,
+  });
+};
+
 export const getTrip = async (tripId) => {
   try {
     const docRef = doc(db, 'trips', tripId);

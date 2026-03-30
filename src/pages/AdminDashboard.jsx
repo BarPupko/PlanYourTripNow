@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, Trash2, Edit, MessageCircle } from 'lucide-react';
-import { getAllTrips, createTrip, deleteTrip, updateTrip } from '../utils/firestoreUtils';
+import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock } from 'lucide-react';
+import { getAllTrips, createTrip, deleteTrip, updateTrip, publishTrip } from '../utils/firestoreUtils';
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import CreateTripModal from '../components/CreateTripModal';
@@ -82,6 +82,13 @@ const AdminDashboard = () => {
     const pending = {};
 
     for (const trip of trips) {
+      // Skip draft trips — they should not be auto-promoted
+      if (trip.status === 'draft') {
+        counts[trip.id] = 0;
+        pending[trip.id] = 0;
+        continue;
+      }
+
       let needsUpdate = false;
       let newStatus = trip.status || 'planned';
 
@@ -178,6 +185,15 @@ const AdminDashboard = () => {
     }
   };
 
+  const handlePublishTrip = async (tripId) => {
+    try {
+      await publishTrip(tripId);
+      loadTrips();
+    } catch (error) {
+      console.error('Error publishing trip:', error);
+    }
+  };
+
   // Get vehicle capacity from layout
   const getVehicleCapacity = (vehicleLayout) => {
     if (vehicleLayout === 'sprinter_15') return 14;
@@ -190,11 +206,14 @@ const AdminDashboard = () => {
     return 0;
   };
 
+  const draftTrips = allTrips.filter(t => t.status === 'draft');
+
   const getFilteredTrips = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    let filtered = allTrips;
+    // Exclude drafts from the main list — they appear in the Pending Review section
+    let filtered = allTrips.filter(t => t.status !== 'draft');
 
     // Apply date/time filter
     if (viewFilter === 'date') {
@@ -349,6 +368,72 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Draft trips — created via WhatsApp bot, pending admin review */}
+            {draftTrips.length > 0 && (
+              <div className="mb-2">
+                <h2 className="flex items-center gap-2 text-sm font-bold text-amber-700 mb-2">
+                  <Clock className="w-4 h-4" /> Pending Review ({draftTrips.length})
+                </h2>
+                <div className="space-y-2">
+                  {draftTrips.map(trip => {
+                    const tripDate = trip.startDateTime?.toDate?.() || (trip.date ? new Date(trip.date) : null);
+                    return (
+                      <div key={trip.id} className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-sm font-semibold text-gray-900">{trip.title || 'Untitled Trip'}</h3>
+                              {trip.source === 'whatsapp' && (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">📢 WhatsApp</span>
+                              )}
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-200 text-amber-800">Draft</span>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-0.5">
+                              {tripDate ? tripDate.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) : 'No date'}
+                              {trip.price ? ` · C$${trip.price}` : ''}
+                              {trip.deposit ? ` (deposit C$${trip.deposit})` : ''}
+                              {trip.childPrice ? ` · Children C$${trip.childPrice}` : ''}
+                            </p>
+                            {trip.websiteDescription && (
+                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{trip.websiteDescription}</p>
+                            )}
+                          </div>
+                          <div className="flex gap-1.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                            <button
+                              onClick={() => setEditingTrip(trip)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-white rounded-lg hover:opacity-90 transition-opacity"
+                              style={{ backgroundColor: colors.primary.teal }}
+                              title="Edit draft"
+                            >
+                              <Edit className="w-3 h-3" />
+                              <span className="hidden sm:inline">Edit</span>
+                            </button>
+                            <button
+                              onClick={() => handlePublishTrip(trip.id)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-white rounded-lg hover:opacity-90 transition-opacity bg-green-600"
+                              title="Publish trip"
+                            >
+                              <Send className="w-3 h-3" />
+                              <span className="hidden sm:inline">Publish</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTrip(trip.id)}
+                              disabled={deletingId === trip.id}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                              style={{ backgroundColor: colors.button.danger }}
+                              title="Delete draft"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {loading ? (
               <div className="text-center py-12">

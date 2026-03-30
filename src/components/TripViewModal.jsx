@@ -38,6 +38,8 @@ const TripViewModal = ({ tripId, onClose }) => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [sendingReminder, setSendingReminder] = useState(false);
   const [reminderResult, setReminderResult] = useState(null); // { sent: number } | 'error'
+  const [showGroupPanel, setShowGroupPanel] = useState(false);
+  const [copiedGroupNumbers, setCopiedGroupNumbers] = useState(false);
 
   const handleSendReminder = async () => {
     setSendingReminder(true);
@@ -140,6 +142,23 @@ const TripViewModal = ({ tripId, onClose }) => {
       console.error('Failed to copy:', err);
       alert('Failed to copy to clipboard');
     });
+  };
+
+  const getGroupPhoneNumbers = () => {
+    return confirmedRegistrations
+      .filter(r => r.phone)
+      .map(r => {
+        const cleaned = r.phone.replace(/\D/g, '');
+        return { name: `${r.firstName} ${r.lastName}`, phone: cleaned, raw: r.phone };
+      });
+  };
+
+  const handleCopyGroupNumbers = () => {
+    const numbers = getGroupPhoneNumbers().map(p => p.phone).join('\n');
+    navigator.clipboard.writeText(numbers).then(() => {
+      setCopiedGroupNumbers(true);
+      setTimeout(() => setCopiedGroupNumbers(false), 2000);
+    }).catch(() => alert('Failed to copy'));
   };
 
   const handleSendToGroup = () => {
@@ -619,34 +638,110 @@ const TripViewModal = ({ tripId, onClose }) => {
 
                 {/* WhatsApp Buttons */}
                 {registrations.length > 0 && (
-                  <div className="flex gap-2 mb-4">
-                    <button
-                      onClick={handleCopyForWhatsApp}
-                      style={{ backgroundColor: copiedWhatsApp ? colors.success : '#25D366' }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
-                      title={t.copyAllParticipantDetails}
-                    >
-                      {copiedWhatsApp ? (
-                        <>
-                          <Check className="w-5 h-5" />
-                          <span className="hidden sm:inline">{t.copied}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-5 h-5" />
-                          <span className="hidden sm:inline">{t.copyForWhatsApp}</span>
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={handleSendToGroup}
-                      style={{ backgroundColor: '#25D366' }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
-                      title={t.sendToWhatsAppGroup}
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      <span className="hidden sm:inline">{t.sendToGroup}</span>
-                    </button>
+                  <div className="mb-4 space-y-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleCopyForWhatsApp}
+                        style={{ backgroundColor: copiedWhatsApp ? colors.success : '#25D366' }}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
+                        title={t.copyAllParticipantDetails}
+                      >
+                        {copiedWhatsApp ? (
+                          <>
+                            <Check className="w-5 h-5" />
+                            <span className="hidden sm:inline">{t.copied}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-5 h-5" />
+                            <span className="hidden sm:inline">{t.copyForWhatsApp}</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleSendToGroup}
+                        style={{ backgroundColor: '#25D366' }}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
+                        title={t.sendToWhatsAppGroup}
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        <span className="hidden sm:inline">{t.sendToGroup}</span>
+                      </button>
+                      <button
+                        onClick={() => setShowGroupPanel(prev => !prev)}
+                        style={{ backgroundColor: showGroupPanel ? '#128C7E' : '#075E54' }}
+                        className="flex items-center justify-center gap-2 px-3 py-3 text-white rounded-lg hover:opacity-90 transition-all font-medium"
+                        title="Create a new WhatsApp group with registered participants"
+                      >
+                        <Users className="w-5 h-5" />
+                        <span className="hidden sm:inline text-sm">New Group</span>
+                      </button>
+                    </div>
+
+                    {/* New Group Panel */}
+                    {showGroupPanel && (() => {
+                      const groupNumbers = getGroupPhoneNumbers();
+                      return (
+                        <div className="rounded-xl border-2 border-[#128C7E] bg-[#f0faf8] p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#128C7E' }}>
+                                <Users className="w-4 h-4 text-white" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-gray-900">Create WhatsApp Group</p>
+                                <p className="text-xs text-gray-500">{groupNumbers.length} registered participant{groupNumbers.length !== 1 ? 's' : ''}</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={handleCopyGroupNumbers}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-xs font-semibold hover:opacity-90 transition-all"
+                              style={{ backgroundColor: copiedGroupNumbers ? colors.success : '#128C7E' }}
+                            >
+                              {copiedGroupNumbers ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                              {copiedGroupNumbers ? 'Copied!' : 'Copy Numbers'}
+                            </button>
+                          </div>
+
+                          <div className="bg-white rounded-lg border border-[#25D366]/30 divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                            {groupNumbers.length === 0 ? (
+                              <p className="text-xs text-gray-400 text-center py-3">No phone numbers available</p>
+                            ) : groupNumbers.map((p, i) => (
+                              <div key={i} className="flex items-center justify-between px-3 py-2">
+                                <span className="text-sm font-medium text-gray-800">{p.name}</span>
+                                <a
+                                  href={`https://wa.me/${p.phone}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-1 text-xs font-mono text-[#128C7E] hover:underline"
+                                >
+                                  <Phone className="w-3 h-3" />
+                                  {p.raw}
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                            <span className="text-yellow-500 text-base leading-none mt-0.5">ℹ️</span>
+                            <p className="text-xs text-yellow-800">
+                              Copy the numbers above, then open WhatsApp → <strong>New Group</strong> and add the contacts. WhatsApp does not support automatic group creation from the web.
+                            </p>
+                          </div>
+
+                          <a
+                            href="https://web.whatsapp.com"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-white text-sm font-semibold hover:opacity-90 transition-all"
+                            style={{ backgroundColor: '#25D366' }}
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            Open WhatsApp Web
+                          </a>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 

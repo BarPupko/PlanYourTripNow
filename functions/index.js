@@ -836,6 +836,11 @@ exports.whatsappBot = functions.https.onRequest(async (req, res) => {
       responseMessage = await handleTripDetailsCommand(incomingMessage, language);
     } else if (incomingLower.includes('stats') || incomingLower.includes('статистика')) {
       responseMessage = await handleStatsCommand(language);
+    } else if (incomingMessage.startsWith('📢') ||
+               incomingLower.startsWith('!newtour') ||
+               incomingLower.startsWith('!тур') ||
+               incomingLower.startsWith('новый тур:')) {
+      responseMessage = await handleNewTourCommand(incomingMessage, req.body, language);
     } else {
       responseMessage = await handleUnknownCommand(language);
     }
@@ -858,12 +863,155 @@ exports.whatsappBot = functions.https.onRequest(async (req, res) => {
 });
 
 /**
+ * Downloads a Twilio media URL and uploads it to Firebase Storage.
+ * Returns the public URL.
+ */
+async function downloadAndUploadMedia(mediaUrl, tripTitle) {
+  const response = await fetch(mediaUrl);
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const contentType = response.headers.get('content-type') || 'image/jpeg';
+  const ext = contentType.split('/')[1]?.split(';')[0] || 'jpg';
+  const safeName = (tripTitle || 'trip').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+  const filename = `trip-images/${Date.now()}-${safeName}.${ext}`;
+
+  const bucket = admin.storage().bucket();
+  const file = bucket.file(filename);
+  await file.save(buffer, { metadata: { contentType } });
+  await file.makePublic();
+  return `https://storage.googleapis.com/${bucket.name}/${filename}`;
+}
+
+/**
+ * Creates a draft trip from a tour announcement forwarded via WhatsApp.
+ * Triggered by messages starting with 📢, !newtour, !тур, or "новый тур:".
+ */
+async function handleNewTourCommand(rawMessage, reqBody, language) {
+  const tourText = rawMessage
+    .replace(/^(📢|!newtour|!тур|новый тур:)/i, '')
+    .trim();
+
+  if (!tourText) {
+    return language === 'ru'
+      ? '❓ Пожалуйста, добавьте текст объявления после 📢\n\nПример:\n📢 26 марта тур «Из прошлого в будущее»...'
+      : '❓ Please add the tour announcement text after 📢\n\nExample:\n📢 March 26 tour "From Past to Future"...';
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return language === 'ru'
+      ? '❌ OpenAI API ключ не настроен.'
+      : '❌ OpenAI API key is not configured.';
+  }
+
+  const prompt = `Extract tour/trip information from this announcement text. Return ONLY valid JSON with no markdown or extra text.
+
+Required fields: "title" (string), "date" (YYYY-MM-DD), "price" (number in CAD).
+Optional fields: "startTime" (HH:MM 24h), "endTime" (HH:MM 24h), "childPrice" (number), "deposit" (number), "description" (clean marketing text suitable for a website — remove prices/booking instructions, keep the experience description).
+
+If this is NOT a tour announcement, return exactly: {"isTourAnnouncement": false}
+
+Text:
+${tourText}`;
+
+  let parsed;
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,
+        max_tokens: 500,
+      }),
+    });
+    const json = await response.json();
+    const raw = json.choices?.[0]?.message?.content?.trim() || '{}';
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    console.error('OpenAI parse error:', e);
+    return language === 'ru'
+      ? '❌ Ошибка при обработке объявления. Попробуйте ещё раз.'
+      : '❌ Error processing the announcement. Please try again.';
+  }
+
+  if (parsed.isTourAnnouncement === false) {
+    return language === 'ru'
+      ? '❌ Это не похоже на объявление тура. Убедитесь, что текст содержит название, дату и цену.'
+      : '❌ This does not look like a tour announcement. Make sure it includes a title, date, and price.';
+  }
+
+  if (!parsed.title || !parsed.date) {
+    return language === 'ru'
+      ? '❌ Не удалось извлечь данные тура (нужны название и дата). Проверьте текст и попробуйте снова.'
+      : '❌ Could not extract tour data (need at least title and date). Check the text and try again.';
+  }
+
+  // Build timestamps (noon UTC to avoid date-shift across timezones)
+  const tripDate = new Date(parsed.date + 'T12:00:00Z');
+  if (isNaN(tripDate.getTime())) {
+    return language === 'ru'
+      ? `❌ Не удалось распознать дату: "${parsed.date}". Убедитесь, что дата указана явно.`
+      : `❌ Could not parse date: "${parsed.date}". Make sure the date is explicit.`;
+  }
+
+  // Handle attached image (if admin included one)
+  let websiteImage = null;
+  const numMedia = parseInt(reqBody.NumMedia || '0', 10);
+  if (numMedia > 0 && reqBody.MediaUrl0) {
+    try {
+      websiteImage = await downloadAndUploadMedia(reqBody.MediaUrl0, parsed.title);
+    } catch (e) {
+      console.warn('Image upload failed:', e.message);
+    }
+  }
+
+  // Save draft trip to Firestore
+  const tripTimestamp = admin.firestore.Timestamp.fromDate(tripDate);
+  const tripData = {
+    title: parsed.title,
+    status: 'draft',
+    showOnWebsite: false,
+    date: tripTimestamp,
+    startDateTime: tripTimestamp,
+    endDateTime: tripTimestamp,
+    startTimeStr: parsed.startTime || null,
+    endTimeStr: parsed.endTime || null,
+    price: parsed.price || 0,
+    deposit: parsed.deposit || 0,
+    childPrice: parsed.childPrice || null,
+    websiteDescription: parsed.description || tourText,
+    websiteImage: websiteImage,
+    source: 'whatsapp',
+    createdAt: admin.firestore.Timestamp.now(),
+  };
+
+  await admin.firestore().collection('trips').add(tripData);
+
+  const dateLabel = tripDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-CA', {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+  });
+  const priceInfo = parsed.price
+    ? `C$${parsed.price}${parsed.deposit ? ` (${language === 'ru' ? 'депозит' : 'deposit'} C$${parsed.deposit})` : ''}`
+    : '';
+
+  return language === 'ru'
+    ? `✅ Черновик тура создан!\n\n📌 *${parsed.title}*\n📅 ${dateLabel}${priceInfo ? `\n💰 ${priceInfo}` : ''}${websiteImage ? '\n🖼️ Изображение загружено' : ''}\n\nОткройте панель администратора для проверки и публикации.`
+    : `✅ Draft trip created!\n\n📌 *${parsed.title}*\n📅 ${dateLabel}${priceInfo ? `\n💰 ${priceInfo}` : ''}${websiteImage ? '\n🖼️ Image uploaded' : ''}\n\nOpen the admin dashboard to review and publish.`;
+}
+
+/**
  * Help command - Shows available commands
  */
 async function handleHelpCommand(language = 'en') {
   if (language === 'ru') {
     return `🤖 *IVRI Tours WhatsApp Ассистент*\n\n` +
       `Вот чем я могу помочь:\n\n` +
+      `📢 *📢 [объявление]* - Создать черновик тура из объявления\n` +
       `📋 *ПОЕЗДКИ* - Просмотр предстоящих туров\n` +
       `👥 *КТО [название]* - Кто зарегистрирован на поездку\n` +
       `📍 *СВОДКА* - Сводка поездки с местами сбора\n` +
@@ -879,6 +1027,7 @@ async function handleHelpCommand(language = 'en') {
 
   return `🤖 *IVRI Tours WhatsApp Assistant*\n\n` +
     `Here's what I can help you with:\n\n` +
+    `📢 *📢 [announcement]* - Create a draft trip from an announcement\n` +
     `📋 *TRIPS* - View upcoming trips\n` +
     `👥 *WHO [trip name]* - See who's registered for a trip\n` +
     `📍 *SUMMARY* - Trip summary with pickup locations\n` +
