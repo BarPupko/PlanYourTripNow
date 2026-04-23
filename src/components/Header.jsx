@@ -33,26 +33,26 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      navigate('/login');
+      navigate('/PlanYourTripNow/login');
     } catch (error) {
       console.error('Error logging out:', error);
     }
   };
 
   const handleBack = () => {
-    navigate('/admin');
+    navigate('/PlanYourTripNow/admin');
   };
 
   // Check if we're on admin dashboard
-  const isAdminDashboard = location.pathname === '/admin';
-  const isGiftCardsPage = location.pathname === '/gift-cards';
+  const isAdminDashboard = location.pathname === '/PlanYourTripNow/admin';
+  const isGiftCardsPage = location.pathname === '/PlanYourTripNow/gift-cards';
   const isPublicPage = location.pathname.includes('/register/');
 
   // Pages where clicking the logo should warn before leaving
-  const isAdminArea = isAdminDashboard || isGiftCardsPage || location.pathname.startsWith('/admin');
+  const isAdminArea = isAdminDashboard || isGiftCardsPage || location.pathname.startsWith('/PlanYourTripNow/admin');
   const handleLogoClick = () => {
     if (isAdminArea) {
-      navigate('/admin');
+      navigate('/PlanYourTripNow/admin');
     } else {
       setShowHomeConfirm(true);
     }
@@ -122,7 +122,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                   <>
                     <button
                       id="tour-gift-cards"
-                      onClick={() => navigate('/gift-cards')}
+                      onClick={() => navigate('/PlanYourTripNow/gift-cards')}
                       className="flex items-center gap-2 px-3 sm:px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors"
                       style={{ color: colors.primary.teal }}
                       title="Gift Cards"
@@ -157,7 +157,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
 
                 {isGiftCardsPage && (
                   <button
-                    onClick={() => navigate('/admin')}
+                    onClick={() => navigate('/PlanYourTripNow/admin')}
                     className="flex items-center gap-2 px-3 sm:px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors"
                     style={{ color: colors.primary.teal }}
                     title="Dashboard"
@@ -195,7 +195,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                       </button>
                     )}
                     <button
-                      onClick={() => { navigate('/admin/feedbacks'); setShowMenu(false); }}
+                      onClick={() => { navigate('/PlanYourTripNow/admin/feedbacks'); setShowMenu(false); }}
                       className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       <Star className="w-4 h-4 text-amber-400" />

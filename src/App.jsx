@@ -14,23 +14,23 @@ import { LanguageProvider } from './contexts/LanguageContext';
 function App() {
   return (
     <LanguageProvider>
-      <Router basename="/PlanYourTripNow">
+      <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route
-            path="/admin"
+            path="/PlanYourTripNow/admin"
             element={
               <PrivateRoute>
                 <AdminDashboard />
               </PrivateRoute>
             }
           />
-          <Route path="/login" element={<Login />} />
+          <Route path="/PlanYourTripNow/login" element={<Login />} />
           <Route path="/register/:tripId" element={<RegistrationForm />} />
           <Route path="/gift/:giftCardId" element={<GiftCardReveal />} />
           <Route path="/feedback/:tripId/:token" element={<FeedbackForm />} />
           <Route
-            path="/admin/feedbacks"
+            path="/PlanYourTripNow/admin/feedbacks"
             element={
               <PrivateRoute>
                 <FeedbacksDashboard />
@@ -39,7 +39,7 @@ function App() {
           />
           <Route path="/gift-card-purchase" element={<GiftCardPurchase />} />
           <Route
-            path="/gift-cards"
+            path="/PlanYourTripNow/gift-cards"
             element={
               <PrivateRoute>
                 <GiftCards />
