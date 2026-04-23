@@ -8,7 +8,8 @@ import { functions } from '../firebase';
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import LanguageSelector from '../components/LanguageSelector';
-import { createQuestion } from '../utils/firestoreUtils';
+import ChatWidget from '../components/ChatWidget';
+import { createQuestion, getWebsiteFeedbacks, getSiteSettings } from '../utils/firestoreUtils';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -47,6 +48,9 @@ const LandingPage = () => {
   const [questionForm, setQuestionForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [questionSubmitting, setQuestionSubmitting] = useState(false);
   const [questionSuccess, setQuestionSuccess] = useState(false);
+  // CMS data
+  const [people, setPeople] = useState([]);
+  const [siteSettings, setSiteSettings] = useState({});
 
   useEffect(() => {
     const fetchUpcomingTrips = async () => {
@@ -83,6 +87,8 @@ const LandingPage = () => {
       }
     };
     fetchUpcomingTrips();
+    getWebsiteFeedbacks().then(setPeople).catch(() => {});
+    getSiteSettings().then(setSiteSettings).catch(() => {});
   }, []);
 
   // Carousel: responsive items-per-view
@@ -197,10 +203,10 @@ const LandingPage = () => {
   };
 
   useEffect(() => {
-    const hasVisited = sessionStorage.getItem('hasVisitedLanding');
+    const hasVisited = localStorage.getItem('hasVisitedLanding');
     if (!hasVisited) {
       setTimeout(() => setShowWelcome(true), 100);
-      sessionStorage.setItem('hasVisitedLanding', 'true');
+      localStorage.setItem('hasVisitedLanding', 'true');
     }
 
     const cookieConsent = localStorage.getItem('cookieConsent');
@@ -805,8 +811,8 @@ const LandingPage = () => {
           <p className="text-xl sm:text-2xl opacity-95">{t.heroSubtitle}</p>
         </div>
       </section>
-       {/* Upcoming Trips Section */}
-      <section className="py-16 px-4 bg-gray-50">
+       {/* Upcoming Trips Section — hidden when empty */}
+      {(tripsLoading || upcomingTrips.length > 0) && <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-4" style={{ color: colors.primary.teal }}>
             {language === 'ru' ? 'Ближайшие туры' : language === 'he' ? 'טיולים קרובים' : 'Upcoming Trips'}
@@ -924,9 +930,9 @@ const LandingPage = () => {
             </div>
           )}
         </div>
-      </section>
+      </section>}
       {/* Destinations Carousel */}
-      <section className="py-16 px-4 max-w-7xl mx-auto">
+      {siteSettings.showDestinations !== false && <section className="py-16 px-4 max-w-7xl mx-auto">
         <h2 className="text-4xl font-bold text-center mb-12" style={{ color: colors.primary.teal }}>{t.destinationsTitle}</h2>
 
         <div className="relative"
@@ -1027,10 +1033,9 @@ const LandingPage = () => {
             />
           ))}
         </div>
-      </section>
+      </section>}
 
-     
-      <section className="py-16 px-4 bg-gray-50">
+      {siteSettings.showTestimonials !== false && <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-12" style={{ color: colors.primary.teal }}>{t.testimonialsTitle}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1043,7 +1048,54 @@ const LandingPage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section>}
+
+      {/* Traveler Reviews section (approved feedbacks) */}
+      {people.length > 0 && siteSettings.showPeople !== false && (
+        <section className="py-16 px-4 bg-gray-50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-4xl font-bold text-center mb-4" style={{ color: colors.primary.teal }}>
+              {language === 'he' ? 'מה אומרים המטיילים שלנו' : language === 'ru' ? 'Отзывы наших путешественников' : 'What Our Travelers Say'}
+            </h2>
+            <p className="text-center text-gray-500 mb-12">
+              {language === 'he' ? 'חוויות אמיתיות ממשתתפים אמיתיים' : language === 'ru' ? 'Реальные впечатления реальных участников' : 'Real experiences from real participants'}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {people.map((fb) => {
+                const stars = fb.ratings?.overall || 0;
+                return (
+                  <div key={fb.id} className="bg-white rounded-xl p-6 shadow-lg flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-gray-900">{fb.firstName} {fb.lastName}</p>
+                        {fb.submittedAt && (
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {fb.submittedAt.toDate?.().toLocaleDateString(
+                              language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA',
+                              { month: 'long', year: 'numeric' }
+                            )}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-lg leading-none" style={{ color: '#f59e0b' }}>
+                        {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
+                      </span>
+                    </div>
+                    {fb.comment && (
+                      <p className="text-gray-600 italic text-sm leading-relaxed flex-1">"{fb.comment}"</p>
+                    )}
+                    {fb.wouldRecommend === 'yes' && (
+                      <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded-full self-start">
+                        ✓ {language === 'he' ? 'ממליץ' : language === 'ru' ? 'Рекомендует' : 'Recommends'}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
@@ -1299,6 +1351,9 @@ const LandingPage = () => {
           border-color: #000 !important;
         }
       `}</style>
+
+      {/* AI Chat Widget */}
+      <ChatWidget language={language} />
     </div>
   );
 };

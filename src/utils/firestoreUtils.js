@@ -255,3 +255,24 @@ export const markQuestionRead = async (questionId) => {
     console.error('Error marking question as read:', error);
   }
 };
+
+// Feedback showcase — mark/unmark a feedback to appear on the landing page
+export const toggleFeedbackWebsite = async (id, show) => {
+  await updateDoc(doc(db, 'feedbacks', id), { showOnWebsite: show });
+};
+
+// Fetch feedbacks approved to show on the landing page
+export const getWebsiteFeedbacks = async () => {
+  const snap = await getDocs(query(collection(db, 'feedbacks'), where('showOnWebsite', '==', true)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+};
+
+// Site settings (single doc: siteSettings/config)
+export const getSiteSettings = async () => {
+  const snap = await getDoc(doc(db, 'siteSettings', 'config'));
+  return snap.exists() ? snap.data() : {};
+};
+
+export const updateSiteSettings = async (settings) => {
+  await setDoc(doc(db, 'siteSettings', 'config'), settings, { merge: true });
+};

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock } from 'lucide-react';
-import { getAllTrips, createTrip, deleteTrip, updateTrip, publishTrip } from '../utils/firestoreUtils';
+import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock, Layout, ToggleLeft, ToggleRight, Users } from 'lucide-react';
+import { getAllTrips, createTrip, deleteTrip, updateTrip, publishTrip, toggleFeedbackWebsite, getSiteSettings, updateSiteSettings } from '../utils/firestoreUtils';
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import CreateTripModal from '../components/CreateTripModal';
@@ -39,6 +39,13 @@ const AdminDashboard = () => {
   const [showMigration, setShowMigration] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
+  // Landing page tab
+  const [activeTab, setActiveTab] = useState('trips');
+  const [siteSettings, setSiteSettings] = useState({});
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [allFeedbacks, setAllFeedbacks] = useState([]);
+  const [feedbacksLoading, setFeedbacksLoading] = useState(false);
+  const [togglingFeedback, setTogglingFeedback] = useState(null);
 
   useEffect(() => {
     loadTrips();
@@ -59,6 +66,36 @@ const AdminDashboard = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Landing page data
+  useEffect(() => {
+    getSiteSettings().then(setSiteSettings).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'landing') return;
+    setFeedbacksLoading(true);
+    getDocs(collection(db, 'feedbacks'))
+      .then(snap => setAllFeedbacks(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+      .catch(() => {})
+      .finally(() => setFeedbacksLoading(false));
+  }, [activeTab]);
+
+  const handleToggleSetting = async (key) => {
+    const updated = { ...siteSettings, [key]: siteSettings[key] === false ? true : false };
+    setSiteSettings(updated);
+    setSettingsSaving(true);
+    try { await updateSiteSettings(updated); } catch (e) { console.error(e); } finally { setSettingsSaving(false); }
+  };
+
+  const handleToggleFeedbackShow = async (fb) => {
+    const next = !fb.showOnWebsite;
+    setTogglingFeedback(fb.id);
+    try {
+      await toggleFeedbackWebsite(fb.id, next);
+      setAllFeedbacks(prev => prev.map(f => f.id === fb.id ? { ...f, showOnWebsite: next } : f));
+    } catch (e) { console.error(e); } finally { setTogglingFeedback(null); }
+  };
 
   const loadTrips = async () => {
     setLoading(true);
@@ -286,8 +323,127 @@ const AdminDashboard = () => {
         onOpenQuestions={() => setShowQuestions(true)}
       />
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Tab bar */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-1">
+          {[
+            { key: 'trips', label: 'Trips', icon: <Clock className="w-4 h-4" /> },
+            { key: 'landing', label: 'Landing Page', icon: <Layout className="w-4 h-4" /> },
+          ].map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === key
+                  ? 'border-[#00BCD4] text-[#00BCD4]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {icon}{label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Landing Page Tab */}
+      {activeTab === 'landing' && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+          {/* Section Visibility */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+              <Layout className="w-5 h-5" style={{ color: colors.primary.teal }} />
+              Section Visibility
+            </h3>
+            <p className="text-sm text-gray-500 mb-5">Toggle which sections appear on the public landing page.</p>
+            {settingsSaving && <p className="text-xs text-gray-400 mb-3">Saving…</p>}
+            <div className="space-y-3">
+              {[
+                { key: 'showDestinations', label: 'Destinations Carousel' },
+                { key: 'showTestimonials', label: 'Testimonials (hardcoded quotes)' },
+                { key: 'showPeople', label: 'Happy Travelers (people section)' },
+              ].map(({ key, label }) => {
+                const on = siteSettings[key] !== false;
+                return (
+                  <div key={key} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                    <span className="text-sm font-medium text-gray-700">{label}</span>
+                    <button onClick={() => handleToggleSetting(key)} className="flex-shrink-0">
+                      {on
+                        ? <ToggleRight className="w-8 h-8" style={{ color: colors.primary.teal }} />
+                        : <ToggleLeft className="w-8 h-8 text-gray-300" />}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Feedback Showcase Picker */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Users className="w-5 h-5" style={{ color: colors.primary.teal }} />
+                Feedback Showcase
+              </h3>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Toggle which participant reviews appear in the "What Our Travelers Say" section on the landing page.
+              </p>
+            </div>
+
+            {feedbacksLoading ? (
+              <div className="text-center py-8 text-gray-400 text-sm">Loading feedbacks…</div>
+            ) : allFeedbacks.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-6">No feedback responses yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-[480px] overflow-y-auto">
+                {[...allFeedbacks]
+                  .sort((a, b) => (b.submittedAt?.seconds || 0) - (a.submittedAt?.seconds || 0))
+                  .map(fb => {
+                    const shown = !!fb.showOnWebsite;
+                    const stars = fb.ratings?.overall || 0;
+                    return (
+                      <div
+                        key={fb.id}
+                        className={`flex items-start gap-3 p-3 rounded-xl border-2 transition-colors ${shown ? 'border-[#00BCD4] bg-[#f0faf8]' : 'border-gray-100 bg-white hover:bg-gray-50'}`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold text-gray-900">{fb.firstName} {fb.lastName}</p>
+                            <span className="text-xs text-amber-500">{'★'.repeat(stars)}{'☆'.repeat(5 - stars)}</span>
+                            {fb.submittedAt && (
+                              <span className="text-xs text-gray-400">
+                                {fb.submittedAt.toDate?.().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                              </span>
+                            )}
+                          </div>
+                          {fb.comment && (
+                            <p className="text-xs text-gray-500 mt-1 italic line-clamp-2">"{fb.comment}"</p>
+                          )}
+                          {fb.wouldRecommend === 'yes' && (
+                            <span className="inline-block mt-1 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Would recommend</span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleToggleFeedbackShow(fb)}
+                          disabled={togglingFeedback === fb.id}
+                          className="flex-shrink-0 mt-0.5"
+                          title={shown ? 'Hide from website' : 'Show on website'}
+                        >
+                          {shown
+                            ? <ToggleRight className="w-8 h-8" style={{ color: colors.primary.teal }} />
+                            : <ToggleLeft className="w-8 h-8 text-gray-300" />}
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Main Content (Trips tab) */}
+      {activeTab === 'trips' && <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Side - Trip List */}
           <div className="lg:col-span-2 space-y-4">
@@ -660,7 +816,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Create Trip Modal */}
       {showCreateModal && (

@@ -2404,3 +2404,45 @@ exports.onQuestionCreated = functions.firestore
       console.error('[onQuestionCreated] Failed to send email:', err);
     }
   });
+
+// AI Chat — Yefim persona powered by OpenAI
+exports.chatWithYefim = functions.https.onCall(async (data) => {
+  const { message, history = [], language = 'en' } = data;
+  if (!message || typeof message !== 'string') {
+    throw new functions.https.HttpsError('invalid-argument', 'message is required');
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new functions.https.HttpsError('failed-precondition', 'OpenAI API key not configured');
+  }
+
+  const systemPrompt = `You are Yefim, a warm and knowledgeable tour assistant for IVRI Tours — a Canadian tour company offering guided trips across North America (Toronto, Niagara Falls, Quebec City, Mont-Tremblant, Detroit, Chicago, Barrie, and more). Tours are conducted in English, Hebrew, and Russian.
+Help visitors with questions about destinations, tour schedules, pricing, what to bring, registration, and anything related to IVRI Tours.
+Always respond in the same language the user writes in. Be friendly, concise, and helpful. If you don't know a specific price or date, tell the user to check the website or contact the team directly.`;
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
+    { role: 'user', content: message }
+  ];
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 400, temperature: 0.7 })
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    console.error('[chatWithYefim] OpenAI error:', err);
+    throw new functions.https.HttpsError('internal', 'OpenAI request failed');
+  }
+
+  const json = await response.json();
+  const reply = json.choices?.[0]?.message?.content?.trim() || '';
+  return { reply };
+});
