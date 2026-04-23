@@ -41,6 +41,8 @@ const FeedbackForm = () => {
   const [ratings, setRatings] = useState({ overall: 0, guide: 0, transport: 0, value: 0 });
   const [wouldRecommend, setWouldRecommend] = useState('');
   const [comment, setComment] = useState('');
+  const [publishConsent, setPublishConsent] = useState(null); // null = not answered yet
+  const [profileImageUrl, setProfileImageUrl] = useState('');
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -101,6 +103,8 @@ const FeedbackForm = () => {
         comment,
         firstName: registration.firstName,
         lastName: registration.lastName,
+        publishConsent: publishConsent === true,
+        profileImageUrl: publishConsent === true ? profileImageUrl.trim() : '',
       });
       setSubmitted(true);
     } catch (err) {
@@ -232,6 +236,59 @@ const FeedbackForm = () => {
             />
           </div>
 
+          {/* Publish consent */}
+          <div className="border-t border-gray-100 pt-4">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Feature your review on our website?</h2>
+            <p className="text-xs text-gray-400 mb-3">Your review may appear in the "What Our Travelers Say" section — only if you agree.</p>
+            <div className="flex gap-3 mb-3">
+              {[
+                { value: true,  label: '🌟 Yes, share it!' },
+                { value: false, label: '🔒 No, keep it private' },
+              ].map(opt => (
+                <button
+                  key={String(opt.value)}
+                  type="button"
+                  onClick={() => setPublishConsent(opt.value)}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border-2 transition-all ${
+                    publishConsent === opt.value
+                      ? 'border-transparent text-white'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                  style={publishConsent === opt.value ? { backgroundColor: colors.primary.teal } : {}}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {publishConsent === true && (
+              <div className="mt-2">
+                <label className="block text-xs font-semibold text-gray-500 mb-1">
+                  Profile photo URL <span className="font-normal text-gray-400">(optional — shown as a circle)</span>
+                </label>
+                <input
+                  type="url"
+                  value={profileImageUrl}
+                  onChange={e => setProfileImageUrl(e.target.value)}
+                  placeholder="https://example.com/your-photo.jpg"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:border-transparent"
+                  style={{ '--tw-ring-color': colors.primary.teal }}
+                />
+                {profileImageUrl && (
+                  <div className="mt-2 flex items-center gap-3">
+                    <img
+                      src={profileImageUrl}
+                      alt="Preview"
+                      className="w-12 h-12 rounded-full object-cover"
+                      style={{ border: `2px solid ${colors.primary.teal}` }}
+                      onError={e => { e.target.style.display = 'none'; }}
+                    />
+                    <span className="text-xs text-gray-500">Preview of your profile photo</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {errors.submit && (
             <p className="text-red-500 text-sm text-center">{errors.submit}</p>
           )}
@@ -246,7 +303,11 @@ const FeedbackForm = () => {
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-400 mt-4">Your feedback is private and shared only with the IVRI Tours team.</p>
+        <p className="text-center text-xs text-gray-400 mt-4">
+          {publishConsent === true
+            ? 'Your review will be visible on the website only after admin approval.'
+            : 'Your feedback is private and shared only with the IVRI Tours team.'}
+        </p>
       </div>
     </div>
   );

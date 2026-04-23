@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Facebook, Instagram, MapPin, Clock, Users, Gift, X, Cookie, Eye, ZoomIn, Type, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Clock, Users, Gift, X, Cookie, Eye, ZoomIn, Type, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, MessageCircle, BookOpen, ChevronDown } from 'lucide-react';
 import colors from '../utils/colors';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
@@ -9,7 +9,8 @@ import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'fire
 import { db } from '../firebase';
 import LanguageSelector from '../components/LanguageSelector';
 import ChatWidget from '../components/ChatWidget';
-import { createQuestion, getWebsiteFeedbacks, getSiteSettings } from '../utils/firestoreUtils';
+import BlogPostModal from '../components/BlogPostModal';
+import { createQuestion, getWebsiteFeedbacks, getSiteSettings, getPublishedBlogPosts } from '../utils/firestoreUtils';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -51,6 +52,10 @@ const LandingPage = () => {
   // CMS data
   const [people, setPeople] = useState([]);
   const [siteSettings, setSiteSettings] = useState({});
+  // Blog
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [selectedBlogPost, setSelectedBlogPost] = useState(null);
+  const [showBlogMenu, setShowBlogMenu] = useState(false);
 
   useEffect(() => {
     const fetchUpcomingTrips = async () => {
@@ -89,6 +94,7 @@ const LandingPage = () => {
     fetchUpcomingTrips();
     getWebsiteFeedbacks().then(setPeople).catch(() => {});
     getSiteSettings().then(setSiteSettings).catch(() => {});
+    getPublishedBlogPosts().then(setBlogPosts).catch(() => {});
   }, []);
 
   // Carousel: responsive items-per-view
@@ -552,6 +558,16 @@ const LandingPage = () => {
 
   const tGift = giftCardTranslations[language];
 
+  // Section ordering — index in array becomes the CSS `order` value
+  const DEFAULT_SECTION_ORDER = ['trips', 'reviews', 'social', 'blog', 'contact'];
+  const activeSectionOrder = siteSettings.sectionOrder?.length
+    ? siteSettings.sectionOrder
+    : DEFAULT_SECTION_ORDER;
+  const getSectionOrder = (key) => {
+    const idx = activeSectionOrder.indexOf(key);
+    return idx >= 0 ? idx : 99;
+  };
+
   // Real sightseeing photos of the actual landmarks
   const destinations = [
     { key: 'toronto', image: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80' }, // CN Tower
@@ -790,16 +806,40 @@ const LandingPage = () => {
           <div className="flex justify-between items-center">
             <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>IVRI Tours</div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/gift-card-purchase')}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: colors.primary.teal }}
-              >
-                <Gift className="w-4 h-4" />
-                <span className="hidden sm:inline">{tGift.purchaseGiftCard}</span>
-                <span className="sm:hidden">Gift</span>
-              </button>
-              <LanguageSelector />
+              {/* Blog dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowBlogMenu(p => !p)}
+                  onBlur={() => setTimeout(() => setShowBlogMenu(false), 150)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
+                  style={{ color: colors.primary.teal }}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span className="hidden sm:inline">Blog</span>
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+                {showBlogMenu && blogPosts.length > 0 && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50">
+                    {blogPosts.map(post => (
+                      <button
+                        key={post.id}
+                        onMouseDown={() => { setSelectedBlogPost(post); setShowBlogMenu(false); }}
+                        className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                      >
+                        <p className="text-sm font-medium text-gray-800 truncate">{post.title}</p>
+                        {post.excerpt && (
+                          <p className="text-xs text-gray-400 truncate mt-0.5">{post.excerpt}</p>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {showBlogMenu && blogPosts.length === 0 && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-3 z-50 text-center text-sm text-gray-400">
+                    No posts yet
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -811,8 +851,12 @@ const LandingPage = () => {
           <p className="text-xl sm:text-2xl opacity-95">{t.heroSubtitle}</p>
         </div>
       </section>
-       {/* Upcoming Trips Section — hidden when empty */}
-      {(tripsLoading || upcomingTrips.length > 0) && <section className="py-16 px-4 bg-gray-50">
+
+      {/* ── Orderable sections ─────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+
+      {/* Upcoming Trips */}
+      {(tripsLoading || upcomingTrips.length > 0) && siteSettings.showDestinations !== false && <section style={{ order: getSectionOrder('trips') }} className="py-16 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-4" style={{ color: colors.primary.teal }}>
             {language === 'ru' ? 'Ближайшие туры' : language === 'he' ? 'טיולים קרובים' : 'Upcoming Trips'}
@@ -1035,57 +1079,67 @@ const LandingPage = () => {
         </div>
       </section>}
 
-      {siteSettings.showTestimonials !== false && <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12" style={{ color: colors.primary.teal }}>{t.testimonialsTitle}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {t.testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-lg text-center">
-                <div className="w-20 h-20 rounded-full mx-auto mb-4 bg-cover bg-center" style={{ backgroundImage: `url(${testimonialImages[index]})`, border: `3px solid ${colors.primary.teal}` }} />
-                <p className="text-gray-600 italic mb-4 leading-relaxed">"{testimonial.text}"</p>
-                <h4 className="font-bold" style={{ color: colors.primary.teal }}>{testimonial.author}</h4>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>}
-
-      {/* Traveler Reviews section (approved feedbacks) */}
-      {people.length > 0 && siteSettings.showPeople !== false && (
-        <section className="py-16 px-4 bg-gray-50">
+      {/* Reviews & Testimonials */}
+      {(siteSettings.showTestimonials !== false || (people.length > 0 && siteSettings.showPeople !== false)) && (
+        <section style={{ order: getSectionOrder('reviews') }} className="py-16 px-4 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-4xl font-bold text-center mb-4" style={{ color: colors.primary.teal }}>
-              {language === 'he' ? 'מה אומרים המטיילים שלנו' : language === 'ru' ? 'Отзывы наших путешественников' : 'What Our Travelers Say'}
+              {t.testimonialsTitle}
             </h2>
             <p className="text-center text-gray-500 mb-12">
-              {language === 'he' ? 'חוויות אמיתיות ממשתתפים אמיתיים' : language === 'ru' ? 'Реальные впечатления реальных участников' : 'Real experiences from real participants'}
+              {language === 'he' ? 'חוויות אמיתיות מהקהילה שלנו' : language === 'ru' ? 'Реальные впечатления нашего сообщества' : 'Real experiences from our community'}
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {people.map((fb) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {/* Hardcoded testimonials */}
+              {siteSettings.showTestimonials !== false && t.testimonials.map((testimonial, index) => (
+                <div key={`static-${index}`} className="bg-white rounded-xl p-6 shadow-lg text-center flex flex-col items-center">
+                  <div
+                    className="w-20 h-20 rounded-full mb-4 bg-cover bg-center flex-shrink-0"
+                    style={{ backgroundImage: `url(${testimonialImages[index]})`, border: `3px solid ${colors.primary.teal}` }}
+                  />
+                  <p className="text-gray-600 italic mb-4 leading-relaxed flex-1">"{testimonial.text}"</p>
+                  <h4 className="font-bold" style={{ color: colors.primary.teal }}>{testimonial.author}</h4>
+                </div>
+              ))}
+              {/* Dynamic traveler feedbacks */}
+              {siteSettings.showPeople !== false && people.map((fb) => {
                 const stars = fb.ratings?.overall || 0;
+                const name = `${fb.firstName} ${fb.lastName}`.trim();
+                const initials = `${fb.firstName?.[0] || ''}${fb.lastName?.[0] || ''}`.toUpperCase();
                 return (
-                  <div key={fb.id} className="bg-white rounded-xl p-6 shadow-lg flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-gray-900">{fb.firstName} {fb.lastName}</p>
-                        {fb.submittedAt && (
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {fb.submittedAt.toDate?.().toLocaleDateString(
-                              language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA',
-                              { month: 'long', year: 'numeric' }
-                            )}
-                          </p>
-                        )}
+                  <div key={`fb-${fb.id}`} className="bg-white rounded-xl p-6 shadow-lg text-center flex flex-col items-center">
+                    {fb.profileImageUrl ? (
+                      <div
+                        className="w-20 h-20 rounded-full mb-4 bg-cover bg-center flex-shrink-0"
+                        style={{ backgroundImage: `url(${fb.profileImageUrl})`, border: `3px solid ${colors.primary.teal}` }}
+                      />
+                    ) : (
+                      <div
+                        className="w-20 h-20 rounded-full mb-4 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
+                        style={{ backgroundColor: colors.primary.teal, border: `3px solid ${colors.primary.teal}` }}
+                      >
+                        {initials || '✦'}
                       </div>
-                      <span className="text-lg leading-none" style={{ color: '#f59e0b' }}>
+                    )}
+                    {stars > 0 && (
+                      <div className="text-base mb-2" style={{ color: '#f59e0b' }}>
                         {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
-                      </span>
-                    </div>
+                      </div>
+                    )}
                     {fb.comment && (
-                      <p className="text-gray-600 italic text-sm leading-relaxed flex-1">"{fb.comment}"</p>
+                      <p className="text-gray-600 italic mb-3 leading-relaxed text-sm flex-1">"{fb.comment}"</p>
+                    )}
+                    <h4 className="font-bold" style={{ color: colors.primary.teal }}>{name}</h4>
+                    {fb.submittedAt && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        {fb.submittedAt.toDate?.().toLocaleDateString(
+                          language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA',
+                          { month: 'long', year: 'numeric' }
+                        )}
+                      </p>
                     )}
                     {fb.wouldRecommend === 'yes' && (
-                      <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded-full self-start">
+                      <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded-full mt-2">
                         ✓ {language === 'he' ? 'ממליץ' : language === 'ru' ? 'Рекомендует' : 'Recommends'}
                       </span>
                     )}
@@ -1097,7 +1151,8 @@ const LandingPage = () => {
         </section>
       )}
 
-      <section className="py-16 px-4 bg-white">
+      {/* Social Media */}
+      {siteSettings.showSocial !== false && <section style={{ order: getSectionOrder('social') }} className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold mb-4" style={{ color: colors.primary.teal }}>{t.socialTitle}</h2>
           <p className="text-xl text-gray-600 mb-8">{t.socialDesc}</p>
@@ -1151,9 +1206,65 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
-      <section className="py-16 px-4 max-w-4xl mx-auto">
+      {/* Blog Posts */}
+      {blogPosts.length > 0 && siteSettings.showBlog !== false && (
+        <section style={{ order: getSectionOrder('blog') }} className="py-16 px-4 bg-gray-50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-4xl font-bold text-center mb-4" style={{ color: colors.primary.teal }}>
+              {language === 'ru' ? 'Блог' : language === 'he' ? 'בלוג' : 'Our Blog'}
+            </h2>
+            <p className="text-center text-gray-500 mb-12">
+              {language === 'ru' ? 'Истории и советы от нашей команды' : language === 'he' ? 'סיפורים וטיפים מהצוות שלנו' : 'Stories and tips from our team'}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {blogPosts.map(post => (
+                <div
+                  key={post.id}
+                  onClick={() => setSelectedBlogPost(post)}
+                  className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
+                >
+                  {post.images?.[0] ? (
+                    <div
+                      className="h-48 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${post.images[0]})` }}
+                    />
+                  ) : (
+                    <div className="h-48 flex items-center justify-center" style={{ backgroundColor: '#E6F7F8' }}>
+                      <BookOpen className="w-12 h-12" style={{ color: colors.primary.teal, opacity: 0.4 }} />
+                    </div>
+                  )}
+                  <div className="p-5 flex flex-col flex-1">
+                    <h3 className="text-lg font-bold leading-snug mb-2" style={{ color: colors.primary.teal }}>
+                      {post.title}
+                    </h3>
+                    {post.excerpt && (
+                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 flex-1">{post.excerpt}</p>
+                    )}
+                    <div className="flex items-center justify-between mt-4">
+                      {post.publishedAt && (
+                        <span className="text-xs text-gray-400">
+                          {post.publishedAt.toDate?.().toLocaleDateString(
+                            language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA',
+                            { month: 'short', day: 'numeric', year: 'numeric' }
+                          )}
+                        </span>
+                      )}
+                      <span className="text-sm font-semibold" style={{ color: colors.primary.teal }}>
+                        {language === 'ru' ? 'Читать →' : language === 'he' ? 'קרא →' : 'Read more →'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Contact Form */}
+      {siteSettings.showContact !== false && <section style={{ order: getSectionOrder('contact') }} className="py-16 px-4 max-w-4xl mx-auto">
         <h2 className="text-4xl font-bold text-center mb-12" style={{ color: colors.primary.teal }}>{t.contactTitle}</h2>
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -1189,15 +1300,38 @@ const LandingPage = () => {
             {sending ? (language === 'ru' ? 'Отправка...' : language === 'he' ? 'שולח...' : 'Sending...') : t.submitBtn}
           </button>
         </form>
-      </section>
+      </section>}
 
-      <footer className="bg-gray-900 text-white py-8 px-4">
+      </div>
+      {/* ── End orderable sections ─────────────────────────────────────────── */}
+
+      <footer className="bg-gray-900 text-white py-10 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <div className="text-2xl font-bold mb-4" style={{ color: colors.primary.teal }}>IVRI Tours</div>
+          <div className="flex justify-center items-center gap-4 mb-5 flex-wrap">
+            <button
+              onClick={() => navigate('/gift-card-purchase')}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium hover:opacity-80 transition-opacity border border-white/20 text-sm"
+            >
+              <Gift className="w-4 h-4" />
+              {tGift.purchaseGiftCard}
+            </button>
+            <div className="[&_button]:!text-white [&_button]:!border-white/20 [&_button]:hover:!bg-white/10">
+              <LanguageSelector />
+            </div>
+          </div>
           <p className="text-gray-400 mb-4">© 2026 IVRI Tours. {t.footerText}</p>
           <button onClick={() => navigate('/login')} className="text-sm hover:underline" style={{ color: colors.primary.teal }}>{t.adminLogin}</button>
         </div>
       </footer>
+
+      {/* Blog Post Lightbox */}
+      {selectedBlogPost && (
+        <BlogPostModal
+          post={selectedBlogPost}
+          onClose={() => setSelectedBlogPost(null)}
+        />
+      )}
 
       {/* Floating Gift Button on Scroll */}
       {scrollY > 300 && (

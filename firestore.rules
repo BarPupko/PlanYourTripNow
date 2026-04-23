@@ -98,5 +98,20 @@ service cloud.firestore {
                          .hasOnly(['viewed', 'viewedAt']);
     }
 
+    // ─── Blog Posts ──────────────────────────────────────────────────────────
+    match /blogPosts/{postId} {
+      // Published posts are publicly readable; drafts are admin-only
+      allow read: if resource.data.published == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ─── Blog Comments ───────────────────────────────────────────────────────
+    match /blogComments/{commentId} {
+      // Anyone can submit a comment; only approved comments are publicly readable
+      allow create: if true;
+      allow read: if resource.data.approved == true || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
   }
 }

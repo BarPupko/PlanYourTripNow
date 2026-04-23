@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock, Layout, ToggleLeft, ToggleRight, Users } from 'lucide-react';
-import { getAllTrips, createTrip, deleteTrip, updateTrip, publishTrip, toggleFeedbackWebsite, getSiteSettings, updateSiteSettings } from '../utils/firestoreUtils';
+import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock, Layout, ToggleLeft, ToggleRight, Users, BookOpen, CheckCheck, X, Eye, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
+import { getAllTrips, createTrip, deleteTrip, updateTrip, publishTrip, toggleFeedbackWebsite, getSiteSettings, updateSiteSettings, getAllBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost, getPendingBlogComments, approveBlogComment, deleteBlogComment } from '../utils/firestoreUtils';
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import CreateTripModal from '../components/CreateTripModal';
+import BlogAdminModal from '../components/BlogAdminModal';
+import BlogPostModal from '../components/BlogPostModal';
 import BulkInvoicesModal from '../components/BulkInvoicesModal';
 import MigrationModal from '../components/MigrationModal';
 import QuestionsModal from '../components/QuestionsModal';
@@ -43,9 +45,23 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('trips');
   const [siteSettings, setSiteSettings] = useState({});
   const [settingsSaving, setSettingsSaving] = useState(false);
+  const DEFAULT_SECTION_ORDER = ['trips', 'reviews', 'social', 'blog', 'contact'];
+  const [sectionOrder, setSectionOrder] = useState(DEFAULT_SECTION_ORDER);
+  const [draggingSection, setDraggingSection] = useState(null);
+  const [dragOverSection, setDragOverSection] = useState(null);
   const [allFeedbacks, setAllFeedbacks] = useState([]);
   const [feedbacksLoading, setFeedbacksLoading] = useState(false);
   const [togglingFeedback, setTogglingFeedback] = useState(null);
+  // Blog tab
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [blogLoading, setBlogLoading] = useState(false);
+  const [showBlogModal, setShowBlogModal] = useState(false);
+  const [editingBlogPost, setEditingBlogPost] = useState(null);
+  const [pendingComments, setPendingComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [togglingPost, setTogglingPost] = useState(null);
+  const [deletingBlogId, setDeletingBlogId] = useState(null);
+  const [previewBlogPost, setPreviewBlogPost] = useState(null);
 
   useEffect(() => {
     loadTrips();
@@ -69,7 +85,10 @@ const AdminDashboard = () => {
 
   // Landing page data
   useEffect(() => {
-    getSiteSettings().then(setSiteSettings).catch(() => {});
+    getSiteSettings().then(settings => {
+      setSiteSettings(settings);
+      if (settings.sectionOrder?.length) setSectionOrder(settings.sectionOrder);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -81,11 +100,81 @@ const AdminDashboard = () => {
       .finally(() => setFeedbacksLoading(false));
   }, [activeTab]);
 
+  const loadBlogData = () => {
+    setBlogLoading(true);
+    getAllBlogPosts().then(setBlogPosts).catch(() => {}).finally(() => setBlogLoading(false));
+    setCommentsLoading(true);
+    getPendingBlogComments().then(setPendingComments).catch(() => {}).finally(() => setCommentsLoading(false));
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'blog') return;
+    loadBlogData();
+  }, [activeTab]);
+
   const handleToggleSetting = async (key) => {
     const updated = { ...siteSettings, [key]: siteSettings[key] === false ? true : false };
     setSiteSettings(updated);
     setSettingsSaving(true);
     try { await updateSiteSettings(updated); } catch (e) { console.error(e); } finally { setSettingsSaving(false); }
+  };
+
+  // Section order & visibility — persisted in siteSettings.sectionOrder
+  const SECTION_CONFIG = [
+    { key: 'trips',   label: 'Upcoming Trips',         icon: '🗺️',  visKey: 'showDestinations' },
+    { key: 'reviews', label: 'Reviews & Testimonials',  icon: '⭐',  visKey: 'showTestimonials', alsoKey: 'showPeople' },
+    { key: 'social',  label: 'Social Media',            icon: '📱',  visKey: 'showSocial' },
+    { key: 'blog',    label: 'Blog Posts',              icon: '📝',  visKey: 'showBlog' },
+    { key: 'contact', label: 'Contact Form',            icon: '✉️',  visKey: 'showContact' },
+  ];
+
+  const handleToggleSectionVisibility = async (cfg) => {
+    const on = siteSettings[cfg.visKey] !== false;
+    const updates = { [cfg.visKey]: !on };
+    if (cfg.alsoKey) updates[cfg.alsoKey] = !on;
+    const updated = { ...siteSettings, ...updates };
+    setSiteSettings(updated);
+    setSettingsSaving(true);
+    try { await updateSiteSettings(updated); } finally { setSettingsSaving(false); }
+  };
+
+  const persistOrder = async (newOrder) => {
+    setSectionOrder(newOrder);
+    setSettingsSaving(true);
+    try { await updateSiteSettings({ sectionOrder: newOrder }); } finally { setSettingsSaving(false); }
+  };
+
+  const moveSectionInOrder = (idx, dir) => {
+    const swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= sectionOrder.length) return;
+    const next = [...sectionOrder];
+    [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+    persistOrder(next);
+  };
+
+  const handleSectionDragStart = (e, idx) => {
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggingSection(idx);
+  };
+  const handleSectionDragOver = (e, idx) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverSection(idx);
+  };
+  const handleSectionDrop = (e, idx) => {
+    e.preventDefault();
+    const from = draggingSection;
+    if (from === null || from === idx) return;
+    const next = [...sectionOrder];
+    const [moved] = next.splice(from, 1);
+    next.splice(idx, 0, moved);
+    setDraggingSection(null);
+    setDragOverSection(null);
+    persistOrder(next);
+  };
+  const handleSectionDragEnd = () => {
+    setDraggingSection(null);
+    setDragOverSection(null);
   };
 
   const handleToggleFeedbackShow = async (fb) => {
@@ -95,6 +184,52 @@ const AdminDashboard = () => {
       await toggleFeedbackWebsite(fb.id, next);
       setAllFeedbacks(prev => prev.map(f => f.id === fb.id ? { ...f, showOnWebsite: next } : f));
     } catch (e) { console.error(e); } finally { setTogglingFeedback(null); }
+  };
+
+  const handleSaveBlogPost = async (formData) => {
+    if (editingBlogPost) {
+      const updates = { ...formData };
+      if (formData.published && !editingBlogPost.published) {
+        updates.publishedAt = new Date();
+      }
+      await updateBlogPost(editingBlogPost.id, updates);
+    } else {
+      await createBlogPost(formData);
+    }
+    setShowBlogModal(false);
+    setEditingBlogPost(null);
+    loadBlogData();
+  };
+
+  const handleDeleteBlogPost = async (postId) => {
+    if (!confirm('Delete this blog post? This cannot be undone.')) return;
+    setDeletingBlogId(postId);
+    try {
+      await deleteBlogPost(postId);
+      loadBlogData();
+    } catch (e) { console.error(e); } finally { setDeletingBlogId(null); }
+  };
+
+  const handleToggleBlogPublish = async (post) => {
+    setTogglingPost(post.id);
+    const next = !post.published;
+    try {
+      await updateBlogPost(post.id, {
+        published: next,
+        publishedAt: next ? new Date() : null,
+      });
+      setBlogPosts(prev => prev.map(p => p.id === post.id ? { ...p, published: next } : p));
+    } catch (e) { console.error(e); } finally { setTogglingPost(null); }
+  };
+
+  const handleApproveComment = async (commentId) => {
+    await approveBlogComment(commentId);
+    setPendingComments(prev => prev.filter(c => c.id !== commentId));
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    await deleteBlogComment(commentId);
+    setPendingComments(prev => prev.filter(c => c.id !== commentId));
   };
 
   const loadTrips = async () => {
@@ -329,6 +464,7 @@ const AdminDashboard = () => {
           {[
             { key: 'trips', label: 'Trips', icon: <Clock className="w-4 h-4" /> },
             { key: 'landing', label: 'Landing Page', icon: <Layout className="w-4 h-4" /> },
+            { key: 'blog', label: 'Blog', icon: <BookOpen className="w-4 h-4" /> },
           ].map(({ key, label, icon }) => (
             <button
               key={key}
@@ -349,25 +485,77 @@ const AdminDashboard = () => {
       {activeTab === 'landing' && (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-          {/* Section Visibility */}
+          {/* Section Manager */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
               <Layout className="w-5 h-5" style={{ color: colors.primary.teal }} />
-              Section Visibility
+              Section Order &amp; Visibility
             </h3>
-            <p className="text-sm text-gray-500 mb-5">Toggle which sections appear on the public landing page.</p>
-            {settingsSaving && <p className="text-xs text-gray-400 mb-3">Saving…</p>}
-            <div className="space-y-3">
-              {[
-                { key: 'showDestinations', label: 'Destinations Carousel' },
-                { key: 'showTestimonials', label: 'Testimonials (hardcoded quotes)' },
-                { key: 'showPeople', label: 'Happy Travelers (people section)' },
-              ].map(({ key, label }) => {
-                const on = siteSettings[key] !== false;
+            <p className="text-sm text-gray-500 mb-1">Drag rows or use arrows to reorder sections on the public website. Toggle the switch to show or hide each section.</p>
+            <p className="text-xs text-gray-400 mb-5">Order is saved automatically and takes effect immediately.</p>
+            {settingsSaving && <p className="text-xs font-medium mb-3" style={{ color: colors.primary.teal }}>Saving…</p>}
+
+            <div className="space-y-2">
+              {sectionOrder.map((key, idx) => {
+                const cfg = SECTION_CONFIG.find(c => c.key === key);
+                if (!cfg) return null;
+                const on = siteSettings[cfg.visKey] !== false;
+                const isDragging = draggingSection === idx;
+                const isOver = dragOverSection === idx;
                 return (
-                  <div key={key} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                    <span className="text-sm font-medium text-gray-700">{label}</span>
-                    <button onClick={() => handleToggleSetting(key)} className="flex-shrink-0">
+                  <div
+                    key={key}
+                    draggable
+                    onDragStart={e => handleSectionDragStart(e, idx)}
+                    onDragOver={e => handleSectionDragOver(e, idx)}
+                    onDrop={e => handleSectionDrop(e, idx)}
+                    onDragEnd={handleSectionDragEnd}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all select-none ${
+                      isDragging ? 'opacity-40' : ''
+                    } ${
+                      isOver && !isDragging
+                        ? 'border-[#00BCD4] bg-[#f0faf8]'
+                        : on ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'
+                    }`}
+                  >
+                    {/* Drag handle */}
+                    <GripVertical className="w-5 h-5 text-gray-300 cursor-grab flex-shrink-0" />
+
+                    {/* Icon + label */}
+                    <span className="text-xl flex-shrink-0">{cfg.icon}</span>
+                    <span className={`text-sm font-medium flex-1 ${on ? 'text-gray-800' : 'text-gray-400'}`}>
+                      {cfg.label}
+                    </span>
+
+                    {/* Position badge */}
+                    <span className="text-xs text-gray-300 font-mono flex-shrink-0">#{idx + 1}</span>
+
+                    {/* Up / Down arrows */}
+                    <div className="flex flex-col gap-0.5 flex-shrink-0">
+                      <button
+                        onClick={() => moveSectionInOrder(idx, -1)}
+                        disabled={idx === 0}
+                        className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20 transition-colors"
+                        title="Move up"
+                      >
+                        <ChevronUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => moveSectionInOrder(idx, 1)}
+                        disabled={idx === sectionOrder.length - 1}
+                        className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20 transition-colors"
+                        title="Move down"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Visibility toggle */}
+                    <button
+                      onClick={() => handleToggleSectionVisibility(cfg)}
+                      className="flex-shrink-0"
+                      title={on ? 'Hide section' : 'Show section'}
+                    >
                       {on
                         ? <ToggleRight className="w-8 h-8" style={{ color: colors.primary.teal }} />
                         : <ToggleLeft className="w-8 h-8 text-gray-300" />}
@@ -436,6 +624,176 @@ const AdminDashboard = () => {
                       </div>
                     );
                   })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Blog Tab */}
+      {activeTab === 'blog' && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+          {/* Blog Posts */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" style={{ color: colors.primary.teal }} />
+                  Blog Posts
+                </h3>
+                <p className="text-sm text-gray-500 mt-0.5">Create and manage blog posts visible on the website.</p>
+              </div>
+              <button
+                onClick={() => { setEditingBlogPost(null); setShowBlogModal(true); }}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: colors.primary.teal }}
+              >
+                <Plus className="w-4 h-4" />
+                New Post
+              </button>
+            </div>
+
+            {blogLoading ? (
+              <div className="text-center py-10 text-gray-400 text-sm">Loading posts…</div>
+            ) : blogPosts.length === 0 ? (
+              <div className="text-center py-10">
+                <BookOpen className="w-10 h-10 mx-auto mb-3 text-gray-200" />
+                <p className="text-gray-400 text-sm">No blog posts yet. Create your first one!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {blogPosts.map(post => (
+                  <div
+                    key={post.id}
+                    className={`flex items-start gap-4 p-4 rounded-xl border-2 transition-colors ${post.published ? 'border-[#00BCD4] bg-[#f0faf8]' : 'border-gray-100 bg-white'}`}
+                  >
+                    {post.images?.[0] && (
+                      <img
+                        src={post.images[0]}
+                        alt=""
+                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{post.title}</p>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${post.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
+                        >
+                          {post.published ? 'Published' : 'Draft'}
+                        </span>
+                      </div>
+                      {post.excerpt && (
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{post.excerpt}</p>
+                      )}
+                      {post.publishedAt && (
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          {post.publishedAt.toDate?.().toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => handleToggleBlogPublish(post)}
+                        disabled={togglingPost === post.id}
+                        title={post.published ? 'Unpublish' : 'Publish'}
+                        className="flex-shrink-0"
+                      >
+                        {post.published
+                          ? <ToggleRight className="w-8 h-8" style={{ color: colors.primary.teal }} />
+                          : <ToggleLeft className="w-8 h-8 text-gray-300" />}
+                      </button>
+                      <button
+                        onClick={() => setPreviewBlogPost(post)}
+                        className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Preview"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => { setEditingBlogPost(post); setShowBlogModal(true); }}
+                        className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBlogPost(post.id)}
+                        disabled={deletingBlogId === post.id}
+                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Pending Comments */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <MessageCircle className="w-5 h-5" style={{ color: colors.primary.teal }} />
+                Pending Comments
+                {pendingComments.length > 0 && (
+                  <span className="ml-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {pendingComments.length}
+                  </span>
+                )}
+              </h3>
+              <p className="text-sm text-gray-500 mt-0.5">Review and approve or reject visitor comments.</p>
+            </div>
+
+            {commentsLoading ? (
+              <div className="text-center py-8 text-gray-400 text-sm">Loading comments…</div>
+            ) : pendingComments.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-6">No pending comments — you're all caught up!</p>
+            ) : (
+              <div className="space-y-3">
+                {pendingComments.map(c => {
+                  const matchingPost = blogPosts.find(p => p.id === c.postId);
+                  return (
+                    <div key={c.id} className="flex items-start gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="text-sm font-semibold text-gray-900">{c.authorName}</span>
+                          <span className="text-xs text-gray-400">{c.authorEmail}</span>
+                          {c.createdAt && (
+                            <span className="text-xs text-gray-400">
+                              {c.createdAt.toDate?.().toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}
+                            </span>
+                          )}
+                        </div>
+                        {matchingPost && (
+                          <p className="text-[11px] text-gray-400 mb-1">On: <span className="font-medium">{matchingPost.title}</span></p>
+                        )}
+                        <p className="text-sm text-gray-700 leading-relaxed">{c.content}</p>
+                      </div>
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => handleApproveComment(c.id)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-200 transition-colors"
+                          title="Approve"
+                        >
+                          <CheckCheck className="w-3.5 h-3.5" />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComment(c.id)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-red-100 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-200 transition-colors"
+                          title="Reject"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -862,6 +1220,24 @@ const AdminDashboard = () => {
         <QuestionsModal
           onClose={() => setShowQuestions(false)}
           onCountChange={(delta) => setQuestionCount(prev => Math.max(0, prev + delta))}
+        />
+      )}
+
+      {/* Blog Post Create/Edit Modal */}
+      {showBlogModal && (
+        <BlogAdminModal
+          post={editingBlogPost}
+          onSave={handleSaveBlogPost}
+          onClose={() => { setShowBlogModal(false); setEditingBlogPost(null); }}
+        />
+      )}
+
+      {/* Blog Post Preview Modal */}
+      {previewBlogPost && (
+        <BlogPostModal
+          post={previewBlogPost}
+          previewMode={true}
+          onClose={() => setPreviewBlogPost(null)}
         />
       )}
     </div>

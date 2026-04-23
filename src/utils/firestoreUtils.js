@@ -276,3 +276,75 @@ export const getSiteSettings = async () => {
 export const updateSiteSettings = async (settings) => {
   await setDoc(doc(db, 'siteSettings', 'config'), settings, { merge: true });
 };
+
+// ─── Blog Post operations ────────────────────────────────────────────────────
+
+export const createBlogPost = async (postData) => {
+  const docRef = await addDoc(collection(db, 'blogPosts'), {
+    ...postData,
+    createdAt: Timestamp.now(),
+    publishedAt: postData.published ? Timestamp.now() : null,
+  });
+  return docRef.id;
+};
+
+export const getAllBlogPosts = async () => {
+  const snap = await getDocs(collection(db, 'blogPosts'));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+};
+
+export const getPublishedBlogPosts = async () => {
+  const q = query(collection(db, 'blogPosts'), where('published', '==', true));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.publishedAt?.seconds || b.createdAt?.seconds || 0) - (a.publishedAt?.seconds || a.createdAt?.seconds || 0));
+};
+
+export const updateBlogPost = async (postId, updates) => {
+  await updateDoc(doc(db, 'blogPosts', postId), updates);
+};
+
+export const deleteBlogPost = async (postId) => {
+  await deleteDoc(doc(db, 'blogPosts', postId));
+};
+
+// ─── Blog Comment operations ─────────────────────────────────────────────────
+
+export const createBlogComment = async (commentData) => {
+  const docRef = await addDoc(collection(db, 'blogComments'), {
+    ...commentData,
+    createdAt: Timestamp.now(),
+  });
+  return docRef.id;
+};
+
+export const getApprovedBlogComments = async (postId) => {
+  const q = query(
+    collection(db, 'blogComments'),
+    where('postId', '==', postId),
+    where('approved', '==', true)
+  );
+  const snap = await getDocs(q);
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+};
+
+export const getPendingBlogComments = async () => {
+  const q = query(collection(db, 'blogComments'), where('approved', '==', false));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+};
+
+export const approveBlogComment = async (commentId) => {
+  await updateDoc(doc(db, 'blogComments', commentId), { approved: true });
+};
+
+export const deleteBlogComment = async (commentId) => {
+  await deleteDoc(doc(db, 'blogComments', commentId));
+};
