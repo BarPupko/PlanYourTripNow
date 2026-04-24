@@ -97,7 +97,8 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
   };
 
   const images = post?.images || [];
-  const renderedContent = parseContent(post?.content || '');
+  const isHtmlContent = post?.content && /<[a-z][\s\S]*>/i.test(post.content);
+  const renderedContent = isHtmlContent ? null : parseContent(post?.content || '');
 
   return (
     <div
@@ -168,9 +169,16 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
         )}
 
         {/* Content */}
-        <div className="px-6 mt-5 text-gray-700 text-sm sm:text-base leading-relaxed">
-          {renderedContent}
-        </div>
+        {isHtmlContent ? (
+          <div
+            className="blog-content px-6 mt-5 text-gray-700 text-sm sm:text-base leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+        ) : (
+          <div className="px-6 mt-5 text-gray-700 text-sm sm:text-base leading-relaxed">
+            {renderedContent}
+          </div>
+        )}
 
         {/* Comments — hidden in preview mode */}
         {!previewMode && (
@@ -253,6 +261,28 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
           </div>
         )}
       </div>
+
+      <style>{`
+        .blog-content h2 { font-size: 1.3rem; font-weight: 700; margin: 1rem 0 0.4rem; color: #111827; }
+        .blog-content h3 { font-size: 1.05rem; font-weight: 700; margin: 0.75rem 0 0.3rem; color: #111827; }
+        .blog-content p { margin: 0.4rem 0; }
+        .blog-content ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+        .blog-content ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+        .blog-content li { margin: 0.2rem 0; }
+        .blog-content blockquote {
+          border-left: 3px solid #00BCD4;
+          padding: 0.5rem 1rem;
+          margin: 0.75rem 0;
+          color: #6b7280;
+          font-style: italic;
+          background: #f0faf8;
+          border-radius: 0 6px 6px 0;
+        }
+        .blog-content hr { border: none; border-top: 1px solid #e5e7eb; margin: 1rem 0; }
+        .blog-content a { color: #00BCD4; text-decoration: underline; }
+        .blog-content strong, .blog-content b { font-weight: 700; }
+        .blog-content em, .blog-content i { font-style: italic; }
+      `}</style>
     </div>
   );
 };
