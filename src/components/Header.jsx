@@ -79,14 +79,14 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
               className="hidden sm:block hover:opacity-80 transition-opacity"
               title={isAdminArea ? 'Go to Dashboard' : 'Go to Home Page'}
             >
-              <IVRILogo size="md" />
+              <IVRILogo size="lg" />
             </button>
             <button
               onClick={handleLogoClick}
               className="sm:hidden hover:opacity-80 transition-opacity"
               title={isAdminArea ? 'Go to Dashboard' : 'Go to Home Page'}
             >
-              <IVRILogo size="xs" />
+              <IVRILogo size="sm" />
             </button>
 
             <div className="min-w-0 flex-1">

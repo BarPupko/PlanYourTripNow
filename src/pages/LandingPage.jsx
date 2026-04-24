@@ -1334,7 +1334,7 @@ const LandingPage = () => {
       <footer style={{ background: '#073944', color: 'white', padding: '4rem 1.5rem 2rem' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ borderBottom: '1px solid rgba(198,223,228,0.15)', paddingBottom: '2rem', marginBottom: '2.5rem' }}>
-            <div className="footer-wordmark" style={{ fontFamily: '"Fraunces", Georgia, serif', fontStyle: 'italic', fontWeight: 350, fontSize: 'clamp(4rem, 12vw, 9rem)', lineHeight: 0.85, color: '#EAF6F8', letterSpacing: '-0.03em', opacity: 0.88 }}>
+            <div className="footer-wordmark" style={{ fontFamily: '"Fraunces", Georgia, serif', fontStyle: 'italic', fontWeight: 350, fontSize: 'clamp(1.5rem, 4vw, 3rem)', lineHeight: 0.85, color: '#EAF6F8', letterSpacing: '-0.03em', opacity: 0.88 }}>
               IVRITours
             </div>
           </div>
@@ -1456,7 +1456,7 @@ const LandingPage = () => {
           .section-pad { padding: 3rem 1rem !important; }
         }
         @media (max-width: 479px) {
-          .footer-wordmark { font-size: clamp(3rem, 18vw, 5rem) !important; }
+          .footer-wordmark { font-size: clamp(1.2rem, 8vw, 2rem) !important; }
         }
       `}</style>
 

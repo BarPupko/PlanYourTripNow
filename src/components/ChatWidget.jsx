@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Bot, Phone } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../firebase';
 import colors from '../utils/colors';
 
 const PROMPT_DELAY_MS = 60_000;
@@ -106,24 +107,10 @@ export default function ChatWidget({ language = 'en' }) {
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
     try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
       const history = messages.slice(-10);
-      const chatMessages = [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...history.map(m => ({ role: m.role, content: m.content })),
-        { role: 'user', content: text }
-      ];
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({ model: 'gpt-4o-mini', messages: chatMessages, max_tokens: 400, temperature: 0.7 })
-      });
-      if (!response.ok) throw new Error(`OpenAI ${response.status}`);
-      const json = await response.json();
-      const reply = json.choices?.[0]?.message?.content?.trim() || '';
+      const chatWithYefim = httpsCallable(functions, 'chatWithYefim');
+      const result = await chatWithYefim({ message: text, history, language });
+      const reply = result.data.reply || '';
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (err) {
       console.error('Chat error:', err);
