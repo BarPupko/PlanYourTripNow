@@ -582,6 +582,26 @@ const AdminDashboard = () => {
               })}
             </div>
           </div>
+   {/* Stats row */}
+        {!loading && allTrips.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            {[
+              { label: 'Total Trips', value: allTrips.filter(t => t.status !== 'draft').length, icon: '🗺️', sub: 'all time' },
+              { label: 'Completed', value: allTrips.filter(t => t.status === 'done').length, icon: '✅', sub: 'trips done' },
+              { label: 'Total Travelers', value: Object.values(registrationCounts).reduce((s, c) => s + c, 0), icon: '👥', sub: 'confirmed regs' },
+              { label: 'Destinations', value: [...new Set(allTrips.filter(t => t.status !== 'draft').map(t => (t.title || '').toLowerCase().split(/\s+/)[0]))].length, icon: '📍', sub: 'unique routes' },
+            ].map(({ label, value, icon, sub }) => (
+              <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-3 flex items-center gap-3">
+                <span className="text-2xl flex-shrink-0">{icon}</span>
+                <div className="min-w-0">
+                  <p className="text-xl font-bold text-gray-900 leading-none">{value}</p>
+                  <p className="text-xs font-medium text-gray-600 mt-0.5">{label}</p>
+                  <p className="text-[10px] text-gray-400">{sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
           {/* Testimonials Editor */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -887,28 +907,10 @@ const AdminDashboard = () => {
       {/* Main Content (Trips tab) */}
       {activeTab === 'trips' && <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Stats row */}
-        {!loading && allTrips.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            {[
-              { label: 'Total Trips', value: allTrips.filter(t => t.status !== 'draft').length, icon: '🗺️', sub: 'all time' },
-              { label: 'Completed', value: allTrips.filter(t => t.status === 'done').length, icon: '✅', sub: 'trips done' },
-              { label: 'Total Travelers', value: Object.values(registrationCounts).reduce((s, c) => s + c, 0), icon: '👥', sub: 'confirmed regs' },
-              { label: 'Destinations', value: [...new Set(allTrips.filter(t => t.status !== 'draft').map(t => (t.title || '').toLowerCase().split(/\s+/)[0]))].length, icon: '📍', sub: 'unique routes' },
-            ].map(({ label, value, icon, sub }) => (
-              <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-3 flex items-center gap-3">
-                <span className="text-2xl flex-shrink-0">{icon}</span>
-                <div className="min-w-0">
-                  <p className="text-xl font-bold text-gray-900 leading-none">{value}</p>
-                  <p className="text-xs font-medium text-gray-600 mt-0.5">{label}</p>
-                  <p className="text-[10px] text-gray-400">{sub}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Side - Trip List */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
