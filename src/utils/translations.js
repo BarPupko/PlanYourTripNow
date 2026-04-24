@@ -3,7 +3,7 @@ export const translations = {
     // Header
     dashboard: 'Trip Management Dashboard',
     dashboardShort: 'Dashboard',
-    IVRITours: 'IVRI Tours',
+    IVRITours: 'IVRITours',
     tripManagement: 'Trip Management System',
     adminPortal: 'Admin Portal',
     logout: 'Logout',
@@ -235,7 +235,7 @@ export const translations = {
     on: 'on',
 
     // Dashboard Tour
-    tourWelcomeTitle: 'Welcome to IVRI Tours Admin 👋',
+    tourWelcomeTitle: 'Welcome to IVRITours Admin 👋',
     tourWelcomeDesc: "Let's take a quick tour of the dashboard to get you up to speed.",
     tourCreateTripTitle: 'Create a Trip',
     tourCreateTripDesc: 'Click here to create a new trip — set the date, time, vehicle, and driver.',
@@ -287,7 +287,7 @@ export const translations = {
     // Header
     dashboard: 'Панель управления поездками',
     dashboardShort: 'Панель',
-    IVRITours: 'IVRI Tours',
+    IVRITours: 'IVRITours',
     tripManagement: 'Система управления поездками',
     adminPortal: 'Портал администратора',
     logout: 'Выйти',
@@ -519,7 +519,7 @@ export const translations = {
     on: '',
 
     // Tour
-    tourWelcomeTitle: 'Добро пожаловать в IVRI Tours 👋',
+    tourWelcomeTitle: 'Добро пожаловать в IVRITours 👋',
     tourWelcomeDesc: 'Давайте быстро познакомимся с панелью управления.',
     tourCreateTripTitle: 'Создать поездку',
     tourCreateTripDesc: 'Нажмите здесь, чтобы создать новую поездку — укажите дату, время, транспорт и водителя.',

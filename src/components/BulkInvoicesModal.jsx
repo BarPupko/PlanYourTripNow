@@ -43,7 +43,7 @@ const BulkInvoicesModal = ({ trips, initialTrip, onClose }) => {
       <div style="padding:28px 32px; font-family:Arial,sans-serif; page-break-after:always;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
           <div>
-            <div style="font-size:26px;font-weight:900;color:#00BCD4;letter-spacing:-0.5px;">IVRI Tours</div>
+            <div style="font-size:26px;font-weight:900;color:#00BCD4;letter-spacing:-0.5px;">IVRITours</div>
             <div style="font-size:12px;color:#9CA3AF;">ivritours.ca</div>
           </div>
           <div style="text-align:right;">
@@ -95,7 +95,7 @@ const BulkInvoicesModal = ({ trips, initialTrip, onClose }) => {
         ` : ''}
 
         <hr style="border:none;border-top:1px solid #E5E7EB;margin:0 0 14px;">
-        <p style="font-size:10px;text-align:center;color:#9CA3AF;margin:0;">IVRI Tours · This document serves as your official registration confirmation.</p>
+        <p style="font-size:10px;text-align:center;color:#9CA3AF;margin:0;">IVRITours · This document serves as your official registration confirmation.</p>
       </div>`;
   };
 

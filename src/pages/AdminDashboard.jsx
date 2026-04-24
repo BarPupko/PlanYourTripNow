@@ -15,6 +15,7 @@ import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
 import Header from '../components/Header';
 import TypewriterGreeting from '../components/TypewriterGreeting';
+import ChatWidget from '../components/ChatWidget';
 import useAdmin from '../hooks/useAdmin';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
@@ -52,6 +53,14 @@ const AdminDashboard = () => {
   const [allFeedbacks, setAllFeedbacks] = useState([]);
   const [feedbacksLoading, setFeedbacksLoading] = useState(false);
   const [togglingFeedback, setTogglingFeedback] = useState(null);
+  // Testimonials editor (landing page)
+  const DEFAULT_TESTIMONIALS = [
+    { text: '', author: '', trip: '' },
+    { text: '', author: '', trip: '' },
+    { text: '', author: '', trip: '' },
+  ];
+  const [customTestimonials, setCustomTestimonials] = useState(DEFAULT_TESTIMONIALS);
+  const [testimonialsSaving, setTestimonialsSaving] = useState(false);
   // Blog tab
   const [blogPosts, setBlogPosts] = useState([]);
   const [blogLoading, setBlogLoading] = useState(false);
@@ -88,6 +97,7 @@ const AdminDashboard = () => {
     getSiteSettings().then(settings => {
       setSiteSettings(settings);
       if (settings.sectionOrder?.length) setSectionOrder(settings.sectionOrder);
+      if (settings.customTestimonials?.length) setCustomTestimonials(settings.customTestimonials);
     }).catch(() => {});
   }, []);
 
@@ -175,6 +185,13 @@ const AdminDashboard = () => {
   const handleSectionDragEnd = () => {
     setDraggingSection(null);
     setDragOverSection(null);
+  };
+
+  const handleSaveTestimonials = async () => {
+    setTestimonialsSaving(true);
+    try {
+      await updateSiteSettings({ customTestimonials });
+    } catch (e) { console.error(e); } finally { setTestimonialsSaving(false); }
   };
 
   const handleToggleFeedbackShow = async (fb) => {
@@ -566,6 +583,73 @@ const AdminDashboard = () => {
             </div>
           </div>
 
+          {/* Testimonials Editor */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="mb-5">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span>✍️</span> Testimonials
+              </h3>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Edit the quote cards shown in the "Letters from the road" section. Leave all fields blank to use the default quotes.
+              </p>
+            </div>
+            <div className="space-y-4">
+              {customTestimonials.map((t, idx) => (
+                <div key={idx} className="p-4 rounded-xl border-2 border-gray-100 bg-gray-50 space-y-3">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Quote {idx + 1}</p>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Quote text</label>
+                    <textarea
+                      rows={2}
+                      value={t.text}
+                      onChange={e => setCustomTestimonials(prev => prev.map((item, i) => i === idx ? { ...item, text: e.target.value } : item))}
+                      placeholder="The quote text that appears on the card…"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm resize-none bg-white"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Author name</label>
+                      <input
+                        type="text"
+                        value={t.author}
+                        onChange={e => setCustomTestimonials(prev => prev.map((item, i) => i === idx ? { ...item, author: e.target.value } : item))}
+                        placeholder="e.g. Dana & Yoav K."
+                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Trip &amp; year</label>
+                      <input
+                        type="text"
+                        value={t.trip}
+                        onChange={e => setCustomTestimonials(prev => prev.map((item, i) => i === idx ? { ...item, trip: e.target.value } : item))}
+                        placeholder="e.g. Canadian Rockies, 2025"
+                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => setCustomTestimonials(prev => [...prev, { text: '', author: '', trip: '' }])}
+                className="text-sm font-medium text-gray-500 hover:text-gray-700"
+              >
+                + Add quote
+              </button>
+              <button
+                onClick={handleSaveTestimonials}
+                disabled={testimonialsSaving}
+                className="px-4 py-2 text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                style={{ backgroundColor: colors.primary.teal }}
+              >
+                {testimonialsSaving ? 'Saving…' : 'Save Testimonials'}
+              </button>
+            </div>
+          </div>
+
           {/* Feedback Showcase Picker */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="mb-4">
@@ -802,6 +886,28 @@ const AdminDashboard = () => {
 
       {/* Main Content (Trips tab) */}
       {activeTab === 'trips' && <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* Stats row */}
+        {!loading && allTrips.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            {[
+              { label: 'Total Trips', value: allTrips.filter(t => t.status !== 'draft').length, icon: '🗺️', sub: 'all time' },
+              { label: 'Completed', value: allTrips.filter(t => t.status === 'done').length, icon: '✅', sub: 'trips done' },
+              { label: 'Total Travelers', value: Object.values(registrationCounts).reduce((s, c) => s + c, 0), icon: '👥', sub: 'confirmed regs' },
+              { label: 'Destinations', value: [...new Set(allTrips.filter(t => t.status !== 'draft').map(t => (t.title || '').toLowerCase().split(/\s+/)[0]))].length, icon: '📍', sub: 'unique routes' },
+            ].map(({ label, value, icon, sub }) => (
+              <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-3 flex items-center gap-3">
+                <span className="text-2xl flex-shrink-0">{icon}</span>
+                <div className="min-w-0">
+                  <p className="text-xl font-bold text-gray-900 leading-none">{value}</p>
+                  <p className="text-xs font-medium text-gray-600 mt-0.5">{label}</p>
+                  <p className="text-[10px] text-gray-400">{sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Side - Trip List */}
           <div className="lg:col-span-2 space-y-4">
@@ -1240,6 +1346,8 @@ const AdminDashboard = () => {
           onClose={() => setPreviewBlogPost(null)}
         />
       )}
+
+      <ChatWidget language={language} />
     </div>
   );
 };

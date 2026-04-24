@@ -220,7 +220,7 @@ const TripView = () => {
     try {
       const token = await ensureCompanionToken(reg.id);
       const url   = `${COMPANION_BASE_URL}?token=${token}`;
-      const msg   = `Hi ${reg.firstName}! 👋\nHere is your personal IVRI Tours companion link for the trip:\n${url}\nOpen it on your phone for your live itinerary. See you soon! 🚌`;
+      const msg   = `Hi ${reg.firstName}! 👋\nHere is your personal IVRITours companion link for the trip:\n${url}\nOpen it on your phone for your live itinerary. See you soon! 🚌`;
       await navigator.clipboard.writeText(msg);
       setCompanionLinkState({ loading: false, copied: true });
       setTimeout(() => setCompanionLinkState({ loading: false, copied: false }), 3000);

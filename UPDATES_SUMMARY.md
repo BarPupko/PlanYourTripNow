@@ -20,7 +20,7 @@
 - Automatically selects available seats
 - Real-time updates when participants are added
 
-### ✅ 4. Applied IVRI Tours Color Scheme
+### ✅ 4. Applied IVRITours Color Scheme
 - Created color configuration: [src/utils/colors.js](src/utils/colors.js)
 - **Primary Teal**: `#00BCD4` (from logo)
 - **Black**: `#2B2B2B` (from logo)
@@ -95,7 +95,7 @@
 - [ ] Update "View" button styling
 - [ ] Update Login page gradient to use teal
 - [ ] Update Login button to teal
-- [ ] Add IVRI Tours logo to header (optional)
+- [ ] Add IVRITours logo to header (optional)
 
 **Files to Update**:
 - [src/pages/AdminDashboard.jsx](src/pages/AdminDashboard.jsx) - Button colors
@@ -171,7 +171,7 @@ firebase deploy --only storage
 
 ## Color Reference
 
-### IVRI Tours Brand Colors
+### IVRITours Brand Colors
 ```javascript
 Primary Teal: #00BCD4
 Teal Dark: #00ACC1

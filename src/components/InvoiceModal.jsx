@@ -90,7 +90,7 @@ const InvoiceModal = ({ registration, trip, onClose }) => {
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div>
-              <div className="text-2xl font-black" style={{ color: colors.primary.teal }}>IVRI Tours</div>
+              <div className="text-2xl font-black" style={{ color: colors.primary.teal }}>IVRITours</div>
               <div className="text-sm text-gray-500">ivritours.ca</div>
             </div>
             <div className="text-right">
@@ -269,7 +269,7 @@ const InvoiceModal = ({ registration, trip, onClose }) => {
 
           <hr className="border-gray-200 mb-4" />
           <p className="text-xs text-center text-gray-400">
-            IVRI Tours · This document serves as your official registration confirmation.
+            IVRITours · This document serves as your official registration confirmation.
           </p>
         </div>
       </div>

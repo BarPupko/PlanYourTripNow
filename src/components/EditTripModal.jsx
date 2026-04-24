@@ -123,7 +123,7 @@ const EditTripModal = ({ trip, onClose, onUpdate }) => {
     
     try {
       const duration = getTripDuration();
-      const prompt = `You are a professional tour coordinator for IVRI Tours. Based on the trip description below, generate a detailed structured itinerary split into individual timed activity blocks in RUSSIAN.
+      const prompt = `You are a professional tour coordinator for IVRITours. Based on the trip description below, generate a detailed structured itinerary split into individual timed activity blocks in RUSSIAN.
 
 Trip: ${formData.title}
 Date: ${formData.date}${formData.endDate && formData.endDate !== formData.date ? `\nEnd date: ${formData.endDate}` : ''}

@@ -194,7 +194,7 @@ async function generateWaiverPDF(registration, trip) {
     // Footer
     doc.moveDown(2);
     doc.fontSize(8).font('DejaVu').text(
-      `Generated on ${new Date().toLocaleString()} | IVRI Tours`,
+      `Generated on ${new Date().toLocaleString()} | IVRITours`,
       { align: 'center' }
     );
 
@@ -265,7 +265,7 @@ exports.onRegistrationCreated = functions.firestore
 
       // Send email to participant
       await transporter.sendMail({
-        from: '"IVRI Tours" <noreply@ivritours.com>',
+        from: '"IVRITours" <noreply@ivritours.com>',
         to: registration.email,
         subject: `✅ Registration Confirmed: ${trip.title}`,
         html: `
@@ -297,7 +297,7 @@ exports.onRegistrationCreated = functions.firestore
               <p style="font-size: 16px; margin-top: 30px;">We look forward to seeing you on the trip! If you have any questions, feel free to reach out.</p>
 
               <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRI Tours Team</strong></p>
+                <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRITours Team</strong></p>
               </div>
             </div>
           </div>
@@ -312,7 +312,7 @@ exports.onRegistrationCreated = functions.firestore
 
       // Send notification to admin
       await transporter.sendMail({
-        from: '"IVRI Tours" <noreply@ivritours.com>',
+        from: '"IVRITours" <noreply@ivritours.com>',
         to: ADMIN_EMAIL,
         subject: `🎫 New Registration: ${trip.title}`,
         html: `
@@ -337,7 +337,7 @@ exports.onRegistrationCreated = functions.firestore
             <div style="text-align: center; margin: 30px 0;">
               <a href="${pdfUrl}" style="background-color: #00BCD4; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">View Signed Waiver PDF</a>
             </div>
-            <p style="color: #666; font-size: 12px; text-align: center;">This is an automated notification from IVRI Tours Trip Management System</p>
+            <p style="color: #666; font-size: 12px; text-align: center;">This is an automated notification from IVRITours Trip Management System</p>
           </div>
         `
       });
@@ -384,7 +384,7 @@ exports.onRegistrationFormSent = functions.firestore
       const formLink = `https://barpupko.github.io/PlanYourTripNow/register/${registration.tripId}?regId=${registrationId}`;
 
       await transporter.sendMail({
-        from: '"IVRI Tours" <noreply@ivritours.com>',
+        from: '"IVRITours" <noreply@ivritours.com>',
         to: registration.email,
         subject: `📋 Complete Your Registration: ${trip.title}`,
         html: `
@@ -406,7 +406,7 @@ exports.onRegistrationFormSent = functions.firestore
               </div>
               <p style="font-size: 14px; color: #666;">If the button doesn't work, copy and paste this link: <a href="${formLink}" style="color: #00BCD4;">${formLink}</a></p>
               <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRI Tours Team</strong></p>
+                <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRITours Team</strong></p>
               </div>
             </div>
           </div>
@@ -469,7 +469,7 @@ exports.onRegistrationConfirmed = functions.firestore
 
       // Send confirmation email to participant
       await transporter.sendMail({
-        from: '"IVRI Tours" <noreply@ivritours.com>',
+        from: '"IVRITours" <noreply@ivritours.com>',
         to: registration.email,
         subject: `✅ Registration Confirmed: ${trip.title}`,
         html: `
@@ -518,7 +518,7 @@ exports.onRegistrationConfirmed = functions.firestore
 
               <p style="font-size: 16px; margin-top: 30px;">We look forward to seeing you on the trip! If you have any questions, feel free to reach out.</p>
               <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRI Tours Team</strong></p>
+                <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRITours Team</strong></p>
               </div>
             </div>
           </div>
@@ -528,7 +528,7 @@ exports.onRegistrationConfirmed = functions.firestore
 
       // Notify admin (include PDF attachment)
       await transporter.sendMail({
-        from: '"IVRI Tours" <noreply@ivritours.com>',
+        from: '"IVRITours" <noreply@ivritours.com>',
         to: ADMIN_EMAIL,
         subject: `✅ Registration Confirmed: ${trip.title}`,
         html: `
@@ -573,17 +573,17 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
 
     // Send welcome email to new admin
     await transporter.sendMail({
-      from: '"IVRI Tours" <noreply@ivritours.com>',
+      from: '"IVRITours" <noreply@ivritours.com>',
       to: email,
-      subject: '🎉 Welcome to IVRI Tours Admin Portal!',
+      subject: '🎉 Welcome to IVRITours Admin Portal!',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); color: white; padding: 40px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="margin: 0; font-size: 32px;">🎉 Welcome to IVRI Tours!</h1>
+            <h1 style="margin: 0; font-size: 32px;">🎉 Welcome to IVRITours!</h1>
           </div>
           <div style="background-color: white; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px;">
             <p style="font-size: 16px;">Hello ${displayName},</p>
-            <p style="font-size: 16px;">Welcome to the <strong style="color: #00BCD4;">IVRI Tours Trip Management System</strong>!</p>
+            <p style="font-size: 16px;">Welcome to the <strong style="color: #00BCD4;">IVRITours Trip Management System</strong>!</p>
 
             <div style="background-color: #E0F7FA; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #00BCD4; margin-top: 0;">🚀 Getting Started</h3>
@@ -607,7 +607,7 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
             <p style="font-size: 14px; color: #666; margin-top: 30px;">If you have any questions or need assistance, please don't hesitate to reach out to our support team.</p>
 
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-              <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRI Tours Team</strong></p>
+              <p style="margin: 0; color: #666; font-size: 14px;">Best regards,<br><strong>IVRITours Team</strong></p>
             </div>
           </div>
         </div>
@@ -616,7 +616,7 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
 
     // Notify main admin about new user creation
     await transporter.sendMail({
-      from: '"IVRI Tours" <noreply@ivritours.com>',
+      from: '"IVRITours" <noreply@ivritours.com>',
       to: ADMIN_EMAIL,
       subject: '👤 New Admin User Created',
       html: `
@@ -628,7 +628,7 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
             <p><strong>User ID:</strong> ${user.uid}</p>
             <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
           </div>
-          <p style="color: #666; font-size: 12px; text-align: center;">This is an automated notification from IVRI Tours Trip Management System</p>
+          <p style="color: #666; font-size: 12px; text-align: center;">This is an automated notification from IVRITours Trip Management System</p>
         </div>
       `
     });
@@ -1009,7 +1009,7 @@ ${tourText}`;
  */
 async function handleHelpCommand(language = 'en') {
   if (language === 'ru') {
-    return `🤖 *IVRI Tours WhatsApp Ассистент*\n\n` +
+    return `🤖 *IVRITours WhatsApp Ассистент*\n\n` +
       `Вот чем я могу помочь:\n\n` +
       `📢 *📢 [объявление]* - Создать черновик тура из объявления\n` +
       `📋 *ПОЕЗДКИ* - Просмотр предстоящих туров\n` +
@@ -1025,7 +1025,7 @@ async function handleHelpCommand(language = 'en') {
       `Пример: "быстробронь Масада, Иван Иванов, ivan@mail.com, +972501234567, Тель-Авив"`;
   }
 
-  return `🤖 *IVRI Tours WhatsApp Assistant*\n\n` +
+  return `🤖 *IVRITours WhatsApp Assistant*\n\n` +
     `Here's what I can help you with:\n\n` +
     `📢 *📢 [announcement]* - Create a draft trip from an announcement\n` +
     `📋 *TRIPS* - View upcoming trips\n` +
@@ -1553,7 +1553,7 @@ async function createBooking(trip, details, language) {
 
 async function sendSimpleConfirmationEmail(trip, registration, language) {
   const mailOptions = {
-    from: `IVRI Tours <${process.env.EMAIL_USER}>`,
+    from: `IVRITours <${process.env.EMAIL_USER}>`,
     to: [registration.email, ADMIN_EMAIL],
     subject: language === 'ru'
       ? `Подтверждение бронирования - ${trip.title}`
@@ -1561,7 +1561,7 @@ async function sendSimpleConfirmationEmail(trip, registration, language) {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">IVRI Tours</h1>
+          <h1 style="color: white; margin: 0;">IVRITours</h1>
           <p style="color: white; margin: 10px 0 0 0;">${language === 'ru' ? 'Подтверждение бронирования' : 'Booking Confirmation'}</p>
         </div>
 
@@ -2061,14 +2061,14 @@ exports.sendContactEmail = functions.https.onCall(async (data, context) => {
   }
 
   const mailOptions = {
-    from: `IVRI Tours Contact Form <${process.env.EMAIL_USER}>`,
+    from: `IVRITours Contact Form <${process.env.EMAIL_USER}>`,
     to: toEmail || 'pupko@mail.com',
     replyTo: email,
     subject: `New Contact Form Submission from ${name}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">IVRI Tours - New Contact Request</h1>
+          <h1 style="color: white; margin: 0;">IVRITours - New Contact Request</h1>
         </div>
 
         <div style="background: #f9f9f9; padding: 30px; border: 1px solid #e0e0e0;">
@@ -2107,7 +2107,7 @@ exports.sendContactEmail = functions.https.onCall(async (data, context) => {
 
         <div style="background: #333; padding: 20px; text-align: center;">
           <p style="color: #999; margin: 0; font-size: 12px;">
-            This email was sent from the IVRI Tours contact form<br>
+            This email was sent from the IVRITours contact form<br>
             Received on ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} EST
           </p>
         </div>
@@ -2169,7 +2169,7 @@ exports.onTripStatusDone = functions.firestore
       const feedbackUrl = `${BASE_URL}/feedback/${tripId}/${token}`;
 
       const mailOptions = {
-        from: `IVRI Tours <${process.env.EMAIL_USER}>`,
+        from: `IVRITours <${process.env.EMAIL_USER}>`,
         to: reg.email,
         subject: `Thank You for Joining ${after.title}! Share Your Feedback ⭐`,
         html: `
@@ -2209,7 +2209,7 @@ exports.onTripStatusDone = functions.firestore
 
             <div style="background: #1f2937; padding: 20px 32px; text-align: center;">
               <p style="color: #9CA3AF; margin: 0; font-size: 12px;">
-                IVRI Tours · Thank you for travelling with us
+                IVRITours · Thank you for travelling with us
               </p>
             </div>
           </div>
@@ -2292,7 +2292,7 @@ exports.sendFeedbackReminder = functions.https.onCall(async (data, context) => {
     const feedbackUrl = `${BASE_URL}/feedback/${tripId}/${token}`;
 
     await transporter.sendMail({
-      from: `IVRI Tours <${process.env.EMAIL_USER}>`,
+      from: `IVRITours <${process.env.EMAIL_USER}>`,
       to: reg.email,
       subject: `Reminder: Share Your Feedback for ${trip.title} ⭐`,
       html: `
@@ -2328,7 +2328,7 @@ exports.sendFeedbackReminder = functions.https.onCall(async (data, context) => {
 
           <div style="background: #1f2937; padding: 20px 32px; text-align: center;">
             <p style="color: #9CA3AF; margin: 0; font-size: 12px;">
-              IVRI Tours · Thank you for travelling with us
+              IVRITours · Thank you for travelling with us
             </p>
           </div>
         </div>
@@ -2394,7 +2394,7 @@ exports.onQuestionCreated = functions.firestore
               </div>
             </div>
             <div style="background: #1f2937; padding: 16px 32px; text-align: center; border-radius: 0 0 12px 12px; margin-top: -12px;">
-              <p style="color: #9CA3AF; margin: 0; font-size: 12px;">IVRI Tours · Visitor Question Notification</p>
+              <p style="color: #9CA3AF; margin: 0; font-size: 12px;">IVRITours · Visitor Question Notification</p>
             </div>
           </div>
         `
@@ -2406,43 +2406,66 @@ exports.onQuestionCreated = functions.firestore
   });
 
 // AI Chat — Yefim persona powered by OpenAI
-exports.chatWithYefim = functions.https.onCall(async (data) => {
-  const { message, history = [], language = 'en' } = data;
-  if (!message || typeof message !== 'string') {
-    throw new functions.https.HttpsError('invalid-argument', 'message is required');
+exports.chatWithYefim = functions.https.onCall(
+  {
+    secrets: ['OPENAI_API_KEY']
+  },
+  async (data, context) => {
+    const { message, history = [], language = 'en' } = data;
+    if (!message || typeof message !== 'string') {
+      throw new functions.https.HttpsError('invalid-argument', 'message is required');
+    }
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new functions.https.HttpsError('failed-precondition', 'OpenAI API key not configured');
+    }
+
+    const systemPrompt = `You are Yefim, a warm and knowledgeable tour assistant for IVRITours — a Canadian tour company offering guided trips across North America (Toronto, Niagara Falls, Quebec City, Mont-Tremblant, Detroit, Chicago, Barrie, and more). Tours are conducted in English, Hebrew, and Russian.
+
+IMPORTANT CONTACT INFORMATION:
+- Phone: (647) 302-6846
+- Email: ivristats@gmail.com
+- Website: https://www.ivritours.ca/
+
+When users ask how to reach the company or need contact information:
+1. Always provide the PHONE NUMBER: (647) 302-6846
+2. Mention that they can also call us directly or visit the website
+3. Offer to gather their information if they prefer
+
+Your role is to:
+- Help with questions about destinations, tour schedules, pricing, what to bring, registration
+- Answer questions related to IVRITours activities and services
+- Collect contact information (name, email, phone) if the user wants the company to reach out
+- Always respond in the same language the user writes in
+- Be friendly, concise, and helpful
+- If you don't know a specific price or date, direct them to call (647) 302-6846 or visit the website
+
+If a user wants the company to contact them, ask for: name, phone number, email, and what they're interested in.`;
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
+      { role: 'user', content: message }
+    ];
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 400, temperature: 0.7 })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('[chatWithYefim] OpenAI error:', err);
+      throw new functions.https.HttpsError('internal', 'OpenAI request failed');
+    }
+
+    const json = await response.json();
+    const reply = json.choices?.[0]?.message?.content?.trim() || '';
+    return { reply };
   }
-
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new functions.https.HttpsError('failed-precondition', 'OpenAI API key not configured');
-  }
-
-  const systemPrompt = `You are Yefim, a warm and knowledgeable tour assistant for IVRI Tours — a Canadian tour company offering guided trips across North America (Toronto, Niagara Falls, Quebec City, Mont-Tremblant, Detroit, Chicago, Barrie, and more). Tours are conducted in English, Hebrew, and Russian.
-Help visitors with questions about destinations, tour schedules, pricing, what to bring, registration, and anything related to IVRI Tours.
-Always respond in the same language the user writes in. Be friendly, concise, and helpful. If you don't know a specific price or date, tell the user to check the website or contact the team directly.`;
-
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
-    { role: 'user', content: message }
-  ];
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 400, temperature: 0.7 })
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    console.error('[chatWithYefim] OpenAI error:', err);
-    throw new functions.https.HttpsError('internal', 'OpenAI request failed');
-  }
-
-  const json = await response.json();
-  const reply = json.choices?.[0]?.message?.content?.trim() || '';
-  return { reply };
-});
+);

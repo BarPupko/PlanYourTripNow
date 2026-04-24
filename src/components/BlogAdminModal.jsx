@@ -32,6 +32,7 @@ const BlogAdminModal = ({ post, onSave, onClose }) => {
   const [form, setForm] = useState({
     title: post?.title || '',
     excerpt: post?.excerpt || '',
+    category: post?.category || '',
     content: post?.content || '',
     published: post?.published ?? false,
     images: post?.images || [],
@@ -159,6 +160,24 @@ const BlogAdminModal = ({ post, onSave, onClose }) => {
               className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm"
               placeholder="Short description for the blog card preview"
             />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Category <span className="font-normal text-gray-400">(shown as badge on card)</span>
+            </label>
+            <select
+              value={form.category}
+              onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm bg-white"
+            >
+              <option value="">Journal (default)</option>
+              <option value="Field Notes">Field Notes</option>
+              <option value="Guides">Guides</option>
+              <option value="Craft">Craft</option>
+              <option value="Stories">Stories</option>
+            </select>
           </div>
 
           {/* Content */}

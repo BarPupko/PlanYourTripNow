@@ -56,6 +56,9 @@ const LandingPage = () => {
   const [blogPosts, setBlogPosts] = useState([]);
   const [selectedBlogPost, setSelectedBlogPost] = useState(null);
   const [showBlogMenu, setShowBlogMenu] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [reviewsIdx, setReviewsIdx] = useState(0);
+  const [destFilter, setDestFilter] = useState('all');
 
   useEffect(() => {
     const fetchUpcomingTrips = async () => {
@@ -114,12 +117,15 @@ const LandingPage = () => {
     const interval = setInterval(() => {
       if (carouselPausedRef.current) return;
       setCarouselIndex(prev => {
-        const maxIndex = Math.max(0, destinations.length - itemsPerView);
+        const fLen = destFilter === 'all' ? destinations.length : destinations.filter(d => d.durationCategory === destFilter).length;
+        const maxIndex = Math.max(0, fLen - itemsPerView);
         return prev >= maxIndex ? 0 : prev + 1;
       });
     }, 4000);
     return () => clearInterval(interval);
-  }, [itemsPerView]);
+  }, [itemsPerView, destFilter]);
+
+  useEffect(() => { setCarouselIndex(0); }, [destFilter]);
 
   const handleQuestionSubmit = async (e) => {
     e.preventDefault();
@@ -244,10 +250,10 @@ const LandingPage = () => {
 
   const translations = {
     en: {
-      welcome: "Welcome to IVRI Tours!",
+      welcome: "Welcome to IVRITours!",
       welcomeMsg: "Discover breathtaking destinations with expert tour guides in multiple languages. Your adventure begins here!",
       getStarted: "Get Started",
-      heroTitle: "Explore North America with IVRI Tours",
+      heroTitle: "Explore North America with IVRITours",
       heroSubtitle: "Professional guided tours in English, Hebrew, and Russian",
       destinationsTitle: "Our Amazing Destinations",
       multiLang: "Multi-language Tours",
@@ -334,17 +340,16 @@ const LandingPage = () => {
       questionSend: "Send Question",
       questionSuccessMsg: "Your question has been sent! We'll get back to you soon.",
       testimonials: [
-        { text: "Amazing experience! The tour guide was knowledgeable and friendly. Seeing Niagara Falls was a dream come true!", author: "Sarah M." },
-        { text: "The multi-language support made everything so comfortable for our family. Highly recommend IVRI Tours!", author: "David L." },
-        { text: "Quebec City tour was magical! Our guide shared fascinating stories and insider tips. Best vacation ever!", author: "Rachel K." },
-        { text: "Professional, organized, and fun! The Chicago architecture tour exceeded all expectations. Thank you IVRI Tours!", author: "Michael R." }
+        { text: "Amazing experience! The tour guide was knowledgeable and friendly. Seeing Niagara Falls was a dream come true!", author: "Sarah M.", trip: "Niagara Falls, 2024" },
+        { text: "The multi-language support made everything so comfortable for our family. Highly recommend IVRITours!", author: "David L.", trip: "Toronto Downtown, 2024" },
+        { text: "Quebec City tour was magical! Our guide shared fascinating stories and insider tips. Best vacation ever!", author: "Rachel K.", trip: "Old Québec, 2024" }
       ]
     },
     he: {
-      welcome: "ברוכים הבאים ל-IVRI Tours!",
+      welcome: "ברוכים הבאים ל-IVRITours!",
       welcomeMsg: "גלו יעדים עוצרי נשימה עם מדריכי טיולים מומחים במספר שפות. ההרפתקה שלכם מתחילה כאן!",
       getStarted: "בואו נתחיל",
-      heroTitle: "חקרו את צפון אמריקה עם IVRI Tours",
+      heroTitle: "חקרו את צפון אמריקה עם IVRITours",
       heroSubtitle: "סיורים מודרכים מקצועיים באנגלית, עברית ורוסית",
       destinationsTitle: "היעדים המדהימים שלנו",
       multiLang: "סיורים בריבוי שפות",
@@ -431,17 +436,16 @@ const LandingPage = () => {
       questionSend: "שלח שאלה",
       questionSuccessMsg: "השאלה שלך נשלחה! נחזור אליך בקרוב.",
       testimonials: [
-        { text: "חוויה מדהימה! המדריך היה בעל ידע וידידותי. לראות את מפלי ניאגרה היה חלום שהתגשם!", author: "שרה מ." },
-        { text: "התמיכה הרב-לשונית הפכה הכל לנוח כל כך עבור המשפחה שלנו. ממליץ בחום על IVRI Tours!", author: "דוד ל." },
-        { text: "סיור קוויבק סיטי היה קסום! המדריך שלנו שיתף סיפורים מרתקים וטיפים פנימיים. החופשה הכי טובה אי פעם!", author: "רחל כ." },
-        { text: "מקצועי, מאורגן ומהנה! סיור האדריכלות בשיקגו עלה על כל הציפיות. תודה IVRI Tours!", author: "מיכאל ר." }
+        { text: "חוויה מדהימה! המדריך היה בעל ידע וידידותי. לראות את מפלי ניאגרה היה חלום שהתגשם!", author: "שרה מ.", trip: "מפלי ניאגרה, 2024" },
+        { text: "התמיכה הרב-לשונית הפכה הכל לנוח כל כך עבור המשפחה שלנו. ממליץ בחום על IVRITours!", author: "דוד ל.", trip: "טורונטו, 2024" },
+        { text: "סיור קוויבק סיטי היה קסום! המדריך שלנו שיתף סיפורים מרתקים וטיפים פנימיים. החופשה הכי טובה אי פעם!", author: "רחל כ.", trip: "קוויבק העתיקה, 2024" }
       ]
     },
     ru: {
-      welcome: "Добро пожаловать в IVRI Tours!",
+      welcome: "Добро пожаловать в IVRITours!",
       welcomeMsg: "Откройте для себя захватывающие дух направления с опытными гидами на нескольких языках. Ваше приключение начинается здесь!",
       getStarted: "Начать",
-      heroTitle: "Исследуйте Северную Америку с IVRI Tours",
+      heroTitle: "Исследуйте Северную Америку с IVRITours",
       heroSubtitle: "Профессиональные экскурсии на английском, иврите и русском языках",
       destinationsTitle: "Наши удивительные направления",
       multiLang: "Многоязычные туры",
@@ -528,10 +532,9 @@ const LandingPage = () => {
       questionSend: "Отправить вопрос",
       questionSuccessMsg: "Ваш вопрос отправлен! Мы свяжемся с вами в ближайшее время.",
       testimonials: [
-        { text: "Потрясающий опыт! Гид был знающим и дружелюбным. Увидеть Ниагарский водопад было сбывшейся мечтой!", author: "Сара М." },
-        { text: "Многоязычная поддержка сделала все таким комфортным для нашей семьи. Настоятельно рекомендую IVRI Tours!", author: "Давид Л." },
-        { text: "Тур по Квебеку был волшебным! Наш гид делился захватывающими историями и инсайдерскими советами. Лучший отпуск в истории!", author: "Рахиль К." },
-        { text: "Профессионально, организованно и весело! Архитектурный тур по Чикаго превзошел все ожидания. Спасибо IVRI Tours!", author: "Михаил Р." }
+        { text: "Потрясающий опыт! Гид был знающим и дружелюбным. Увидеть Ниагарский водопад было сбывшейся мечтой!", author: "Сара М.", trip: "Ниагарский водопад, 2024" },
+        { text: "Многоязычная поддержка сделала все таким комфортным для нашей семьи. Настоятельно рекомендую IVRITours!", author: "Давид Л.", trip: "Торонто, 2024" },
+        { text: "Тур по Квебеку был волшебным! Наш гид делился захватывающими историями и инсайдерскими советами. Лучший отпуск в истории!", author: "Рахиль К.", trip: "Старый Квебек, 2024" }
       ]
     }
   };
@@ -541,22 +544,28 @@ const LandingPage = () => {
   const giftCardTranslations = {
     en: {
       giftCardTitle: "Give the Gift of Travel",
-      giftCardDesc: "Share unforgettable experiences with IVRI Tours gift cards",
+      giftCardDesc: "Share unforgettable experiences with IVRITours gift cards",
       purchaseGiftCard: "Purchase Gift Card"
     },
     he: {
       giftCardTitle: "תנו את המתנה של טיול",
-      giftCardDesc: "שתפו חוויות בלתי נשכחות עם כרטיסי מתנה של IVRI Tours",
+      giftCardDesc: "שתפו חוויות בלתי נשכחות עם כרטיסי מתנה של IVRITours",
       purchaseGiftCard: "קנה כרטיס מתנה"
     },
     ru: {
       giftCardTitle: "Подарите путешествие",
-      giftCardDesc: "Поделитесь незабываемыми впечатлениями с подарочными картами IVRI Tours",
+      giftCardDesc: "Поделитесь незабываемыми впечатлениями с подарочными картами IVRITours",
       purchaseGiftCard: "Купить подарочную карту"
     }
   };
 
   const tGift = giftCardTranslations[language];
+
+  const getDisplayTestimonials = () => {
+    const custom = siteSettings.customTestimonials;
+    if (custom?.length) return custom.filter(c => c.text && c.author);
+    return t.testimonials;
+  };
 
   // Section ordering — index in array becomes the CSS `order` value
   const DEFAULT_SECTION_ORDER = ['trips', 'reviews', 'social', 'blog', 'contact'];
@@ -570,21 +579,18 @@ const LandingPage = () => {
 
   // Real sightseeing photos of the actual landmarks
   const destinations = [
-    { key: 'toronto', image: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80' }, // CN Tower
-    { key: 'niagara', image: 'https://images.unsplash.com/photo-1489447068241-b3490214e879?w=800&q=80' }, // Niagara Falls
-    { key: 'tremblant', image: 'https://images.unsplash.com/photo-1729477458908-0a59d8026ed8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' }, // Mont Tremblant village
-    { key: 'quebec', image: 'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=800&q=80' }, // Quebec City
-    { key: 'barrie', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80' }, // Lake waterfront
-    { key: 'detroit', image: 'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=800&q=80' }, // Detroit skyline
-    { key: 'chicago', image: 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80' } // Chicago Cloud Gate
+    { key: 'toronto',  image: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80',  durationCategory: 'day',   country: 'ca' },
+    { key: 'niagara',  image: 'https://images.unsplash.com/photo-1489447068241-b3490214e879?w=800&q=80',  durationCategory: 'day',   country: 'ca' },
+    { key: 'tremblant',image: 'https://images.unsplash.com/photo-1729477458908-0a59d8026ed8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', durationCategory: 'multi', country: 'ca' },
+    { key: 'quebec',   image: 'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=800&q=80',  durationCategory: 'multi', country: 'ca' },
+    { key: 'barrie',   image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',  durationCategory: 'hours', country: 'ca' },
+    { key: 'detroit',  image: 'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=800&q=80',  durationCategory: 'day',   country: 'us' },
+    { key: 'chicago',  image: 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80',  durationCategory: 'multi', country: 'us' },
   ];
 
-  const testimonialImages = [
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
-    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80',
-    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80'
-  ];
+  const filteredDestinations = destFilter === 'all'
+    ? destinations
+    : destinations.filter(d => d.durationCategory === destFilter);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -632,16 +638,14 @@ const LandingPage = () => {
   };
 
   return (
-    
+    <div className="min-h-screen" style={{ background: '#EAF6F8', color: '#0A2A33' }} dir={language === 'he' ? 'rtl' : 'ltr'}>
 
-    
-    <div className="min-h-screen bg-white" dir={language === 'he' ? 'rtl' : 'ltr'}>
       {showWelcome && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full text-center shadow-2xl animate-slideDown">
+          <div className="rounded-2xl p-8 max-w-lg w-full text-center shadow-2xl animate-slideDown" style={{ background: '#F5FBFC' }}>
             <div className="text-6xl mb-4">🌍</div>
-            <h2 className="text-3xl font-bold mb-4" style={{ color: colors.primary.teal }}>{t.welcome}</h2>
-            <p className="text-lg text-gray-600 mb-6">{t.welcomeMsg}</p>
+            <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: '"Fraunces", Georgia, serif', color: '#073944' }}>{t.welcome}</h2>
+            <p className="text-lg mb-6" style={{ color: '#3E5F68' }}>{t.welcomeMsg}</p>
             <button onClick={() => setShowWelcome(false)} className="px-8 py-3 text-white rounded-lg text-lg font-semibold hover:opacity-90 transition-opacity" style={{ backgroundColor: colors.primary.teal }}>{t.getStarted}</button>
           </div>
         </div>
@@ -801,252 +805,266 @@ const LandingPage = () => {
         </div>
       )}
 
-      <nav className="bg-white shadow-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>IVRI Tours</div>
-            <div className="flex items-center gap-3">
-              {/* Blog dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowBlogMenu(p => !p)}
-                  onBlur={() => setTimeout(() => setShowBlogMenu(false), 150)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
-                  style={{ color: colors.primary.teal }}
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span className="hidden sm:inline">Blog</span>
-                  <ChevronDown className="w-3 h-3" />
-                </button>
-                {showBlogMenu && blogPosts.length > 0 && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50">
-                    {blogPosts.map(post => (
-                      <button
-                        key={post.id}
-                        onMouseDown={() => { setSelectedBlogPost(post); setShowBlogMenu(false); }}
-                        className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors"
-                      >
-                        <p className="text-sm font-medium text-gray-800 truncate">{post.title}</p>
-                        {post.excerpt && (
-                          <p className="text-xs text-gray-400 truncate mt-0.5">{post.excerpt}</p>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {showBlogMenu && blogPosts.length === 0 && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-3 z-50 text-center text-sm text-gray-400">
-                    No posts yet
-                  </div>
-                )}
-              </div>
+      {/* ── NAV ─────────────────────────────────────────────────── */}
+      <nav style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(234,246,248,0.88)', backdropFilter: 'blur(14px) saturate(140%)', borderBottom: '1px solid #C6DFE4' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* <div style={{ width: 34, height: 34, borderRadius: '50%', background: colors.primary.teal, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontFamily: '"Fraunces", Georgia, serif', fontStyle: 'italic', fontSize: 17, fontWeight: 600 }}>i</div> */}
+            <img src="/src/assets/site_logo.png" alt="IVRITours" style={{ height: 42, width: 'auto', display: 'block' }} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div className="relative">
+              <button
+                onClick={() => setShowBlogMenu(p => !p)}
+                onBlur={() => setTimeout(() => setShowBlogMenu(false), 150)}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, color: '#3E5F68', fontSize: 14, fontWeight: 500, background: 'transparent', border: 'none', cursor: 'pointer' }}
+              >
+                <BookOpen className="w-4 h-4" />
+                <span className="hidden sm:inline">Blog</span>
+                <ChevronDown className="w-3 h-3" />
+              </button>
+              {showBlogMenu && blogPosts.length > 0 && (
+                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, width: 256, background: 'white', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid #D9EBEE', padding: '4px 0', zIndex: 50 }}>
+                  {blogPosts.map(post => (
+                    <button key={post.id} onMouseDown={() => { setSelectedBlogPost(post); setShowBlogMenu(false); }}
+                      style={{ width: '100%', textAlign: 'left', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:bg-gray-50">
+                      <p style={{ fontSize: 14, fontWeight: 500, color: '#0A2A33' }} className="truncate">{post.title}</p>
+                      {post.excerpt && <p style={{ fontSize: 12, color: '#78959D', marginTop: 2 }} className="truncate">{post.excerpt}</p>}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {showBlogMenu && blogPosts.length === 0 && (
+                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, width: 192, background: 'white', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid #D9EBEE', padding: 12, zIndex: 50, textAlign: 'center', fontSize: 14, color: '#78959D' }}>
+                  No posts yet
+                </div>
+              )}
             </div>
+            {/* <LanguageSelector /> */}
           </div>
         </div>
       </nav>
 
-      <section className="py-20 px-4 text-center text-white" style={{ background: `linear-gradient(135deg, ${colors.primary.teal} 0%, #0097A7 100%)` }}>
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">{t.heroTitle}</h1>
-          <p className="text-xl sm:text-2xl opacity-95">{t.heroSubtitle}</p>
+      {/* ── HERO ─────────────────────────────────────────────────── */}
+      <section className="hero-section" style={{ background: '#EAF6F8', padding: '5rem 1.5rem 4rem' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+            <div>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 16 }}>
+                {language === 'ru' ? '— Туристическое агентство' : language === 'he' ? '— סוכנות טיולים' : '— Travel Studio'}
+              </p>
+              <h1 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2.2rem, 6vw, 4.5rem)', lineHeight: 1.05, letterSpacing: '-0.022em', color: '#073944', marginBottom: 24 }}>
+                {language === 'he' ? <>חקרו את <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>צפון אמריקה</em></> : language === 'ru' ? <>Исследуйте <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>Северную Америку</em></> : <>Explore <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>North America</em></>}
+              </h1>
+              <p style={{ fontSize: 17, lineHeight: 1.65, color: '#3E5F68', marginBottom: 32, maxWidth: '40ch' }}>{t.heroSubtitle}</p>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <a href="#trips" style={{ display: 'inline-block', padding: '12px 28px', background: colors.primary.teal, color: 'white', borderRadius: 8, fontWeight: 600, textDecoration: 'none', fontSize: 15 }}>
+                  {language === 'ru' ? 'Туры' : language === 'he' ? 'טיולים' : 'View Tours'}
+                </a>
+                <a href="#contact" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: '1.5px solid #C6DFE4', color: '#0A2A33', borderRadius: 8, fontWeight: 600, textDecoration: 'none', fontSize: 15 }}>
+                  {language === 'ru' ? 'Связаться' : language === 'he' ? 'צרו קשר' : 'Contact Us'}
+                </a>
+              </div>
+            </div>
+            <div className="hero-image-wrap" style={{ borderRadius: 16, overflow: 'hidden', aspectRatio: '4/3', boxShadow: '0 20px 60px rgba(7,57,68,0.15)' }}>
+              <img src="https://images.unsplash.com/photo-1517935706615-2717063c2225?w=1200&q=80" alt="CN Tower Toronto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+          </div>
+          {/* Stats bar */}
+          <div className="hero-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: '#C6DFE4', marginTop: 48, borderRadius: 12, overflow: 'hidden' }}>
+            {[{ num: '1000+', label: t.stats.travelers }, { num: '100+', label: t.stats.tours }, { num: '7', label: t.stats.destinations }, { num: '3', label: t.stats.languages }].map(({ num, label }) => (
+              <div key={label} style={{ background: '#F5FBFC', padding: '20px 16px', textAlign: 'center' }}>
+                <div style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 30, fontWeight: 350, color: '#073944' }}>{num}</div>
+                <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#78959D', marginTop: 4 }}>{label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── Orderable sections ─────────────────────────────────────────────── */}
+      {/* ── Orderable sections ─────────────────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
 
-      {/* Upcoming Trips */}
-      {(tripsLoading || upcomingTrips.length > 0) && siteSettings.showDestinations !== false && <section style={{ order: getSectionOrder('trips') }} className="py-16 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-4" style={{ color: colors.primary.teal }}>
-            {language === 'ru' ? 'Ближайшие туры' : language === 'he' ? 'טיולים קרובים' : 'Upcoming Trips'}
-          </h2>
-          <p className="text-center text-gray-500 mb-12 text-lg">
-            {language === 'ru' ? 'Зарегистрируйтесь на один из наших туров' : language === 'he' ? 'הירשמו לאחד הטיולים שלנו' : 'Register for one of our upcoming tours'}
-          </p>
-          {tripsLoading ? (
-            <div className="text-center py-12">
-              <div className="inline-block w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${colors.primary.teal} transparent ${colors.primary.teal} ${colors.primary.teal}` }} />
+      {/* TRIPS */}
+      {(tripsLoading || upcomingTrips.length > 0) && siteSettings.showDestinations !== false && (
+        <section id="trips" style={{ order: getSectionOrder('trips'), padding: '5rem 1.5rem', background: '#F5FBFC' }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+            <div style={{ marginBottom: 48 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+                {language === 'ru' ? '01 — ТУРЫ' : language === 'he' ? '01 — טיולים' : '01 — TOURS'}
+              </p>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#073944' }}>
+                {language === 'ru' ? 'Ближайшие туры' : language === 'he' ? 'טיולים קרובים' : 'Upcoming Trips'}
+              </h2>
             </div>
-          ) : upcomingTrips.length === 0 ? (
-            <p className="text-center text-gray-400 py-12 text-lg">
-              {language === 'ru' ? 'Нет запланированных туров' : language === 'he' ? 'אין טיולים מתוכננים כרגע' : 'No upcoming trips at the moment'}
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {upcomingTrips.map((trip) => {
-                const capacity = getVehicleCapacity(trip.vehicleLayout);
-                const taken = tripRegistrationCounts[trip.id] || 0;
-                const available = Math.max(0, capacity - taken);
-                const tripDate = trip.date?.toDate?.() || (trip.date ? new Date(trip.date) : null);
-                return (
-                  <div key={trip.id} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col">
-                    {/* Header: Trip name + cost */}
-                    <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
-                      <h3 className="text-xl font-bold leading-snug" style={{ color: colors.primary.teal }}>{trip.title}</h3>
-                      {trip.price && (
-                        <span className="flex-shrink-0 text-white font-bold text-sm px-3 py-1.5 rounded-full shadow-sm" style={{ backgroundColor: colors.primary.teal }}>
-                          C${trip.price}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Image */}
-                    <div className="mx-5 rounded-xl h-48 bg-cover bg-center relative overflow-hidden" style={{ backgroundImage: `url(${trip.websiteImage || getImageForTrip(trip.title)})` }}>
-                      {available === 0 && (
-                        <div className="absolute inset-0 bg-red-900 bg-opacity-60 flex items-center justify-center">
-                          <span className="text-white font-black text-2xl tracking-widest uppercase px-5 py-2 border-4 border-white rounded-lg rotate-[-8deg]">
-                            {language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Sold Out'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="px-5 pt-3 pb-5 flex flex-col flex-1 gap-3">
-                      {/* Date */}
-                      {tripDate && (
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <CalendarDays className="w-4 h-4 flex-shrink-0" style={{ color: colors.primary.teal }} />
-                          <span>{tripDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                        </div>
-                      )}
-
-                      {/* Description */}
-                      {trip.websiteDescription && (
-                        <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">{trip.websiteDescription}</p>
-                      )}
-
-                      {/* Itinerary toggle */}
-                      {trip.itinerary && (
-                        <div>
-                          <button
-                            onClick={() => setExpandedItinerary(prev => {
-                              const next = new Set(prev);
-                              next.has(trip.id) ? next.delete(trip.id) : next.add(trip.id);
-                              return next;
-                            })}
-                            className="flex items-center gap-1.5 text-sm font-medium transition-colors"
-                            style={{ color: colors.primary.teal }}
-                          >
-                            <span>📋</span>
-                            <span>
-                              {expandedItinerary.has(trip.id)
-                                ? (language === 'ru' ? 'Скрыть маршрут' : language === 'he' ? 'הסתר מסלול' : 'Hide Itinerary')
-                                : (language === 'ru' ? 'Посмотреть маршрут' : language === 'he' ? 'הצג מסלול' : 'View Itinerary')}
+            {tripsLoading ? (
+              <div style={{ textAlign: 'center', padding: '3rem' }}>
+                <div className="inline-block w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${colors.primary.teal} transparent ${colors.primary.teal} ${colors.primary.teal}` }} />
+              </div>
+            ) : upcomingTrips.length === 0 ? (
+              <p style={{ textAlign: 'center', color: '#78959D', padding: '3rem', fontSize: 17 }}>
+                {language === 'ru' ? 'Нет запланированных туров' : language === 'he' ? 'אין טיולים מתוכננים כרגע' : 'No upcoming trips at the moment'}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {upcomingTrips.map((trip) => {
+                  const capacity = getVehicleCapacity(trip.vehicleLayout);
+                  const taken = tripRegistrationCounts[trip.id] || 0;
+                  const available = Math.max(0, capacity - taken);
+                  const tripDate = trip.date?.toDate?.() || (trip.date ? new Date(trip.date) : null);
+                  return (
+                    <div key={trip.id} className="hover:-translate-y-1" style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(7,57,68,0.08)', border: '1px solid #D9EBEE', display: 'flex', flexDirection: 'column', transition: 'all 0.3s' }}>
+                      <div style={{ padding: '20px 20px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                        <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#073944' }}>{trip.title}</h3>
+                        {trip.price && <span style={{ flexShrink: 0, background: colors.primary.teal, color: 'white', fontWeight: 700, fontSize: 13, padding: '4px 12px', borderRadius: 100 }}>C${trip.price}</span>}
+                      </div>
+                      <div style={{ margin: '0 20px', borderRadius: 12, height: 192, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden', backgroundImage: `url(${trip.websiteImage || getImageForTrip(trip.title)})` }}>
+                        {available === 0 && (
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(153,27,27,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ color: 'white', fontWeight: 900, fontSize: 22, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '8px 20px', border: '4px solid white', borderRadius: 8, transform: 'rotate(-8deg)', display: 'inline-block' }}>
+                              {language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Sold Out'}
                             </span>
-                            <span className="text-xs">{expandedItinerary.has(trip.id) ? '▲' : '▼'}</span>
-                          </button>
-                          {expandedItinerary.has(trip.id) && (
-                            <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                              <pre className="whitespace-pre-wrap text-xs text-gray-700 font-sans leading-relaxed">{trip.itinerary}</pre>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Registration count (only if showRegistrationCount is on) */}
-                      {trip.showRegistrationCount && capacity > 0 && (
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
-                            <div className="h-2 rounded-full transition-all" style={{ width: `${Math.min(100, (taken / capacity) * 100)}%`, backgroundColor: taken >= capacity ? colors.error : colors.primary.teal }} />
                           </div>
-                          <span className="text-sm font-semibold text-gray-700 flex-shrink-0">
-                            {taken}/{capacity}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Register button */}
-                      <button
-                        onClick={() => available > 0 && openRegisterModal(trip)}
-                        disabled={available === 0}
-                        className="mt-auto w-full py-2.5 text-white font-semibold rounded-lg transition-opacity disabled:cursor-not-allowed"
-                        style={{ backgroundColor: available === 0 ? '#dc2626' : colors.primary.teal, opacity: available === 0 ? 1 : undefined }}
-                      >
-                        {available === 0
-                          ? (language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Sold Out')
-                          : (language === 'ru' ? 'Записаться' : language === 'he' ? 'הירשם' : 'Register Now')}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>}
-      {/* Destinations Carousel */}
-      {siteSettings.showDestinations !== false && <section className="py-16 px-4 max-w-7xl mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-12" style={{ color: colors.primary.teal }}>{t.destinationsTitle}</h2>
-
-        <div className="relative"
-          onMouseEnter={() => { carouselPausedRef.current = true; }}
-          onMouseLeave={() => { carouselPausedRef.current = false; }}
-        >
-          {/* Left arrow */}
-          <button
-            onClick={() => setCarouselIndex(prev => Math.max(0, prev - 1))}
-            disabled={carouselIndex === 0}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-5 h-5 text-gray-700" />
-          </button>
-
-          {/* Carousel track */}
-          <div className="overflow-hidden">
-            <div
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${carouselIndex * (100 / itemsPerView)}%)` }}
-            >
-              {destinations.map((dest) => (
-                <div
-                  key={dest.key}
-                  className="flex-shrink-0 px-3"
-                  style={{ width: `${100 / itemsPerView}%` }}
-                >
-                  <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col h-full">
-                    <div className="h-56 bg-cover bg-center" style={{ backgroundImage: `url(${dest.image})` }} />
-                    <div className="p-5 flex flex-col flex-1">
-                      <h3 className="text-xl font-bold mb-2" style={{ color: colors.primary.teal }}>{t.destinations[dest.key].title}</h3>
-                      <p className="text-gray-600 leading-relaxed mb-3 text-sm line-clamp-3">{t.destinations[dest.key].desc}</p>
-
-                      <div className="space-y-1.5 mb-3">
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.primary.teal }} />
-                          <span className="font-semibold">{t.duration}:</span> {t.destinations[dest.key].duration}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <Users className="w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.primary.teal }} />
-                          <span className="font-semibold">{t.groupSize}:</span> {t.destinations[dest.key].groupSize}
-                        </div>
+                        )}
                       </div>
-
-                      <div className="mb-3">
-                        <p className="text-xs font-semibold text-gray-700 mb-1.5">{t.highlights}:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {t.destinations[dest.key].highlights.map((highlight, idx) => (
-                            <span key={idx} className="inline-block px-2 py-0.5 rounded-full text-white text-xs" style={{ backgroundColor: colors.primary.teal }}>
-                              {highlight}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="mt-auto pt-3 flex flex-col gap-2">
-                        <span className="inline-block px-3 py-1.5 rounded-full text-white text-xs font-medium self-start" style={{ backgroundColor: colors.primary.teal }}>🗣️ {t.multiLang}</span>
+                      <div style={{ padding: '12px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1, gap: 12 }}>
+                        {tripDate && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#78959D' }}>
+                            <CalendarDays style={{ width: 14, height: 14, flexShrink: 0, color: colors.primary.teal }} />
+                            {tripDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </div>
+                        )}
+                        {trip.websiteDescription && <p style={{ color: '#3E5F68', fontSize: 14, lineHeight: 1.6 }} className="line-clamp-3">{trip.websiteDescription}</p>}
+                        {trip.itinerary && (
+                          <div>
+                            <button
+                              onClick={() => setExpandedItinerary(prev => { const next = new Set(prev); next.has(trip.id) ? next.delete(trip.id) : next.add(trip.id); return next; })}
+                              style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: colors.primary.teal, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                            >
+                              <span>📋</span>
+                              <span>{expandedItinerary.has(trip.id) ? (language === 'ru' ? 'Скрыть маршрут' : language === 'he' ? 'הסתר מסלול' : 'Hide Itinerary') : (language === 'ru' ? 'Посмотреть маршрут' : language === 'he' ? 'הצג מסלול' : 'View Itinerary')}</span>
+                              <span style={{ fontSize: 11 }}>{expandedItinerary.has(trip.id) ? '▲' : '▼'}</span>
+                            </button>
+                            {expandedItinerary.has(trip.id) && (
+                              <div style={{ marginTop: 8, padding: 12, background: '#EAF6F8', borderRadius: 8, border: '1px solid #C6DFE4' }}>
+                                <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, color: '#3E5F68', fontFamily: 'sans-serif', lineHeight: 1.5, margin: 0 }}>{trip.itinerary}</pre>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {trip.showRegistrationCount && capacity > 0 && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ flex: 1, background: '#D9EBEE', borderRadius: 100, height: 6 }}>
+                              <div style={{ height: 6, borderRadius: 100, width: `${Math.min(100, (taken / capacity) * 100)}%`, backgroundColor: taken >= capacity ? '#dc2626' : colors.primary.teal }} />
+                            </div>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: '#0A2A33', flexShrink: 0 }}>{taken}/{capacity}</span>
+                          </div>
+                        )}
                         <button
-                          onClick={() => {
-                            setQuestionDest({ key: dest.key, title: t.destinations[dest.key].title });
-                            setQuestionForm({ name: '', email: '', phone: '', message: '' });
-                            setQuestionSuccess(false);
-                          }}
-                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border-2 text-sm font-semibold transition-all hover:text-white hover:border-transparent"
-                          style={{ borderColor: colors.primary.teal, color: colors.primary.teal }}
-                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = colors.primary.teal; }}
-                          onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; e.currentTarget.style.color = colors.primary.teal; }}
+                          onClick={() => available > 0 && openRegisterModal(trip)}
+                          disabled={available === 0}
+                          style={{ marginTop: 'auto', width: '100%', padding: '10px', color: 'white', fontWeight: 600, borderRadius: 8, background: available === 0 ? '#dc2626' : colors.primary.teal, border: 'none', cursor: available === 0 ? 'not-allowed' : 'pointer', fontSize: 14 }}
                         >
-                          <MessageCircle className="w-4 h-4" />
-                          {t.askQuestion}
+                          {available === 0 ? (language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Sold Out') : (language === 'ru' ? 'Записаться' : language === 'he' ? 'הירשם' : 'Register Now')}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+      {/* DESTINATIONS CAROUSEL */}
+      {siteSettings.showDestinations !== false && (
+        <section style={{ padding: '5rem 1.5rem', background: '#EAF6F8' }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+            <div style={{ marginBottom: 32 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+                {language === 'ru' ? '02 — НАПРАВЛЕНИЯ' : language === 'he' ? '02 — יעדים' : '02 — DESTINATIONS'}
+              </p>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#073944' }}>{t.destinationsTitle}</h2>
+            </div>
+            {/* Duration filter */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 36, flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#78959D', marginRight: 4 }}>
+                {language === 'ru' ? 'ДЛИТЕЛЬНОСТЬ:' : language === 'he' ? 'משך:' : 'DURATION:'}
+              </span>
+              {[
+                { key: 'all',   en: 'All',        he: 'הכל',         ru: 'Все' },
+                { key: 'hours', en: 'Few Hours',   he: 'כמה שעות',    ru: 'Несколько ч.' },
+                { key: 'day',   en: 'Day',         he: 'יום',         ru: 'День' },
+                { key: 'multi', en: 'Two Days+',   he: 'יומיים+',     ru: '2+ дня' },
+              ].map(({ key, en, he, ru }) => (
+                <button
+                  key={key}
+                  onClick={() => { setDestFilter(key); setCarouselIndex(0); }}
+                  style={{
+                    padding: '5px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600,
+                    cursor: 'pointer', border: `1.5px solid ${destFilter === key ? colors.primary.teal : '#C6DFE4'}`,
+                    background: destFilter === key ? colors.primary.teal : 'transparent',
+                    color: destFilter === key ? 'white' : '#3E5F68',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {language === 'he' ? he : language === 'ru' ? ru : en}
+                </button>
+              ))}
+            </div>
+            <div className="relative" onMouseEnter={() => { carouselPausedRef.current = true; }} onMouseLeave={() => { carouselPausedRef.current = false; }}>
+              <button
+                onClick={() => setCarouselIndex(prev => Math.max(0, prev - 1))}
+                disabled={carouselIndex === 0}
+                className="disabled:opacity-30"
+                style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%) translateX(-16px)', zIndex: 10, width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+              >
+                <ChevronLeft style={{ width: 20, height: 20, color: '#0A2A33' }} />
+              </button>
+              <div style={{ overflow: 'hidden' }}>
+                <div style={{ display: 'flex', transition: 'transform 0.5s ease', transform: `translateX(-${carouselIndex * (100 / itemsPerView)}%)` }}>
+                  {filteredDestinations.length === 0 ? (
+                    <div style={{ minWidth: '100%', padding: '3rem', textAlign: 'center', color: '#78959D', fontSize: 16 }}>
+                      {language === 'ru' ? 'Нет направлений в этой категории' : language === 'he' ? 'אין יעדים בקטגוריה זו' : 'No destinations in this category'}
+                    </div>
+                  ) : filteredDestinations.map((dest) => (
+                    <div key={dest.key} style={{ flexShrink: 0, padding: '0 12px', width: `${100 / itemsPerView}%` }}>
+                      <div className="hover:-translate-y-2" style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(7,57,68,0.08)', border: '1px solid #D9EBEE', display: 'flex', flexDirection: 'column', height: '100%', transition: 'all 0.3s' }}>
+                        <div style={{ height: 220, backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${dest.image})`, position: 'relative' }}>
+                          <div style={{ position: 'absolute', top: 10, left: 10 }}>
+                            <span style={{ fontSize: 22, lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}>{dest.country === 'ca' ? '🇨🇦' : '🇺🇸'}</span>
+                          </div>
+                        </div>
+                        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', flex: 1 }}>
+                          <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#073944', marginBottom: 8 }}>{t.destinations[dest.key].title}</h3>
+                          <p style={{ color: '#3E5F68', fontSize: 14, lineHeight: 1.6, marginBottom: 12 }} className="line-clamp-3">{t.destinations[dest.key].desc}</p>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#3E5F68' }}>
+                              <Clock style={{ width: 13, height: 13, color: colors.primary.teal }} />
+                              <span style={{ fontWeight: 600 }}>{t.duration}:</span> {t.destinations[dest.key].duration}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#3E5F68' }}>
+                              <Users style={{ width: 13, height: 13, color: colors.primary.teal }} />
+                              <span style={{ fontWeight: 600 }}>{t.groupSize}:</span> {t.destinations[dest.key].groupSize}
+                            </div>
+                          </div>
+                          <div style={{ marginBottom: 12 }}>
+                            <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, fontWeight: 600, color: '#0A2A33', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.highlights}</p>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                              {t.destinations[dest.key].highlights.map((h, i) => (
+                                <span key={i} style={{ background: '#EAF6F8', color: '#3E5F68', fontSize: 11, padding: '3px 10px', borderRadius: 100, border: '1px solid #C6DFE4' }}>{h}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <span style={{ background: colors.primary.teal, color: 'white', fontSize: 11, padding: '4px 12px', borderRadius: 100, alignSelf: 'flex-start' }}>🗣️ {t.multiLang}</span>
+                            <button
+                              onClick={() => { setQuestionDest({ key: dest.key, title: t.destinations[dest.key].title }); setQuestionForm({ name: '', email: '', phone: '', message: '' }); setQuestionSuccess(false); }}
+                              className="hover:bg-[#00BCD4] hover:text-white transition-colors"
+                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, border: `2px solid ${colors.primary.teal}`, color: colors.primary.teal, background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                            >
+                              <MessageCircle style={{ width: 14, height: 14 }} />
+                              {t.askQuestion}
                         </button>
                       </div>
                     </div>
@@ -1056,93 +1074,178 @@ const LandingPage = () => {
             </div>
           </div>
 
-          {/* Right arrow */}
-          <button
-            onClick={() => setCarouselIndex(prev => Math.min(destinations.length - itemsPerView, prev + 1))}
-            disabled={carouselIndex >= destinations.length - itemsPerView}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronRight className="w-5 h-5 text-gray-700" />
-          </button>
-        </div>
-
-        {/* Dot indicators */}
-        <div className="flex justify-center gap-2 mt-6">
-          {Array.from({ length: Math.max(1, destinations.length - itemsPerView + 1) }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCarouselIndex(i)}
-              className="w-2.5 h-2.5 rounded-full transition-all"
-              style={{ backgroundColor: i === carouselIndex ? colors.primary.teal : '#D1D5DB', transform: i === carouselIndex ? 'scale(1.3)' : 'scale(1)' }}
-            />
-          ))}
-        </div>
-      </section>}
-
-      {/* Reviews & Testimonials */}
-      {(siteSettings.showTestimonials !== false || (people.length > 0 && siteSettings.showPeople !== false)) && (
-        <section style={{ order: getSectionOrder('reviews') }} className="py-16 px-4 bg-gray-50">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl font-bold text-center mb-4" style={{ color: colors.primary.teal }}>
-              {t.testimonialsTitle}
-            </h2>
-            <p className="text-center text-gray-500 mb-12">
-              {language === 'he' ? 'חוויות אמיתיות מהקהילה שלנו' : language === 'ru' ? 'Реальные впечатления нашего сообщества' : 'Real experiences from our community'}
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {/* Hardcoded testimonials */}
-              {siteSettings.showTestimonials !== false && t.testimonials.map((testimonial, index) => (
-                <div key={`static-${index}`} className="bg-white rounded-xl p-6 shadow-lg text-center flex flex-col items-center">
-                  <div
-                    className="w-20 h-20 rounded-full mb-4 bg-cover bg-center flex-shrink-0"
-                    style={{ backgroundImage: `url(${testimonialImages[index]})`, border: `3px solid ${colors.primary.teal}` }}
-                  />
-                  <p className="text-gray-600 italic mb-4 leading-relaxed flex-1">"{testimonial.text}"</p>
-                  <h4 className="font-bold" style={{ color: colors.primary.teal }}>{testimonial.author}</h4>
-                </div>
+              <button
+                onClick={() => setCarouselIndex(prev => Math.min(filteredDestinations.length - itemsPerView, prev + 1))}
+                disabled={carouselIndex >= filteredDestinations.length - itemsPerView}
+                className="disabled:opacity-30"
+                style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%) translateX(16px)', zIndex: 10, width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+              >
+                <ChevronRight style={{ width: 20, height: 20, color: '#0A2A33' }} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
+              {Array.from({ length: Math.max(1, filteredDestinations.length - itemsPerView + 1) }).map((_, i) => (
+                <button key={i} onClick={() => setCarouselIndex(i)} style={{ width: 10, height: 10, borderRadius: '50%', background: i === carouselIndex ? colors.primary.teal : '#C6DFE4', transform: i === carouselIndex ? 'scale(1.3)' : 'scale(1)', border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0 }} />
               ))}
-              {/* Dynamic traveler feedbacks */}
-              {siteSettings.showPeople !== false && people.map((fb) => {
-                const stars = fb.ratings?.overall || 0;
-                const name = `${fb.firstName} ${fb.lastName}`.trim();
-                const initials = `${fb.firstName?.[0] || ''}${fb.lastName?.[0] || ''}`.toUpperCase();
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* REVIEWS */}
+      {(siteSettings.showTestimonials !== false || (people.length > 0 && siteSettings.showPeople !== false)) && (
+        <section style={{ order: getSectionOrder('reviews'), padding: '5rem 1.5rem', background: '#F5FBFC' }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+            {/* Editorial header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 32, marginBottom: 48, borderBottom: '1px solid #D9EBEE', paddingBottom: 32, flexWrap: 'wrap' }}>
+              <div>
+                <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>
+                  {language === 'ru' ? '03 / Голоса ОТ ГОСТЕЙ' : language === 'he' ? '03 / קולות מאורחים' : '03 / Voices FROM GUESTS'}
+                </p>
+                <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3.25rem)', letterSpacing: '-0.02em', color: '#073944', lineHeight: 1.1 }}>
+                  {language === 'ru' ? <>Письма <em style={{ fontStyle: 'italic' }}>с дороги.</em></> : language === 'he' ? <>מכתבים <em style={{ fontStyle: 'italic' }}>מהדרך.</em></> : <>Letters from the <em style={{ fontStyle: 'italic' }}>road.</em></>}
+                </h2>
+              </div>
+              <p style={{ color: '#3E5F68', fontSize: 14, lineHeight: 1.65, maxWidth: '30ch', textAlign: language === 'he' ? 'left' : 'right', flexShrink: 0 }} className="hidden sm:block">
+                {language === 'ru' ? 'Мы отправляем открытку домой после каждой поездки. Вот что приходит в ответ.' : language === 'he' ? 'אנו שולחים גלויה כתובה ביד לכל טיול. הנה מה שחוזר.' : "We send a handwritten postcard home for every trip. Here's what comes back."}
+              </p>
+            </div>
+            {/* Quote cards — carousel */}
+            {(() => {
+              const allCards = [
+                ...(siteSettings.showTestimonials !== false ? getDisplayTestimonials() : []),
+                ...(siteSettings.showPeople !== false ? people.map(fb => ({
+                  text: fb.comment,
+                  author: `${fb.firstName || ''} ${fb.lastName || ''}`.trim(),
+                  trip: [fb.tripTitle, fb.submittedAt?.toDate?.().getFullYear()].filter(Boolean).join(', '),
+                  initials: `${fb.firstName?.[0] || ''}${fb.lastName?.[0] || ''}`.toUpperCase(),
+                })) : []),
+              ].filter(c => c.text);
+              if (!allCards.length) return null;
+              const goBack = () => setReviewsIdx(i => (i > 0 ? i - 1 : allCards.length - 1));
+              const goNext = () => setReviewsIdx(i => (i < allCards.length - 1 ? i + 1 : 0));
+              const idx = reviewsIdx % allCards.length;
+              return (
+                <div style={{ position: 'relative', maxWidth: 780, margin: '0 auto' }}>
+                  <div style={{ overflow: 'hidden', borderRadius: 20 }}>
+                    <div style={{ display: 'flex', transition: 'transform 0.45s ease', transform: `translateX(-${idx * 100}%)` }}>
+                      {allCards.map((c, i) => {
+                        const inits = c.initials || (c.author || '').split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+                        return (
+                          <div key={i} style={{ minWidth: '100%', background: '#F5FBFC', border: '1px solid #D9EBEE', borderRadius: 20, padding: '44px 48px 40px', display: 'flex', flexDirection: 'column', gap: 24, boxSizing: 'border-box' }}>
+                            <span style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 60, lineHeight: 1, color: colors.primary.teal, opacity: 0.45, fontStyle: 'italic', marginTop: -12, display: 'block' }}>"</span>
+                            <p style={{ color: '#0A2A33', fontSize: 17, lineHeight: 1.7, fontStyle: 'italic', textAlign: 'center' }}>{c.text}</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
+                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#D9EBEE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, fontWeight: 600, color: '#3E5F68' }}>{inits || '✦'}</span>
+                              </div>
+                              <div>
+                                <p style={{ fontWeight: 600, fontSize: 15, color: '#073944' }}>{c.author}</p>
+                                {c.trip && <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: '#78959D', marginTop: 2 }}>{c.trip}</p>}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {allCards.length > 1 && (
+                    <>
+                      <button onClick={goBack} style={{ position: 'absolute', left: -24, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', zIndex: 2 }}>
+                        <ChevronLeft style={{ width: 20, height: 20, color: '#0A2A33' }} />
+                      </button>
+                      <button onClick={goNext} style={{ position: 'absolute', right: -24, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', zIndex: 2 }}>
+                        <ChevronRight style={{ width: 20, height: 20, color: '#0A2A33' }} />
+                      </button>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 7, marginTop: 28 }}>
+                        {allCards.map((_, i) => (
+                          <button key={i} onClick={() => setReviewsIdx(i)} style={{ width: 8, height: 8, borderRadius: '50%', background: i === idx ? colors.primary.teal : '#C6DFE4', border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0, transform: i === idx ? 'scale(1.35)' : 'scale(1)' }} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </section>
+      )}
+
+      {/* SOCIAL */}
+      {siteSettings.showSocial !== false && (
+        <section style={{ order: getSectionOrder('social'), padding: '5rem 1.5rem', background: '#EAF6F8' }}>
+          <div style={{ maxWidth: 960, margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ marginBottom: 40 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+                {language === 'ru' ? '04 — СОЦСЕТИ' : language === 'he' ? '04 — רשתות' : '04 — SOCIAL'}
+              </p>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#073944', marginBottom: 12 }}>{t.socialTitle}</h2>
+              <p style={{ color: '#3E5F68', fontSize: 16 }}>{t.socialDesc}</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="https://www.facebook.com/Ivritours/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: '#1877F2', color: 'white', borderRadius: 8, fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
+                <Facebook style={{ width: 20, height: 20 }} />{t.visitFacebook}
+              </a>
+              <a href="https://www.instagram.com/ivritours_ca/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)', color: 'white', borderRadius: 8, fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
+                <Instagram style={{ width: 20, height: 20 }} />{t.visitInstagram}
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* BLOG */}
+      {blogPosts.length > 0 && siteSettings.showBlog !== false && (
+        <section style={{ order: getSectionOrder('blog'), padding: '5rem 1.5rem', background: '#EAF6F8' }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+            {/* Editorial header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, marginBottom: 40, borderBottom: '1px solid #D9EBEE', paddingBottom: 32, flexWrap: 'wrap' }}>
+              <div>
+                <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>
+                  {language === 'ru' ? '05 / Журнал ПОЛЕВЫЕ ЗАМЕТКИ' : language === 'he' ? '05 / יומן הערות שטח' : '05 / Journal FIELD NOTES'}
+                </p>
+                <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3.25rem)', letterSpacing: '-0.02em', color: '#073944', lineHeight: 1.1 }}>
+                  {language === 'ru' ? <>Отправления <em style={{ fontStyle: 'italic' }}>из студии.</em></> : language === 'he' ? <>שגרים <em style={{ fontStyle: 'italic' }}>מהאולפן.</em></> : <>Dispatches from the <em style={{ fontStyle: 'italic' }}>studio.</em></>}
+                </h2>
+              </div>
+              <span
+                onClick={() => setSelectedBlogPost(blogPosts[0])}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#0A2A33', fontSize: 14, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 4, paddingBottom: 4, flexShrink: 0 }}
+              >
+                {language === 'ru' ? 'Все записи →' : language === 'he' ? 'כל הכתבות →' : 'Read all entries →'}
+              </span>
+            </div>
+            {/* Cards — borderless editorial grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              {blogPosts.slice(0, 3).map(post => {
+                const category = post.category || 'Journal';
+                const pubDate = post.publishedAt?.toDate?.();
+                const dateStr = pubDate ? pubDate.toLocaleDateString('en-CA', { month: 'short', year: 'numeric' }) : '';
+                const wordCount = (post.content || '').split(/\s+/).filter(Boolean).length;
+                const readTime = Math.max(1, Math.ceil(wordCount / 200));
                 return (
-                  <div key={`fb-${fb.id}`} className="bg-white rounded-xl p-6 shadow-lg text-center flex flex-col items-center">
-                    {fb.profileImageUrl ? (
-                      <div
-                        className="w-20 h-20 rounded-full mb-4 bg-cover bg-center flex-shrink-0"
-                        style={{ backgroundImage: `url(${fb.profileImageUrl})`, border: `3px solid ${colors.primary.teal}` }}
-                      />
-                    ) : (
-                      <div
-                        className="w-20 h-20 rounded-full mb-4 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
-                        style={{ backgroundColor: colors.primary.teal, border: `3px solid ${colors.primary.teal}` }}
-                      >
-                        {initials || '✦'}
+                  <div key={post.id} onClick={() => setSelectedBlogPost(post)} className="group" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ borderRadius: 12, overflow: 'hidden', aspectRatio: '16/10', position: 'relative', marginBottom: 20 }}>
+                      {post.images?.[0] ? (
+                        <img src={post.images[0]} alt={post.title} className="group-hover:scale-105" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', background: '#C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <BookOpen style={{ width: 40, height: 40, color: '#78959D' }} />
+                        </div>
+                      )}
+                      <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
+                        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.92)', background: 'rgba(7,57,68,0.72)', borderRadius: 4, backdropFilter: 'blur(4px)', padding: '3px 8px', display: 'inline-block', textTransform: 'lowercase' }}>
+                          journal · {category.toLowerCase()}
+                        </span>
                       </div>
-                    )}
-                    {stars > 0 && (
-                      <div className="text-base mb-2" style={{ color: '#f59e0b' }}>
-                        {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
-                      </div>
-                    )}
-                    {fb.comment && (
-                      <p className="text-gray-600 italic mb-3 leading-relaxed text-sm flex-1">"{fb.comment}"</p>
-                    )}
-                    <h4 className="font-bold" style={{ color: colors.primary.teal }}>{name}</h4>
-                    {fb.submittedAt && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        {fb.submittedAt.toDate?.().toLocaleDateString(
-                          language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA',
-                          { month: 'long', year: 'numeric' }
-                        )}
-                      </p>
-                    )}
-                    {fb.wouldRecommend === 'yes' && (
-                      <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded-full mt-2">
-                        ✓ {language === 'he' ? 'ממליץ' : language === 'ru' ? 'Рекомендует' : 'Recommends'}
-                      </span>
-                    )}
+                    </div>
+                    <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#78959D', marginBottom: 10 }}>
+                      {category.toUpperCase()}{dateStr ? ` · ${dateStr}` : ''} · {readTime} min read
+                    </p>
+                    <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#073944', marginBottom: 8, lineHeight: 1.3 }} className="group-hover:underline">
+                      {post.title}
+                    </h3>
+                    {post.excerpt && <p style={{ color: '#3E5F68', fontSize: 14, lineHeight: 1.6 }} className="line-clamp-2">{post.excerpt}</p>}
                   </div>
                 );
               })}
@@ -1151,272 +1254,144 @@ const LandingPage = () => {
         </section>
       )}
 
-      {/* Social Media */}
-      {siteSettings.showSocial !== false && <section style={{ order: getSectionOrder('social') }} className="py-16 px-4 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-4" style={{ color: colors.primary.teal }}>{t.socialTitle}</h2>
-          <p className="text-xl text-gray-600 mb-8">{t.socialDesc}</p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <a
-              href="https://www.facebook.com/Ivritours/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 text-white text-lg font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg"
-              style={{ backgroundColor: '#1877F2' }}
-            >
-              <Facebook className="w-6 h-6" />
-              {t.visitFacebook}
-            </a>
-            <a
-              href="https://www.instagram.com/ivritours_ca/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 text-white text-lg font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg"
-              style={{ background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)' }}
-            >
-              <Instagram className="w-6 h-6" />
-              {t.visitInstagram}
-            </a>
-          </div>
-
-          <div className="bg-gray-50 rounded-xl p-8 shadow-inner">
-            <div className="text-gray-500 mb-6">
-              <p className="text-lg font-semibold mb-2">Connect with us:</p>
-              <p className="mb-1">Facebook: @Ivritours</p>
-              <p>Instagram: @ivritours_ca</p>
+      {/* CONTACT */}
+      {siteSettings.showContact !== false && (
+        <section id="contact" style={{ order: getSectionOrder('contact'), padding: '5rem 1.5rem', background: '#EAF6F8' }}>
+          <div style={{ maxWidth: 768, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 40 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+                {language === 'ru' ? '06 — КОНТАКТЫ' : language === 'he' ? '06 — יצירת קשר' : '06 — CONTACT'}
+              </p>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#073944' }}>{t.contactTitle}</h2>
+              <button
+                onClick={() => setContactOpen(p => !p)}
+                className="sm:hidden"
+                style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: colors.primary.teal, color: 'white', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
+              >
+                {contactOpen ? (language === 'ru' ? 'Скрыть форму' : language === 'he' ? 'הסתר טופס' : 'Hide Form') : (language === 'ru' ? 'Написать нам' : language === 'he' ? 'פתח טופס' : 'Show Form')}
+                <ChevronDown style={{ width: 16, height: 16, transform: contactOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-              <div className="bg-white rounded-lg p-4 shadow">
-                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>1000+</div>
-                <div className="text-sm text-gray-600">{t.stats.travelers}</div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow">
-                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>100+</div>
-                <div className="text-sm text-gray-600">{t.stats.tours}</div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow">
-                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>7</div>
-                <div className="text-sm text-gray-600">{t.stats.destinations}</div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow">
-                <div className="text-3xl font-bold" style={{ color: colors.primary.teal }}>3</div>
-                <div className="text-sm text-gray-600">{t.stats.languages}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>}
-
-      {/* Blog Posts */}
-      {blogPosts.length > 0 && siteSettings.showBlog !== false && (
-        <section style={{ order: getSectionOrder('blog') }} className="py-16 px-4 bg-gray-50">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl font-bold text-center mb-4" style={{ color: colors.primary.teal }}>
-              {language === 'ru' ? 'Блог' : language === 'he' ? 'בלוג' : 'Our Blog'}
-            </h2>
-            <p className="text-center text-gray-500 mb-12">
-              {language === 'ru' ? 'Истории и советы от нашей команды' : language === 'he' ? 'סיפורים וטיפים מהצוות שלנו' : 'Stories and tips from our team'}
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {blogPosts.map(post => (
-                <div
-                  key={post.id}
-                  onClick={() => setSelectedBlogPost(post)}
-                  className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
-                >
-                  {post.images?.[0] ? (
-                    <div
-                      className="h-48 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${post.images[0]})` }}
-                    />
-                  ) : (
-                    <div className="h-48 flex items-center justify-center" style={{ backgroundColor: '#E6F7F8' }}>
-                      <BookOpen className="w-12 h-12" style={{ color: colors.primary.teal, opacity: 0.4 }} />
-                    </div>
-                  )}
-                  <div className="p-5 flex flex-col flex-1">
-                    <h3 className="text-lg font-bold leading-snug mb-2" style={{ color: colors.primary.teal }}>
-                      {post.title}
-                    </h3>
-                    {post.excerpt && (
-                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 flex-1">{post.excerpt}</p>
-                    )}
-                    <div className="flex items-center justify-between mt-4">
-                      {post.publishedAt && (
-                        <span className="text-xs text-gray-400">
-                          {post.publishedAt.toDate?.().toLocaleDateString(
-                            language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA',
-                            { month: 'short', day: 'numeric', year: 'numeric' }
-                          )}
-                        </span>
-                      )}
-                      <span className="text-sm font-semibold" style={{ color: colors.primary.teal }}>
-                        {language === 'ru' ? 'Читать →' : language === 'he' ? 'קרא →' : 'Read more →'}
-                      </span>
-                    </div>
+            <div className={`sm:block ${contactOpen ? 'block' : 'hidden'}`}>
+              <form onSubmit={handleSubmit} style={{ background: 'white', borderRadius: 16, boxShadow: '0 4px 20px rgba(7,57,68,0.08)', padding: 32, border: '1px solid #D9EBEE' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: 24 }}>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, color: '#0A2A33', marginBottom: 8, fontSize: 14 }}>{t.nameLabel} *</label>
+                    <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="focus:border-[#00BCD4]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #D9EBEE', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, color: '#0A2A33', marginBottom: 8, fontSize: 14 }}>{t.emailLabel} *</label>
+                    <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="focus:border-[#00BCD4]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #D9EBEE', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
                   </div>
                 </div>
-              ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: 24 }}>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, color: '#0A2A33', marginBottom: 8, fontSize: 14 }}>{t.phoneLabel}</label>
+                    <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="focus:border-[#00BCD4]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #D9EBEE', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, color: '#0A2A33', marginBottom: 8, fontSize: 14 }}>{t.destinationLabel}</label>
+                    <input type="text" value={formData.destination} onChange={(e) => setFormData({ ...formData, destination: e.target.value })} className="focus:border-[#00BCD4]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #D9EBEE', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
+                  </div>
+                </div>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0A2A33', marginBottom: 8, fontSize: 14 }}>{t.messageLabel} *</label>
+                  <textarea required rows={5} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="focus:border-[#00BCD4]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #D9EBEE', borderRadius: 8, outline: 'none', fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }} />
+                </div>
+                <button type="submit" disabled={sending} style={{ width: '100%', padding: '14px', color: 'white', fontSize: 16, fontWeight: 700, borderRadius: 8, background: colors.primary.teal, border: 'none', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? 0.5 : 1 }}>
+                  {sending ? (language === 'ru' ? 'Отправка...' : language === 'he' ? 'שולח...' : 'Sending...') : t.submitBtn}
+                </button>
+              </form>
             </div>
           </div>
         </section>
       )}
 
-      {/* Contact Form */}
-      {siteSettings.showContact !== false && <section style={{ order: getSectionOrder('contact') }} className="py-16 px-4 max-w-4xl mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-12" style={{ color: colors.primary.teal }}>{t.contactTitle}</h2>
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">{t.nameLabel} *</label>
-              <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#00BCD4] focus:outline-none transition-colors" required />
-            </div>
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">{t.emailLabel} *</label>
-              <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#00BCD4] focus:outline-none transition-colors" required />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">{t.phoneLabel}</label>
-              <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#00BCD4] focus:outline-none transition-colors" />
-            </div>
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">{t.destinationLabel}</label>
-              <input type="text" value={formData.destination} onChange={(e) => setFormData({ ...formData, destination: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#00BCD4] focus:outline-none transition-colors" />
-            </div>
-          </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 font-semibold mb-2">{t.messageLabel} *</label>
-            <textarea value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} rows="6" className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#00BCD4] focus:outline-none transition-colors resize-vertical" required />
-          </div>
-          <button
-            type="submit"
-            disabled={sending}
-            className="w-full py-4 text-white text-lg font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: colors.primary.teal }}
-          >
-            {sending ? (language === 'ru' ? 'Отправка...' : language === 'he' ? 'שולח...' : 'Sending...') : t.submitBtn}
-          </button>
-        </form>
-      </section>}
-
       </div>
-      {/* ── End orderable sections ─────────────────────────────────────────── */}
+      {/* ── End orderable sections ──────────────────────────────── */}
 
-      <footer className="bg-gray-900 text-white py-10 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="text-2xl font-bold mb-4" style={{ color: colors.primary.teal }}>IVRI Tours</div>
-          <div className="flex justify-center items-center gap-4 mb-5 flex-wrap">
-            <button
-              onClick={() => navigate('/gift-card-purchase')}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium hover:opacity-80 transition-opacity border border-white/20 text-sm"
-            >
-              <Gift className="w-4 h-4" />
-              {tGift.purchaseGiftCard}
-            </button>
+      {/* FOOTER */}
+      <footer style={{ background: '#073944', color: 'white', padding: '4rem 1.5rem 2rem' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ borderBottom: '1px solid rgba(198,223,228,0.15)', paddingBottom: '2rem', marginBottom: '2.5rem' }}>
+            <div className="footer-wordmark" style={{ fontFamily: '"Fraunces", Georgia, serif', fontStyle: 'italic', fontWeight: 350, fontSize: 'clamp(4rem, 12vw, 9rem)', lineHeight: 0.85, color: '#EAF6F8', letterSpacing: '-0.03em', opacity: 0.88 }}>
+              IVRITours
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8" style={{ marginBottom: '2.5rem' }}>
+            <div>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>Tours</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {destinations.slice(0, 4).map(d => <span key={d.key} style={{ color: '#C6DFE4', fontSize: 14 }}>{t.destinations[d.key].title}</span>)}
+              </div>
+            </div>
+            <div>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>{language === 'ru' ? 'Ещё' : language === 'he' ? 'עוד' : 'More'}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {destinations.slice(4).map(d => <span key={d.key} style={{ color: '#C6DFE4', fontSize: 14 }}>{t.destinations[d.key].title}</span>)}
+              </div>
+            </div>
+            <div>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>{language === 'ru' ? 'Соцсети' : language === 'he' ? 'עקבו' : 'Follow'}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a href="https://www.facebook.com/Ivritours/" target="_blank" rel="noopener noreferrer" style={{ color: '#C6DFE4', fontSize: 14, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}><Facebook style={{ width: 14, height: 14 }} />Facebook</a>
+                <a href="https://www.instagram.com/ivritours_ca/" target="_blank" rel="noopener noreferrer" style={{ color: '#C6DFE4', fontSize: 14, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}><Instagram style={{ width: 14, height: 14 }} />Instagram</a>
+              </div>
+            </div>
+            <div>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>{language === 'ru' ? 'Прочее' : language === 'he' ? 'כללי' : 'General'}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <button onClick={() => navigate('/gift-card-purchase')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C6DFE4', fontSize: 14, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, padding: 0 }}>
+                  <Gift style={{ width: 14, height: 14 }} />{tGift.purchaseGiftCard}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid rgba(198,223,228,0.15)', paddingTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <p style={{ color: '#78959D', fontSize: 13 }}>© 2026 IVRITours. {t.footerText}</p>
             <div className="[&_button]:!text-white [&_button]:!border-white/20 [&_button]:hover:!bg-white/10">
               <LanguageSelector />
             </div>
           </div>
-          <p className="text-gray-400 mb-4">© 2026 IVRI Tours. {t.footerText}</p>
-          <button onClick={() => navigate('/login')} className="text-sm hover:underline" style={{ color: colors.primary.teal }}>{t.adminLogin}</button>
         </div>
       </footer>
 
-      {/* Blog Post Lightbox */}
-      {selectedBlogPost && (
-        <BlogPostModal
-          post={selectedBlogPost}
-          onClose={() => setSelectedBlogPost(null)}
-        />
-      )}
+      {selectedBlogPost && <BlogPostModal post={selectedBlogPost} onClose={() => setSelectedBlogPost(null)} />}
 
-      {/* Floating Gift Button on Scroll */}
       {scrollY > 300 && (
-        <button
-          onClick={() => navigate('/gift-card-purchase')}
-          className="fixed bottom-8 left-8 bg-white rounded-full shadow-2xl p-4 hover:scale-110 transition-all duration-300 z-50 animate-float"
-          style={{ boxShadow: '0 10px 30px rgba(0,188,212,0.3)' }}
-          title={language === 'ru' ? 'Купить подарочную карту' : language === 'he' ? 'קנה כרטיס מתנה' : 'Purchase Gift Card'}
-        >
-          <Gift className="w-8 h-8" style={{ color: colors.primary.teal }} />
+        <button onClick={() => navigate('/gift-card-purchase')} className="animate-float" style={{ position: 'fixed', bottom: 32, left: 32, background: 'white', borderRadius: '50%', boxShadow: '0 10px 30px rgba(0,188,212,0.3)', padding: 16, border: 'none', cursor: 'pointer', zIndex: 50 }} title={language === 'ru' ? 'Купить подарочную карту' : language === 'he' ? 'קנה כרטיס מתנה' : 'Purchase Gift Card'}>
+          <Gift style={{ width: 32, height: 32, color: colors.primary.teal }} />
         </button>
       )}
 
-      {/* Israeli Accessibility Widget */}
-      <div className="fixed top-24 right-4 z-50">
-        <button
-          onClick={() => setShowAccessibility(!showAccessibility)}
-          className="bg-blue-600 text-white rounded-full p-3 shadow-lg hover:bg-blue-700 transition-colors"
-          title={language === 'ru' ? 'Доступность' : language === 'he' ? 'נגישות' : 'Accessibility'}
-          aria-label="Accessibility Menu"
-        >
-          <Eye className="w-6 h-6" />
+      <div style={{ position: 'fixed', top: 96, right: 16, zIndex: 50 }}>
+        <button onClick={() => setShowAccessibility(!showAccessibility)} style={{ background: '#2563EB', color: 'white', borderRadius: '50%', padding: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: 'none', cursor: 'pointer' }} aria-label="Accessibility Menu">
+          <Eye style={{ width: 24, height: 24 }} />
         </button>
-
         {showAccessibility && (
-          <div className="absolute top-14 right-0 bg-white rounded-lg shadow-2xl p-4 w-64 border-2 border-blue-600">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-lg">
-                {language === 'ru' ? 'Доступность' : language === 'he' ? 'נגישות' : 'Accessibility'}
-              </h3>
-              <button onClick={() => setShowAccessibility(false)} className="text-gray-500 hover:text-gray-700">
-                <X className="w-5 h-5" />
-              </button>
+          <div style={{ position: 'absolute', top: 56, right: 0, background: 'white', borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', padding: 16, width: 256, border: '2px solid #2563EB' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ fontWeight: 700, fontSize: 18 }}>{language === 'ru' ? 'Доступность' : language === 'he' ? 'נגישות' : 'Accessibility'}</h3>
+              <button onClick={() => setShowAccessibility(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}><X style={{ width: 20, height: 20 }} /></button>
             </div>
-
-            <div className="space-y-4">
-              {/* Font Size */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
-                  <Type className="w-4 h-4" />
-                  {language === 'ru' ? 'Размер шрифта' : language === 'he' ? 'גודל גופן' : 'Font Size'}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
+                  <Type style={{ width: 16, height: 16 }} />{language === 'ru' ? 'Размер шрифта' : language === 'he' ? 'גודל גופן' : 'Font Size'}
                 </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setAccessibilitySettings(prev => ({ ...prev, fontSize: Math.max(80, prev.fontSize - 10) }))}
-                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                  >
-                    A-
-                  </button>
-                  <span className="text-sm">{accessibilitySettings.fontSize}%</span>
-                  <button
-                    onClick={() => setAccessibilitySettings(prev => ({ ...prev, fontSize: Math.min(150, prev.fontSize + 10) }))}
-                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                  >
-                    A+
-                  </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button onClick={() => setAccessibilitySettings(prev => ({ ...prev, fontSize: Math.max(80, prev.fontSize - 10) }))} style={{ padding: '4px 12px', background: '#E5E7EB', borderRadius: 4, border: 'none', cursor: 'pointer' }}>A-</button>
+                  <span style={{ fontSize: 14 }}>{accessibilitySettings.fontSize}%</span>
+                  <button onClick={() => setAccessibilitySettings(prev => ({ ...prev, fontSize: Math.min(150, prev.fontSize + 10) }))} style={{ padding: '4px 12px', background: '#E5E7EB', borderRadius: 4, border: 'none', cursor: 'pointer' }}>A+</button>
                 </div>
               </div>
-
-              {/* High Contrast */}
-              <div>
-                <button
-                  onClick={() => setAccessibilitySettings(prev => ({ ...prev, contrast: !prev.contrast }))}
-                  className={`w-full p-3 rounded-lg flex items-center gap-2 ${accessibilitySettings.contrast ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-                >
-                  <ZoomIn className="w-5 h-5" />
-                  {language === 'ru' ? 'Высокий контраст' : language === 'he' ? 'ניגודיות גבוהה' : 'High Contrast'}
-                </button>
-              </div>
-
-              {/* Grayscale */}
-              <div>
-                <button
-                  onClick={() => setAccessibilitySettings(prev => ({ ...prev, grayScale: !prev.grayScale }))}
-                  className={`w-full p-3 rounded-lg ${accessibilitySettings.grayScale ? 'bg-gray-800 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-                >
-                  {language === 'ru' ? 'Оттенки серого' : language === 'he' ? 'גווני אפור' : 'Grayscale'}
-                </button>
-              </div>
-
-              {/* Reset */}
-              <button
-                onClick={() => setAccessibilitySettings({ fontSize: 100, contrast: false, grayScale: false })}
-                className="w-full py-2 text-sm text-blue-600 hover:underline"
-              >
+              <button onClick={() => setAccessibilitySettings(prev => ({ ...prev, contrast: !prev.contrast }))} style={{ width: '100%', padding: 12, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, background: accessibilitySettings.contrast ? '#2563EB' : '#F3F4F6', color: accessibilitySettings.contrast ? 'white' : 'inherit', border: 'none', cursor: 'pointer' }}>
+                <ZoomIn style={{ width: 20, height: 20 }} />{language === 'ru' ? 'Высокий контраст' : language === 'he' ? 'ניגודיות גבוהה' : 'High Contrast'}
+              </button>
+              <button onClick={() => setAccessibilitySettings(prev => ({ ...prev, grayScale: !prev.grayScale }))} style={{ width: '100%', padding: 12, borderRadius: 8, background: accessibilitySettings.grayScale ? '#1F2937' : '#F3F4F6', color: accessibilitySettings.grayScale ? 'white' : 'inherit', border: 'none', cursor: 'pointer' }}>
+                {language === 'ru' ? 'Оттенки серого' : language === 'he' ? 'גווני אפור' : 'Grayscale'}
+              </button>
+              <button onClick={() => setAccessibilitySettings({ fontSize: 100, contrast: false, grayScale: false })} style={{ padding: 8, fontSize: 14, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer' }}>
                 {language === 'ru' ? 'Сбросить' : language === 'he' ? 'איפוס' : 'Reset'}
               </button>
             </div>
@@ -1424,40 +1399,19 @@ const LandingPage = () => {
         )}
       </div>
 
-      {/* Cookie Consent Banner */}
       {showCookieConsent && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-blue-600 shadow-2xl p-6 z-50 animate-slideUp">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-start gap-4 flex-1">
-              <Cookie className="w-8 h-8 flex-shrink-0" style={{ color: colors.primary.teal }} />
+        <div className="animate-slideUp" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '4px solid #2563EB', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)', padding: 24, zIndex: 50 }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flex: 1 }}>
+              <Cookie style={{ width: 32, height: 32, flexShrink: 0, color: colors.primary.teal }} />
               <div>
-                <h3 className="font-bold text-lg mb-2">
-                  {language === 'ru' ? 'Мы используем cookies' : language === 'he' ? 'אנו משתמשים בעוגיות' : 'We use cookies'}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {language === 'ru'
-                    ? 'Этот сайт использует cookies для улучшения вашего опыта. Используя наш сайт, вы соглашаетесь с нашей политикой в отношении cookies.'
-                    : language === 'he'
-                    ? 'אתר זה משתמש בעוגיות כדי לשפר את החוויה שלך. על ידי שימוש באתר שלנו, אתה מסכים למדיניות העוגיות שלנו.'
-                    : 'This website uses cookies to enhance your experience. By using our site, you agree to our cookie policy.'}
-                </p>
+                <h3 style={{ fontWeight: 700, fontSize: 17, marginBottom: 6 }}>{language === 'ru' ? 'Мы используем cookies' : language === 'he' ? 'אנו משתמשים בעוגיות' : 'We use cookies'}</h3>
+                <p style={{ fontSize: 14, color: '#4B5563' }}>{language === 'ru' ? 'Этот сайт использует cookies для улучшения вашего опыта.' : language === 'he' ? 'אתר זה משתמש בעוגיות כדי לשפר את החוויה שלך.' : 'This website uses cookies to enhance your experience.'}</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={declineCookies}
-                className="px-6 py-2 border-2 rounded-lg hover:bg-gray-50 transition-colors"
-                style={{ borderColor: colors.primary.teal, color: colors.primary.teal }}
-              >
-                {language === 'ru' ? 'Отклонить' : language === 'he' ? 'דחה' : 'Decline'}
-              </button>
-              <button
-                onClick={acceptCookies}
-                className="px-6 py-2 text-white rounded-lg hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: colors.primary.teal }}
-              >
-                {language === 'ru' ? 'Принять' : language === 'he' ? 'קבל' : 'Accept'}
-              </button>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={declineCookies} style={{ padding: '8px 20px', border: `2px solid ${colors.primary.teal}`, borderRadius: 8, color: colors.primary.teal, background: 'transparent', cursor: 'pointer' }}>{language === 'ru' ? 'Отклонить' : language === 'he' ? 'דחה' : 'Decline'}</button>
+              <button onClick={acceptCookies} style={{ padding: '8px 20px', background: colors.primary.teal, color: 'white', borderRadius: 8, border: 'none', cursor: 'pointer' }}>{language === 'ru' ? 'Принять' : language === 'he' ? 'קבל' : 'Accept'}</button>
             </div>
           </div>
         </div>
@@ -1466,27 +1420,26 @@ const LandingPage = () => {
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        @keyframes slideUp {
-          from { transform: translateY(100%); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
         .animate-slideDown { animation: slideDown 0.5s ease-out; }
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-slideUp { animation: slideUp 0.5s ease-out; }
-        .high-contrast {
-          filter: contrast(2);
+        .high-contrast { filter: contrast(2); }
+        .high-contrast * { border-color: #000 !important; }
+        @media (max-width: 767px) {
+          .hero-grid { grid-template-columns: 1fr !important; }
+          .hero-image-wrap { display: none !important; }
+          .hero-section { padding: 3rem 1rem 2.5rem !important; }
+          .hero-stats { grid-template-columns: repeat(2, 1fr) !important; }
+          .section-pad { padding: 3rem 1rem !important; }
         }
-        .high-contrast * {
-          border-color: #000 !important;
+        @media (max-width: 479px) {
+          .footer-wordmark { font-size: clamp(3rem, 18vw, 5rem) !important; }
         }
       `}</style>
 
-      {/* AI Chat Widget */}
       <ChatWidget language={language} />
     </div>
   );

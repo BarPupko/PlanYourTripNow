@@ -317,7 +317,7 @@ const TripViewModal = ({ tripId, onClose }) => {
     try {
       const token = await ensureCompanionToken(reg.id);
       const url   = `${COMPANION_BASE_URL}?token=${token}`;
-      const msg   = `Hi ${reg.firstName}! 👋\nHere is your personal IVRI Tours itinerary link:\n${url}\nOpen it on your phone to follow the live schedule. See you soon! 🚌`;
+      const msg   = `Hi ${reg.firstName}! 👋\nHere is your personal IVRITours itinerary link:\n${url}\nOpen it on your phone to follow the live schedule. See you soon! 🚌`;
       await navigator.clipboard.writeText(msg);
       setItineraryLoadingId(null);
       setItineraryCopiedId(reg.id);
@@ -345,7 +345,7 @@ const TripViewModal = ({ tripId, onClose }) => {
         ? new Date(reg.registrationDate).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
       return `<div style="padding:28px 32px;font-family:Arial,sans-serif;page-break-after:always;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
-          <div><div style="font-size:26px;font-weight:900;color:#00BCD4;">IVRI Tours</div><div style="font-size:12px;color:#9CA3AF;">ivritours.ca</div></div>
+          <div><div style="font-size:26px;font-weight:900;color:#00BCD4;">IVRITours</div><div style="font-size:12px;color:#9CA3AF;">ivritours.ca</div></div>
           <div style="text-align:right;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#D1D5DB;">Invoice</div><div style="font-size:13px;font-weight:600;color:#374151;">${regDate}</div></div>
         </div>
         <hr style="border:none;border-top:2px solid #E5E7EB;margin:0 0 18px;">
@@ -371,7 +371,7 @@ const TripViewModal = ({ tripId, onClose }) => {
             <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Status</span><span style="display:inline-block;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;${reg.paid ? 'background:#D1FAE5;color:#065F46;' : 'background:#FEE2E2;color:#991B1B;'}">${reg.paid ? '✓ Paid' : '✗ Not Paid'}</span></div>
           </div></div>
         <hr style="border:none;border-top:1px solid #E5E7EB;margin:0 0 12px;">
-        <p style="font-size:10px;text-align:center;color:#9CA3AF;margin:0;">IVRI Tours · Official registration confirmation.</p>
+        <p style="font-size:10px;text-align:center;color:#9CA3AF;margin:0;">IVRITours · Official registration confirmation.</p>
       </div>`;
     };
 

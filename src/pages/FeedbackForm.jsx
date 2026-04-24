@@ -306,7 +306,7 @@ const FeedbackForm = () => {
         <p className="text-center text-xs text-gray-400 mt-4">
           {publishConsent === true
             ? 'Your review will be visible on the website only after admin approval.'
-            : 'Your feedback is private and shared only with the IVRI Tours team.'}
+            : 'Your feedback is private and shared only with the IVRITours team.'}
         </p>
       </div>
     </div>

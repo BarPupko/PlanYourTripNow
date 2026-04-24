@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Bot } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, Phone, Mail } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { functions, db } from '../firebase';
 import colors from '../utils/colors';
 
 const PROMPT_DELAY_MS = 60_000;
+const INACTIVITY_MSG_DELAY_MS = 60_000; // 1 minute after first user msg
 
 const YEFIM_INTRO = {
   en: "Hello, my name is Yefim 👋 I would like to help you with anything you need related to our tours, please feel free to ask!",
@@ -25,25 +27,46 @@ const ERROR_MSG = {
   ru: "Извините, не удалось подключиться. Попробуйте снова."
 };
 
+const INACTIVITY_MSG = {
+  en: "If you'd like us to reach out to you directly, please provide your contact information or call us at (647) 302-6846",
+  he: "אם אתה מעדיף שנשמור אליך ישירות, אנא תן לנו את פרטי הקשר או התקשר אלינו בטלפון (647) 302-6846",
+  ru: "Если вы хотите, чтобы мы связались с вами напрямую, пожалуйста, предоставьте вашу контактную информацию или позвоните нам по телефону (647) 302-6846"
+};
+
 export default function ChatWidget({ language = 'en' }) {
   const [open, setOpen] = useState(false);
   const [prompted, setPrompted] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [showInactivityMsg, setShowInactivityMsg] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const [submittingContact, setSubmittingContact] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
-  const timerRef = useRef(null);
+  const inactivityTimerRef = useRef(null);
 
+  // Prompt after 60 seconds if chat not opened
   useEffect(() => {
-    timerRef.current = setTimeout(() => {
-      setPrompted(prev => {
-        if (!open) return true;
-        return prev;
-      });
-    }, PROMPT_DELAY_MS);
-    return () => clearTimeout(timerRef.current);
-  }, []);
+    let timeoutId;
+    if (!open && !prompted) {
+      timeoutId = setTimeout(() => {
+        setPrompted(true);
+      }, PROMPT_DELAY_MS);
+    }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [open, prompted]);
+
+  // Show inactivity message after 1 minute of no response
+  const resetInactivityTimer = () => {
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    inactivityTimerRef.current = setTimeout(() => {
+      setShowInactivityMsg(true);
+    }, INACTIVITY_MSG_DELAY_MS);
+  };
 
   useEffect(() => {
     if (open) {
@@ -52,17 +75,20 @@ export default function ChatWidget({ language = 'en' }) {
         setMessages([{ role: 'assistant', content: YEFIM_INTRO[language] || YEFIM_INTRO.en }]);
       }
       setTimeout(() => inputRef.current?.focus(), 100);
+      resetInactivityTimer();
     }
   }, [open]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+  }, [messages, loading, showInactivityMsg]);
 
   const handleSend = async () => {
     const text = input.trim();
     if (!text || loading) return;
     setInput('');
+    resetInactivityTimer(); // Reset timer on new message
+    setShowInactivityMsg(false);
     const userMsg = { role: 'user', content: text };
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
@@ -79,6 +105,43 @@ export default function ChatWidget({ language = 'en' }) {
     }
   };
 
+  const handleContactSubmit = async () => {
+    if (!contactForm.name || !contactForm.email || !contactForm.phone) {
+      alert(language === 'en' ? 'Please fill in all fields' : language === 'he' ? 'אנא מלא את כל השדות' : 'Пожалуйста, заполните все поля');
+      return;
+    }
+    
+    setSubmittingContact(true);
+    try {
+      // Store in Firestore for admin to see
+      const docRef = collection(db, 'contactRequests');
+      await addDoc(docRef, {
+        name: contactForm.name,
+        email: contactForm.email,
+        phone: contactForm.phone,
+        message: contactForm.message,
+        createdAt: serverTimestamp(),
+        source: 'chat_widget'
+      });
+
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: language === 'en' 
+          ? 'Thank you! We received your information and will contact you soon at the phone number you provided.' 
+          : language === 'he'
+          ? 'תודה! קיבלנו את המידע שלך וניצור איתך קשר בקרוב בטלפון שנתת.'
+          : 'Спасибо! Мы получили вашу информацию и вскоре свяжемся с вами по номеру телефона, который вы предоставили.'
+      }]);
+      setShowContactForm(false);
+      setContactForm({ name: '', email: '', phone: '', message: '' });
+    } catch (err) {
+      console.error('Contact submission error:', err);
+      alert(language === 'en' ? 'Error sending information' : language === 'he' ? 'שגיאה בשליחת המידע' : 'Ошибка отправки информации');
+    } finally {
+      setSubmittingContact(false);
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
@@ -89,7 +152,7 @@ export default function ChatWidget({ language = 'en' }) {
       {open && (
         <div
           className="mb-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
-          style={{ maxHeight: '480px' }}
+          style={{ maxHeight: '600px' }}
         >
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 text-white" style={{ backgroundColor: colors.primary.teal }}>
@@ -98,7 +161,7 @@ export default function ChatWidget({ language = 'en' }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-sm leading-none">Yefim</p>
-              <p className="text-xs opacity-80 mt-0.5">IVRI Tours Assistant</p>
+              <p className="text-xs opacity-80 mt-0.5">IVRITours Assistant</p>
             </div>
             <button onClick={() => setOpen(false)} className="hover:bg-white/20 rounded-full p-1 transition-colors">
               <X className="w-4 h-4" />
@@ -130,6 +193,82 @@ export default function ChatWidget({ language = 'en' }) {
                 </div>
               </div>
             )}
+
+            {/* Inactivity message */}
+            {showInactivityMsg && !showContactForm && (
+              <div className="flex justify-start">
+                <div className="bg-blue-50 border border-blue-200 px-3 py-2 rounded-2xl rounded-bl-sm text-sm text-blue-900 shadow-sm">
+                  <p className="mb-3">{INACTIVITY_MSG[language] || INACTIVITY_MSG.en}</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-blue-700 font-medium">
+                      <Phone className="w-4 h-4" />
+                      <span>(647) 302-6846</span>
+                    </div>
+                    <button
+                      onClick={() => setShowContactForm(true)}
+                      className="w-full px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition-colors"
+                    >
+                      {language === 'en' ? 'Send Your Info' : language === 'he' ? 'שלח את הפרטים שלך' : 'Отправить вашу информацию'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Contact Form */}
+            {showContactForm && (
+              <div className="flex justify-start">
+                <div className="bg-white border-2 border-gray-200 px-3 py-3 rounded-2xl rounded-bl-sm text-sm w-full space-y-2">
+                  <p className="font-semibold text-gray-900 mb-2">
+                    {language === 'en' ? 'Your Information' : language === 'he' ? 'הפרטים שלך' : 'Ваша информация'}
+                  </p>
+                  <input
+                    type="text"
+                    placeholder={language === 'en' ? 'Name' : language === 'he' ? 'שם' : 'Имя'}
+                    value={contactForm.name}
+                    onChange={e => setContactForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-500"
+                  />
+                  <input
+                    type="email"
+                    placeholder={language === 'en' ? 'Email' : language === 'he' ? 'דוא"ל' : 'Почта'}
+                    value={contactForm.email}
+                    onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-500"
+                  />
+                  <input
+                    type="tel"
+                    placeholder={language === 'en' ? 'Phone' : language === 'he' ? 'טלפון' : 'Телефон'}
+                    value={contactForm.phone}
+                    onChange={e => setContactForm(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-500"
+                  />
+                  <textarea
+                    placeholder={language === 'en' ? 'Message (optional)' : language === 'he' ? 'הודעה (אופציונלי)' : 'Сообщение (опционально)'}
+                    rows={2}
+                    value={contactForm.message}
+                    onChange={e => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-500 resize-none"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowContactForm(false)}
+                      className="flex-1 px-2 py-1.5 text-gray-600 border border-gray-300 rounded-lg text-xs font-semibold hover:bg-gray-50"
+                    >
+                      {language === 'en' ? 'Cancel' : language === 'he' ? 'ביטול' : 'Отмена'}
+                    </button>
+                    <button
+                      onClick={handleContactSubmit}
+                      disabled={submittingContact}
+                      className="flex-1 px-2 py-1.5 bg-green-500 text-white rounded-lg text-xs font-semibold hover:bg-green-600 disabled:opacity-50"
+                    >
+                      {submittingContact ? (language === 'en' ? 'Sending…' : language === 'he' ? 'שולח…' : 'Отправка…') : (language === 'en' ? 'Send' : language === 'he' ? 'שלח' : 'Отправить')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div ref={bottomRef} />
           </div>
 

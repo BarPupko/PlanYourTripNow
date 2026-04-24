@@ -1,4 +1,4 @@
-# WhatsApp Bot Setup Guide for IVRI Tours
+# WhatsApp Bot Setup Guide for IVRITours
 
 Your WhatsApp bot has been created and deployed to Firebase! Follow these steps to connect it with Twilio and start using it.
 
@@ -269,7 +269,7 @@ Your bot integrates directly with your Firestore database and can:
 
 ```
 You: hi
-Bot: 🤖 IVRI Tours WhatsApp Assistant
+Bot: 🤖 IVRITours WhatsApp Assistant
 
 Here's what I can help you with:
 
@@ -385,7 +385,7 @@ Bot: 📊 Overall Statistics
 
 ```
 Вы: привет
-Бот: 🤖 IVRI Tours WhatsApp Ассистент
+Бот: 🤖 IVRITours WhatsApp Ассистент
 
 Вот чем я могу помочь:
 
