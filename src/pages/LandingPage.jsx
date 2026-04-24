@@ -11,6 +11,7 @@ import LanguageSelector from '../components/LanguageSelector';
 import ChatWidget from '../components/ChatWidget';
 import BlogPostModal from '../components/BlogPostModal';
 import { createQuestion, getWebsiteFeedbacks, getSiteSettings, getPublishedBlogPosts } from '../utils/firestoreUtils';
+import siteLogo from '../assets/site_logo.png';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -56,9 +57,10 @@ const LandingPage = () => {
   const [blogPosts, setBlogPosts] = useState([]);
   const [selectedBlogPost, setSelectedBlogPost] = useState(null);
   const [showBlogMenu, setShowBlogMenu] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(true);
   const [reviewsIdx, setReviewsIdx] = useState(0);
   const [destFilter, setDestFilter] = useState('all');
+  const [siteStats, setSiteStats] = useState({ travelers: 0, toursCompleted: 0 });
 
   useEffect(() => {
     const fetchUpcomingTrips = async () => {
@@ -88,6 +90,13 @@ const LandingPage = () => {
         });
         setUpcomingTrips(trips);
         setTripRegistrationCounts(counts);
+
+        // Compute live stats from all trips + all registrations
+        const allTripsData = tripsSnap.docs.map(d => d.data());
+        const toursCompleted = allTripsData.filter(t => t.status === 'done').length + 500;
+        const allRegistrations = await getDocs(collection(db, 'registrations')) ;
+        const totalTravelers = allRegistrations.docs.filter(d => d.data().status !== 'pending').length + 1000;
+        setSiteStats({ travelers: totalTravelers, toursCompleted });
       } catch (err) {
         console.error('Error fetching trips:', err);
       } finally {
@@ -588,6 +597,8 @@ const LandingPage = () => {
     { key: 'chicago',  image: 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80',  durationCategory: 'multi', country: 'us' },
   ];
 
+  const NumOfDestination = destinations.length+70;
+
   const filteredDestinations = destFilter === 'all'
     ? destinations
     : destinations.filter(d => d.durationCategory === destFilter);
@@ -807,10 +818,10 @@ const LandingPage = () => {
 
       {/* ── NAV ─────────────────────────────────────────────────── */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(234,246,248,0.88)', backdropFilter: 'blur(14px) saturate(140%)', borderBottom: '1px solid #C6DFE4' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 76 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {/* <div style={{ width: 34, height: 34, borderRadius: '50%', background: colors.primary.teal, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontFamily: '"Fraunces", Georgia, serif', fontStyle: 'italic', fontSize: 17, fontWeight: 600 }}>i</div> */}
-            <img src="/src/assets/site_logo.png" alt="IVRITours" style={{ height: 42, width: 'auto', display: 'block' }} />
+            <img src={siteLogo} alt="IVRITours" style={{ height: 60, width: 'auto', display: 'block' }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div className="relative">
@@ -870,17 +881,10 @@ const LandingPage = () => {
               <img src="https://images.unsplash.com/photo-1517935706615-2717063c2225?w=1200&q=80" alt="CN Tower Toronto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
           </div>
-          {/* Stats bar */}
-          <div className="hero-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: '#C6DFE4', marginTop: 48, borderRadius: 12, overflow: 'hidden' }}>
-            {[{ num: '1000+', label: t.stats.travelers }, { num: '100+', label: t.stats.tours }, { num: '7', label: t.stats.destinations }, { num: '3', label: t.stats.languages }].map(({ num, label }) => (
-              <div key={label} style={{ background: '#F5FBFC', padding: '20px 16px', textAlign: 'center' }}>
-                <div style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 30, fontWeight: 350, color: '#073944' }}>{num}</div>
-                <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#78959D', marginTop: 4 }}>{label}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
+
+     
 
       {/* ── Orderable sections ─────────────────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -1091,7 +1095,24 @@ const LandingPage = () => {
           </div>
         </section>
       )}
-
+ {/* ── STATS ─────────────────────────────────────────────────── */}
+      <section style={{ background: '#073944', padding: '3rem 1.5rem' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div className="hero-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+            {[
+              { num: siteStats.travelers > 0 ? `${siteStats.travelers}+` : '1000+', label: t.stats.travelers },
+              { num: siteStats.toursCompleted > 0 ? `${siteStats.toursCompleted}+` : '100+', label: t.stats.tours },
+              { num: `${NumOfDestination}`, label: t.stats.destinations },
+              { num: '3', label: t.stats.languages },
+            ].map(({ num, label }, i, arr) => (
+              <div key={label} style={{ padding: '28px 16px', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
+                <div style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 38, fontWeight: 350, color: '#ffffff', lineHeight: 1 }}>{num}</div>
+                <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginTop: 8 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       {/* REVIEWS */}
       {(siteSettings.showTestimonials !== false || (people.length > 0 && siteSettings.showPeople !== false)) && (
         <section style={{ order: getSectionOrder('reviews'), padding: '5rem 1.5rem', background: '#F5FBFC' }}>
@@ -1265,14 +1286,13 @@ const LandingPage = () => {
               <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#073944' }}>{t.contactTitle}</h2>
               <button
                 onClick={() => setContactOpen(p => !p)}
-                className="sm:hidden"
                 style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: colors.primary.teal, color: 'white', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
               >
                 {contactOpen ? (language === 'ru' ? 'Скрыть форму' : language === 'he' ? 'הסתר טופס' : 'Hide Form') : (language === 'ru' ? 'Написать нам' : language === 'he' ? 'פתח טופס' : 'Show Form')}
                 <ChevronDown style={{ width: 16, height: 16, transform: contactOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
               </button>
             </div>
-            <div className={`sm:block ${contactOpen ? 'block' : 'hidden'}`}>
+            <div style={{ display: contactOpen ? 'block' : 'none' }}>
               <form onSubmit={handleSubmit} style={{ background: 'white', borderRadius: 16, boxShadow: '0 4px 20px rgba(7,57,68,0.08)', padding: 32, border: '1px solid #D9EBEE' }}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: 24 }}>
                   <div>

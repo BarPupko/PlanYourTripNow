@@ -2405,12 +2405,8 @@ exports.onQuestionCreated = functions.firestore
     }
   });
 
-// AI Chat — Yefim persona powered by OpenAI
-exports.chatWithYefim = functions.https.onCall(
-  {
-    secrets: ['OPENAI_API_KEY']
-  },
-  async (data, context) => {
+// AI Chat — Yefim persona powered by OpenAI (key loaded from functions/.env)
+exports.chatWithYefim = functions.https.onCall(async (data, context) => {
     const { message, history = [], language = 'en' } = data;
     if (!message || typeof message !== 'string') {
       throw new functions.https.HttpsError('invalid-argument', 'message is required');
