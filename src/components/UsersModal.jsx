@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Loader2, Shield, PenLine, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { getRoleUsers, setUserRole, removeUserRole } from '../utils/firestoreUtils';
+import { initializeApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import app from '../firebase';
 import colors from '../utils/colors';
 
-const FIREBASE_API_KEY = 'AIzaSyAriwME6CybqyDw1e3yNTwF6sHk4NUn7oY';
+let _secondaryAuth = null;
+const getSecondaryAuth = () => {
+  if (!_secondaryAuth) {
+    const secondary = initializeApp(app.options, 'user-creation');
+    _secondaryAuth = getAuth(secondary);
+  }
+  return _secondaryAuth;
+};
 
 const ROLE_CONFIG = {
   admin: { label: 'Administrator', icon: <Shield className="w-3.5 h-3.5" />, bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
@@ -40,28 +50,24 @@ const UsersModal = ({ onClose }) => {
     setSaving(true);
     setError('');
     try {
-      // Create the Firebase Auth user via REST API (doesn't sign out the current admin)
-      const res = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: form.email.trim(), password: form.password, returnSecureToken: true }),
-        }
+      const secondaryAuth = getSecondaryAuth();
+      const { user } = await createUserWithEmailAndPassword(
+        secondaryAuth,
+        form.email.trim(),
+        form.password
       );
-      const data = await res.json();
-      if (!res.ok) {
-        const msg = data?.error?.message || 'Failed to create account.';
-        setError(msg === 'EMAIL_EXISTS' ? 'An account with this email already exists.' : msg);
-        return;
-      }
-      const uid = data.localId;
-      await setUserRole(uid, form.role, form.displayName.trim(), form.email.trim());
+      await updateProfile(user, { displayName: form.displayName.trim() });
+      await secondaryAuth.signOut();
+      await setUserRole(user.uid, form.role, form.displayName.trim(), form.email.trim());
       setForm({ displayName: '', email: '', password: '', role: 'writer' });
       setShowForm(false);
       load();
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      const code = err?.code || '';
+      if (code === 'auth/email-already-in-use') setError('An account with this email already exists.');
+      else if (code === 'auth/weak-password') setError('Password must be at least 6 characters.');
+      else if (code === 'auth/invalid-email') setError('Please enter a valid email address.');
+      else setError('Failed to create user. Please try again.');
       console.error(err);
     } finally {
       setSaving(false);

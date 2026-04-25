@@ -41,11 +41,17 @@ service cloud.firestore {
     }
 
     // ─── Admins ─────────────────────────────────────────────────────────────
-    // Any logged-in user can read their own admin doc (to check their role).
-    // Only existing admins can write (managed manually in Firebase Console).
+    // Any logged-in user can read admin docs (to check their role).
+    // Only admins can create/update/delete admin and writer records.
     match /admins/{uid} {
       allow read: if request.auth != null;
-      allow write: if false; // managed manually via Firebase Console
+      allow write: if isAdmin();
+    }
+
+    // ─── Writers ─────────────────────────────────────────────────────────────
+    match /writers/{uid} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // ─── Contacts ───────────────────────────────────────────────────────────
