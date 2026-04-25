@@ -1210,6 +1210,67 @@ const LandingPage = () => {
                 {language === 'ru' ? 'Мы отправляем открытку домой после каждой поездки. Вот что приходит в ответ.' : language === 'he' ? 'אנו שולחים גלויה כתובה ביד לכל טיול. הנה מה שחוזר.' : "We send a handwritten postcard home for every trip. Here's what comes back."}
               </p>
             </div>
+            {/* Google Rating Badge */}
+            {siteSettings.googleRating && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 48 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16, background: 'white', borderRadius: 16, boxShadow: '0 4px 24px rgba(7,57,68,0.10)', border: '1px solid #D9EBEE', padding: '18px 28px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {/* Google G logo */}
+                  <svg width="32" height="32" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  {/* Stars + score */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                      {[1,2,3,4,5].map(i => {
+                        const pct = Math.round(Math.min(100, Math.max(0, (siteSettings.googleRating - (i - 1)) * 100)));
+                        return (
+                          <svg key={i} width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                            <defs>
+                              <linearGradient id={`g-star-${i}`} x1="0" x2="1" y1="0" y2="0">
+                                <stop offset={`${pct}%`} stopColor="#FBBC04"/>
+                                <stop offset={`${pct}%`} stopColor="#D1D5DB"/>
+                              </linearGradient>
+                            </defs>
+                            <path fill={`url(#g-star-${i})`} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                          </svg>
+                        );
+                      })}
+                      <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 16, fontWeight: 700, color: '#073944', marginLeft: 6 }}>
+                        {Number(siteSettings.googleRating).toFixed(1)}
+                      </span>
+                    </div>
+                    {siteSettings.googleReviewCount && (
+                      <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: '#78959D', letterSpacing: '0.04em' }}>
+                        {siteSettings.googleReviewCount} {language === 'ru' ? 'отзывов на Google' : language === 'he' ? 'ביקורות ב-Google' : 'reviews on Google'}
+                      </p>
+                    )}
+                  </div>
+                  {/* Divider */}
+                  <div style={{ width: 1, height: 40, background: '#D9EBEE', flexShrink: 0 }} />
+                  {/* Review CTA */}
+                  {siteSettings.googleReviewUrl ? (
+                    <a
+                      href={siteSettings.googleReviewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#073944', color: 'white', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', transition: 'opacity 0.2s' }}
+                      onMouseOver={e => e.currentTarget.style.opacity = '0.85'}
+                      onMouseOut={e => e.currentTarget.style.opacity = '1'}
+                    >
+                      {language === 'ru' ? 'Оставить отзыв →' : language === 'he' ? 'כתוב ביקורת →' : 'Leave a review →'}
+                    </a>
+                  ) : (
+                    <p style={{ fontSize: 13, color: '#3E5F68', fontWeight: 600 }}>
+                      {language === 'ru' ? 'Оставьте отзыв на Google' : language === 'he' ? 'דרגו אותנו ב-Google' : 'Rate us on Google'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Quote cards — carousel */}
             {(() => {
               const allCards = [
@@ -1325,7 +1386,7 @@ const LandingPage = () => {
                 const readTime = Math.max(1, Math.ceil(wordCount / 200));
                 return (
                   <div key={post.id} onClick={() => setSelectedBlogPost(post)} className="group" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ borderRadius: 12, overflow: 'hidden', aspectRatio: '16/10', position: 'relative', marginBottom: 20 }}>
+                    <div style={{ borderRadius: 12, overflow: 'hidden', aspectRatio: '1/1', position: 'relative', marginBottom: 20 }}>
                       {post.images?.[0] ? (
                         <img src={post.images[0]} alt={post.title} className="group-hover:scale-105" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} />
                       ) : (
@@ -1437,30 +1498,29 @@ const LandingPage = () => {
                 {language === 'ru' ? 'Наш персонал' : language === 'he' ? 'הצוות שלנו' : 'Our Staff'}
               </h2>
             </div>
+            <style>{`
+              .staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+              @media (max-width: 640px) { .staff-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
+              .staff-grid-single { display: grid; grid-template-columns: minmax(0, 280px); gap: 20px; margin: 0 auto; max-width: 280px; }
+              @media (max-width: 640px) { .staff-grid-single { max-width: 140px; } }
+            `}</style>
             {(() => {
               const visibleStaff = drivers.filter(d => d.visible !== false);
               const isSingle = visibleStaff.length === 1;
               return (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: isSingle ? 'minmax(0, 320px)' : 'repeat(auto-fill, minmax(160px, 1fr))',
-                  gap: 20,
-                  justifyContent: isSingle ? 'center' : undefined,
-                  margin: isSingle ? '0 auto' : undefined,
-                  maxWidth: isSingle ? 320 : undefined,
-                }}>
+                <div className={isSingle ? 'staff-grid-single' : 'staff-grid'}>
                   {visibleStaff.map(d => (
-                    <div key={d.id} style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(7,57,68,0.08)', border: '1px solid #D9EBEE' }}>
+                    <div key={d.id} style={{ background: 'white', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 20px rgba(7,57,68,0.08)', border: '1px solid #D9EBEE' }}>
                       {d.photoUrl ? (
-                        <img src={d.photoUrl} alt={d.name} style={{ width: '100%', height: 160, objectFit: 'cover', objectPosition: 'top' }} />
+                        <img src={d.photoUrl} alt={d.name} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', objectPosition: 'top', display: 'block' }} />
                       ) : (
-                        <div style={{ height: 160, background: '#EAF6F8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48 }}>👤</div>
+                        <div style={{ aspectRatio: '1/1', background: '#EAF6F8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>👤</div>
                       )}
-                      <div style={{ padding: '12px 14px 16px' }}>
-                        <p style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 16, fontWeight: 500, color: '#073944', marginBottom: 3 }}>{d.name}</p>
-                        {d.since && <p style={{ fontSize: 11, color: colors.primary.teal, fontWeight: 600, marginBottom: 6 }}>Since {d.since}</p>}
-                        {d.languages && <p style={{ fontSize: 11, color: '#78959D', marginBottom: 6 }}>🌐 {d.languages}</p>}
-                        {d.bio && <p style={{ fontSize: 12, color: '#3E5F68', lineHeight: 1.5 }}>{d.bio}</p>}
+                      <div style={{ padding: '10px 12px 14px' }}>
+                        <p style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 15, fontWeight: 500, color: '#073944', marginBottom: 2 }}>{d.name}</p>
+                        {d.since && <p style={{ fontSize: 10, color: colors.primary.teal, fontWeight: 600, marginBottom: 4 }}>Since {d.since}</p>}
+                        {d.languages && <p style={{ fontSize: 10, color: '#78959D', marginBottom: 4 }}>🌐 {d.languages}</p>}
+                        {d.bio && <p style={{ fontSize: 11, color: '#3E5F68', lineHeight: 1.5 }}>{d.bio}</p>}
                       </div>
                     </div>
                   ))}
