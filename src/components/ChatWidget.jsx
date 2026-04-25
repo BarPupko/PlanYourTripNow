@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Bot, Phone } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { MessageCircle, X, Send, Bot, Phone, Users } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '../firebase';
+import { functions } from '../firebase';
+import { createQuestion } from '../utils/firestoreUtils';
 import colors from '../utils/colors';
 
 const PROMPT_DELAY_MS = 60_000;
@@ -28,7 +28,9 @@ Your role is to:
 - Be friendly, concise, and helpful
 - If you don't know a specific price or date, direct them to call (647) 302-6846 or visit the website
 
-If a user wants the company to contact them, ask for: name, phone number, email, and what they're interested in.`;
+IMPORTANT: When a user provides their contact information (name, phone number, and/or email), acknowledge it warmly and tell them to click the green "Send to Team" button (👥 icon) at the top of the chat window to send their information directly to our team. This ensures their info is saved and the team is notified immediately.
+
+If a user wants the company to contact them, ask for: name, phone number, email, and what they're interested in. Then remind them to use the Send to Team button.`;
 
 const YEFIM_INTRO = {
   en: "Hello, my name is Yefim 👋 I would like to help you with anything you need related to our tours, please feel free to ask!",
@@ -55,6 +57,30 @@ const INACTIVITY_MSG = {
   ru: "Если вы хотите, чтобы мы связались с вами напрямую, пожалуйста, предоставьте вашу контактную информацию или позвоните нам по телефону (647) 302-6846"
 };
 
+// Try to extract contact info from conversation messages
+const extractContactInfo = (msgs) => {
+  const allText = msgs.map(m => m.content).join('\n');
+  const emailMatch = allText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
+  const phoneMatch = allText.match(/\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/);
+  // Look for AI addressing user by name e.g. "Thank you, Bar!"
+  const aiNameMatch = msgs
+    .filter(m => m.role === 'assistant')
+    .map(m => m.content).join('\n')
+    .match(/(?:Thank you,?\s+|Hello,?\s+|Hi,?\s+)([A-Z][a-zA-Z]+)/);
+  const userNameMatch = allText.match(/(?:my name is|I'm|I am)\s+([A-Z][a-zA-Z]+)/i);
+  return {
+    name: (aiNameMatch?.[1] || userNameMatch?.[1] || '').trim(),
+    email: emailMatch?.[0] || '',
+    phone: phoneMatch?.[0] || '',
+  };
+};
+
+const buildTranscript = (msgs) =>
+  msgs
+    .filter(m => m.content)
+    .map(m => `${m.role === 'user' ? 'Visitor' : 'Yefim'}: ${m.content}`)
+    .join('\n\n');
+
 export default function ChatWidget({ language = 'en' }) {
   const [open, setOpen] = useState(false);
   const [prompted, setPrompted] = useState(false);
@@ -65,6 +91,7 @@ export default function ChatWidget({ language = 'en' }) {
   const [showInactivityMsg, setShowInactivityMsg] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [submittingContact, setSubmittingContact] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const inactivityTimerRef = useRef(null);
@@ -111,12 +138,10 @@ export default function ChatWidget({ language = 'en' }) {
       let reply = '';
 
       try {
-        // Primary: Firebase Cloud Function (API key stays on server)
         const chatWithYefim = httpsCallable(functions, 'chatWithYefim');
         const result = await chatWithYefim({ message: text, history, language });
         reply = result.data.reply || '';
       } catch {
-        // Fallback: direct OpenAI call (uses VITE key baked into build)
         const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
         if (!apiKey) throw new Error('no_key');
         const chatMessages = [
@@ -143,34 +168,70 @@ export default function ChatWidget({ language = 'en' }) {
     }
   };
 
+  const handleOpenSendToTeam = () => {
+    const extracted = extractContactInfo(messages);
+    setContactForm(prev => ({
+      name: extracted.name || prev.name,
+      email: extracted.email || prev.email,
+      phone: extracted.phone || prev.phone,
+      message: prev.message,
+    }));
+    setShowContactForm(true);
+    setShowInactivityMsg(false);
+  };
+
   const handleContactSubmit = async () => {
-    if (!contactForm.name || !contactForm.email || !contactForm.phone) {
-      alert(language === 'en' ? 'Please fill in all fields' : language === 'he' ? 'אנא מלא את כל השדות' : 'Пожалуйста, заполните все поля');
+    if (!contactForm.name.trim() || !contactForm.email.trim() || !contactForm.phone.trim()) {
+      alert(language === 'en' ? 'Please fill in name, email, and phone' : language === 'he' ? 'אנא מלא שם, אימייל וטלפון' : 'Пожалуйста, заполните имя, email и телефон');
       return;
     }
     setSubmittingContact(true);
+
+    const transcript = buildTranscript(messages);
+    const fullMessage = contactForm.message.trim()
+      ? `${contactForm.message.trim()}\n\n--- Chat Transcript ---\n${transcript}`
+      : `--- Chat Transcript ---\n${transcript}`;
+
     try {
-      await addDoc(collection(db, 'contactRequests'), {
-        name: contactForm.name,
-        email: contactForm.email,
-        phone: contactForm.phone,
-        message: contactForm.message,
-        createdAt: serverTimestamp(),
-        source: 'chat_widget'
+      // Save to questions (shows up in admin Questions panel)
+      await createQuestion({
+        name: contactForm.name.trim(),
+        email: contactForm.email.trim(),
+        phone: contactForm.phone.trim(),
+        message: fullMessage,
+        destination: 'Chat',
+        language,
+        source: 'chat_widget',
       });
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: language === 'en'
-          ? 'Thank you! We received your information and will contact you soon at the phone number you provided.'
-          : language === 'he'
-          ? 'תודה! קיבלנו את המידע שלך וניצור איתך קשר בקרוב בטלפון שנתת.'
-          : 'Спасибо! Мы получили вашу информацию и вскоре свяжемся с вами по номеру телефона, который вы предоставили.'
-      }]);
+
+      // Send email notification (non-blocking — don't fail the whole flow if email fails)
+      try {
+        const sendEmail = httpsCallable(functions, 'sendContactEmail');
+        await sendEmail({
+          name: contactForm.name.trim(),
+          email: contactForm.email.trim(),
+          phone: contactForm.phone.trim(),
+          destination: 'Chat Inquiry via Yefim',
+          message: fullMessage,
+          toEmail: 'pupko@mail.com',
+        });
+      } catch (emailErr) {
+        console.warn('Email notification failed (info still saved):', emailErr);
+      }
+
+      const confirmMsg = language === 'en'
+        ? 'Thank you! Your information and our conversation have been sent to our team. We will contact you soon! 🎉'
+        : language === 'he'
+        ? 'תודה! המידע שלך ושיחתנו נשלחו לצוות. ניצור איתך קשר בקרוב! 🎉'
+        : 'Спасибо! Ваша информация и наш разговор отправлены команде. Мы свяжемся с вами в ближайшее время! 🎉';
+
+      setMessages(prev => [...prev, { role: 'assistant', content: confirmMsg }]);
       setShowContactForm(false);
+      setSubmitted(true);
       setContactForm({ name: '', email: '', phone: '', message: '' });
     } catch (err) {
       console.error('Contact submission error:', err);
-      alert(language === 'en' ? 'Error sending information' : language === 'he' ? 'שגיאה בשליחת המידע' : 'Ошибка отправки информации');
+      alert(language === 'en' ? 'Error sending information. Please try again.' : language === 'he' ? 'שגיאה בשליחת המידע. אנא נסה שוב.' : 'Ошибка отправки. Попробуйте ещё раз.');
     } finally {
       setSubmittingContact(false);
     }
@@ -179,6 +240,8 @@ export default function ChatWidget({ language = 'en' }) {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
+
+  const hasUserMessages = messages.some(m => m.role === 'user');
 
   return (
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-2">
@@ -196,6 +259,19 @@ export default function ChatWidget({ language = 'en' }) {
               <p className="font-bold text-sm leading-none">Yefim</p>
               <p className="text-xs opacity-80 mt-0.5">IVRITours Assistant</p>
             </div>
+
+            {/* Send to Team button — visible once user has sent a message */}
+            {hasUserMessages && !submitted && (
+              <button
+                onClick={handleOpenSendToTeam}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-semibold transition-colors"
+                title={language === 'en' ? 'Send conversation to our team' : language === 'he' ? 'שלח שיחה לצוות' : 'Отправить команде'}
+              >
+                <Users className="w-3.5 h-3.5" />
+                {language === 'en' ? 'Send to Team' : language === 'he' ? 'שלח לצוות' : 'Команде'}
+              </button>
+            )}
+
             <button onClick={() => setOpen(false)} className="hover:bg-white/20 rounded-full p-1 transition-colors">
               <X className="w-4 h-4" />
             </button>
@@ -237,7 +313,7 @@ export default function ChatWidget({ language = 'en' }) {
                       <span>(647) 302-6846</span>
                     </div>
                     <button
-                      onClick={() => setShowContactForm(true)}
+                      onClick={handleOpenSendToTeam}
                       className="w-full px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition-colors"
                     >
                       {language === 'en' ? 'Send Your Info' : language === 'he' ? 'שלח את הפרטים שלך' : 'Отправить вашу информацию'}
@@ -248,21 +324,62 @@ export default function ChatWidget({ language = 'en' }) {
             )}
 
             {showContactForm && (
-              <div className="flex justify-start">
+              <div className="flex justify-start w-full">
                 <div className="bg-white border-2 border-gray-200 px-3 py-3 rounded-2xl rounded-bl-sm text-sm w-full space-y-2">
                   <p className="font-semibold text-gray-900 mb-2">
-                    {language === 'en' ? 'Your Information' : language === 'he' ? 'הפרטים שלך' : 'Ваша информация'}
+                    {language === 'en' ? 'Send Your Info to Our Team' : language === 'he' ? 'שלח פרטים לצוות' : 'Отправить информацию команде'}
                   </p>
-                  <input type="text" placeholder={language === 'en' ? 'Name' : language === 'he' ? 'שם' : 'Имя'} value={contactForm.name} onChange={e => setContactForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-500" />
-                  <input type="email" placeholder={language === 'en' ? 'Email' : language === 'he' ? 'דוא"ל' : 'Почта'} value={contactForm.email} onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))} className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-500" />
-                  <input type="tel" placeholder={language === 'en' ? 'Phone' : language === 'he' ? 'טלפון' : 'Телефон'} value={contactForm.phone} onChange={e => setContactForm(prev => ({ ...prev, phone: e.target.value }))} className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-500" />
-                  <textarea placeholder={language === 'en' ? 'Message (optional)' : language === 'he' ? 'הודעה (אופציונלי)' : 'Сообщение (опционально)'} rows={2} value={contactForm.message} onChange={e => setContactForm(prev => ({ ...prev, message: e.target.value }))} className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-500 resize-none" />
+                  <input
+                    type="text"
+                    placeholder={language === 'en' ? 'Name *' : language === 'he' ? 'שם *' : 'Имя *'}
+                    value={contactForm.name}
+                    onChange={e => setContactForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#00BCD4]"
+                  />
+                  <input
+                    type="email"
+                    placeholder={language === 'en' ? 'Email *' : language === 'he' ? 'דוא"ל *' : 'Почта *'}
+                    value={contactForm.email}
+                    onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#00BCD4]"
+                  />
+                  <input
+                    type="tel"
+                    placeholder={language === 'en' ? 'Phone *' : language === 'he' ? 'טלפון *' : 'Телефон *'}
+                    value={contactForm.phone}
+                    onChange={e => setContactForm(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#00BCD4]"
+                  />
+                  <textarea
+                    placeholder={language === 'en' ? 'Additional notes (optional)' : language === 'he' ? 'הערות נוספות (אופציונלי)' : 'Доп. заметки (опционально)'}
+                    rows={2}
+                    value={contactForm.message}
+                    onChange={e => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#00BCD4] resize-none"
+                  />
+                  <p className="text-[10px] text-gray-400">
+                    {language === 'en'
+                      ? 'Your full conversation will be included so our team has all the context.'
+                      : language === 'he'
+                      ? 'השיחה המלאה תצורף כדי שהצוות יהיה עם כל ההקשר.'
+                      : 'Полный разговор будет включён, чтобы у команды был весь контекст.'}
+                  </p>
                   <div className="flex gap-2">
-                    <button onClick={() => setShowContactForm(false)} className="flex-1 px-2 py-1.5 text-gray-600 border border-gray-300 rounded-lg text-xs font-semibold hover:bg-gray-50">
+                    <button
+                      onClick={() => setShowContactForm(false)}
+                      className="flex-1 px-2 py-1.5 text-gray-600 border border-gray-300 rounded-lg text-xs font-semibold hover:bg-gray-50"
+                    >
                       {language === 'en' ? 'Cancel' : language === 'he' ? 'ביטול' : 'Отмена'}
                     </button>
-                    <button onClick={handleContactSubmit} disabled={submittingContact} className="flex-1 px-2 py-1.5 bg-green-500 text-white rounded-lg text-xs font-semibold hover:bg-green-600 disabled:opacity-50">
-                      {submittingContact ? (language === 'en' ? 'Sending…' : language === 'he' ? 'שולח…' : 'Отправка…') : (language === 'en' ? 'Send' : language === 'he' ? 'שלח' : 'Отправить')}
+                    <button
+                      onClick={handleContactSubmit}
+                      disabled={submittingContact}
+                      className="flex-1 px-2 py-1.5 text-white rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+                      style={{ backgroundColor: colors.primary.teal }}
+                    >
+                      {submittingContact
+                        ? (language === 'en' ? 'Sending…' : language === 'he' ? 'שולח…' : 'Отправка…')
+                        : (language === 'en' ? 'Send to Team' : language === 'he' ? 'שלח לצוות' : 'Отправить команде')}
                     </button>
                   </div>
                 </div>

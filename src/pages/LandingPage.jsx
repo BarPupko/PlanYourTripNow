@@ -11,12 +11,12 @@ import LanguageSelector from '../components/LanguageSelector';
 import ChatWidget from '../components/ChatWidget';
 import WeatherWidget from '../components/WeatherWidget';
 import BlogPostModal from '../components/BlogPostModal';
-import { createQuestion, getWebsiteFeedbacks, getSiteSettings, getPublishedBlogPosts } from '../utils/firestoreUtils';
+import { createQuestion, getWebsiteFeedbacks, getSiteSettings, getPublishedBlogPosts, getPartners, getDrivers, getCustomDestinations } from '../utils/firestoreUtils';
 import siteLogo from '../assets/site_logo.png';
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const [showWelcome, setShowWelcome] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [showCookieConsent, setShowCookieConsent] = useState(false);
@@ -59,6 +59,11 @@ const LandingPage = () => {
   const [blogPosts, setBlogPosts] = useState([]);
   const [selectedBlogPost, setSelectedBlogPost] = useState(null);
   const [showBlogMenu, setShowBlogMenu] = useState(false);
+  // Partners, drivers, custom destinations
+  const [partners, setPartners] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [customDestinations, setCustomDestinations] = useState([]);
+  const [selectedPartnerId, setSelectedPartnerId] = useState(null);
   const [contactOpen, setContactOpen] = useState(true);
   const [reviewsIdx, setReviewsIdx] = useState(0);
   const [destFilter, setDestFilter] = useState('all');
@@ -109,6 +114,9 @@ const LandingPage = () => {
     getWebsiteFeedbacks().then(setPeople).catch(() => {});
     getSiteSettings().then(setSiteSettings).catch(() => {});
     getPublishedBlogPosts().then(setBlogPosts).catch(() => {});
+    getPartners().then(setPartners).catch(() => {});
+    getDrivers().then(setDrivers).catch(() => {});
+    getCustomDestinations().then(setCustomDestinations).catch(() => {});
   }, []);
 
   // Carousel: responsive items-per-view
@@ -579,7 +587,7 @@ const LandingPage = () => {
   };
 
   // Section ordering — index in array becomes the CSS `order` value
-  const DEFAULT_SECTION_ORDER = ['trips', 'reviews', 'social', 'blog', 'contact'];
+  const DEFAULT_SECTION_ORDER = ['trips', 'partners', 'drivers', 'reviews', 'social', 'blog', 'contact'];
   const activeSectionOrder = siteSettings.sectionOrder?.length
     ? siteSettings.sectionOrder
     : DEFAULT_SECTION_ORDER;
@@ -588,15 +596,20 @@ const LandingPage = () => {
     return idx >= 0 ? idx : 99;
   };
 
-  // Real sightseeing photos of the actual landmarks
+  const hiddenDestinations = siteSettings.hiddenDestinations || [];
+  const staticDestinations = [
+    { key: 'toronto',   image: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80',  durationCategory: 'day',   country: 'ca' },
+    { key: 'niagara',   image: 'https://images.unsplash.com/photo-1489447068241-b3490214e879?w=800&q=80',  durationCategory: 'day',   country: 'ca' },
+    { key: 'tremblant', image: 'https://images.unsplash.com/photo-1729477458908-0a59d8026ed8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', durationCategory: 'multi', country: 'ca' },
+    { key: 'quebec',    image: 'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=800&q=80',  durationCategory: 'multi', country: 'ca' },
+    { key: 'barrie',    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',  durationCategory: 'hours', country: 'ca' },
+    { key: 'detroit',   image: 'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=800&q=80',  durationCategory: 'day',   country: 'us' },
+    { key: 'chicago',   image: 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80',  durationCategory: 'multi', country: 'us' },
+  ].filter(d => !hiddenDestinations.includes(d.key));
+
   const destinations = [
-    { key: 'toronto',  image: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=800&q=80',  durationCategory: 'day',   country: 'ca' },
-    { key: 'niagara',  image: 'https://images.unsplash.com/photo-1489447068241-b3490214e879?w=800&q=80',  durationCategory: 'day',   country: 'ca' },
-    { key: 'tremblant',image: 'https://images.unsplash.com/photo-1729477458908-0a59d8026ed8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', durationCategory: 'multi', country: 'ca' },
-    { key: 'quebec',   image: 'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=800&q=80',  durationCategory: 'multi', country: 'ca' },
-    { key: 'barrie',   image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',  durationCategory: 'hours', country: 'ca' },
-    { key: 'detroit',  image: 'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=800&q=80',  durationCategory: 'day',   country: 'us' },
-    { key: 'chicago',  image: 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80',  durationCategory: 'multi', country: 'us' },
+    ...staticDestinations,
+    ...customDestinations.filter(d => d.visible !== false).map(d => ({ ...d, type: 'custom' })),
   ];
 
   const NumOfDestination = destinations.length+70;
@@ -818,21 +831,60 @@ const LandingPage = () => {
         </div>
       )}
 
-      {/* ── NAV ─────────────────────────────────────────────────── */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(234,246,248,0.88)', backdropFilter: 'blur(14px) saturate(140%)', borderBottom: '1px solid #C6DFE4' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 76 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ display: 'block', lineHeight: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-              <img src={siteLogo} alt="IVRITours" style={{ height: 60, width: 'auto', display: 'block' }} />
+      {/* ── TOP BAR — language picker, scrolls away naturally ──── */}
+      <div style={{ background: '#0A2A33', height: 36, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem' }}>
+        <a href="tel:6473026846" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, textDecoration: 'none', letterSpacing: '0.02em' }}>
+          📞 647-302-6846
+        </a>
+        <div style={{ display: 'flex', gap: 2 }}>
+          {[
+            { code: 'en', flag: '🇨🇦', label: 'EN' },
+            { code: 'he', flag: '🇮🇱', label: 'HE' },
+            { code: 'ru', flag: '🇷🇺', label: 'RU' },
+          ].map(l => (
+            <button
+              key={l.code}
+              onClick={() => setLanguage(l.code)}
+              style={{
+                background: language === l.code ? '#00BCD4' : 'transparent',
+                color: language === l.code ? 'white' : 'rgba(255,255,255,0.45)',
+                border: 'none',
+                borderRadius: 5,
+                padding: '3px 9px',
+                fontSize: 11,
+                fontWeight: language === l.code ? 700 : 400,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                transition: 'all 0.15s',
+              }}
+            >
+              {l.flag} {l.label}
             </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── NAV — minimal, sticky ────────────────────────────── */}
+      <style>{`
+        @media (max-width: 640px) {
+          .nav-logo { height: 50px !important; }
+          .nav-inner { height: 64px !important; }
+        }
+      `}</style>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(234,246,248,0.92)', backdropFilter: 'blur(14px) saturate(140%)', borderBottom: '1px solid #C6DFE4' }}>
+        <div className="nav-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 140 }}>
+          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ display: 'block', lineHeight: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+            <img src={siteLogo} alt="IVRITours" className="nav-logo" style={{ height: 125, width: 'auto', display: 'block' }} />
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <WeatherWidget compact={true} />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div className="relative">
               <button
                 onClick={() => setShowBlogMenu(p => !p)}
                 onBlur={() => setTimeout(() => setShowBlogMenu(false), 150)}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, color: '#3E5F68', fontSize: 14, fontWeight: 500, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 8, color: '#3E5F68', fontSize: 13, fontWeight: 500, background: 'transparent', border: 'none', cursor: 'pointer' }}
               >
                 <BookOpen className="w-4 h-4" />
                 <span className="hidden sm:inline">Blog</span>
@@ -855,7 +907,6 @@ const LandingPage = () => {
                 </div>
               )}
             </div>
-            {/* <LanguageSelector /> */}
           </div>
         </div>
       </nav>
@@ -1035,40 +1086,54 @@ const LandingPage = () => {
                     <div style={{ minWidth: '100%', padding: '3rem', textAlign: 'center', color: '#78959D', fontSize: 16 }}>
                       {language === 'ru' ? 'Нет направлений в этой категории' : language === 'he' ? 'אין יעדים בקטגוריה זו' : 'No destinations in this category'}
                     </div>
-                  ) : filteredDestinations.map((dest) => (
-                    <div key={dest.key} style={{ flexShrink: 0, padding: '0 12px', width: `${100 / itemsPerView}%` }}>
+                  ) : filteredDestinations.map((dest) => {
+                    const isCustom = dest.type === 'custom';
+                    const destTitle = isCustom ? dest.title : t.destinations[dest.key]?.title;
+                    const destDesc = isCustom ? dest.description : t.destinations[dest.key]?.desc;
+                    const destDuration = isCustom ? dest.duration : t.destinations[dest.key]?.duration;
+                    const destGroupSize = isCustom ? dest.groupSize : t.destinations[dest.key]?.groupSize;
+                    const destHighlights = isCustom ? (dest.highlights || []) : (t.destinations[dest.key]?.highlights || []);
+                    const destCardKey = isCustom ? dest.id : dest.key;
+                    return (
+                    <div key={destCardKey} style={{ flexShrink: 0, padding: '0 12px', width: `${100 / itemsPerView}%` }}>
                       <div className="hover:-translate-y-2" style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(7,57,68,0.08)', border: '1px solid #D9EBEE', display: 'flex', flexDirection: 'column', height: '100%', transition: 'all 0.3s' }}>
                         <div style={{ height: 220, backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${dest.image})`, position: 'relative' }}>
                           <div style={{ position: 'absolute', top: 10, left: 10 }}>
-                            <span style={{ fontSize: 22, lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}>{dest.country === 'ca' ? '🇨🇦' : '🇺🇸'}</span>
+                            <span style={{ fontSize: 22, lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}>{dest.country === 'ca' ? '🇨🇦' : dest.country === 'us' ? '🇺🇸' : '🌍'}</span>
                           </div>
                         </div>
                         <div style={{ padding: 20, display: 'flex', flexDirection: 'column', flex: 1 }}>
-                          <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#073944', marginBottom: 8 }}>{t.destinations[dest.key].title}</h3>
-                          <p style={{ color: '#3E5F68', fontSize: 14, lineHeight: 1.6, marginBottom: 12 }} className="line-clamp-3">{t.destinations[dest.key].desc}</p>
+                          <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#073944', marginBottom: 8 }}>{destTitle}</h3>
+                          <p style={{ color: '#3E5F68', fontSize: 14, lineHeight: 1.6, marginBottom: 12 }} className="line-clamp-3">{destDesc}</p>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#3E5F68' }}>
-                              <Clock style={{ width: 13, height: 13, color: colors.primary.teal }} />
-                              <span style={{ fontWeight: 600 }}>{t.duration}:</span> {t.destinations[dest.key].duration}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#3E5F68' }}>
-                              <Users style={{ width: 13, height: 13, color: colors.primary.teal }} />
-                              <span style={{ fontWeight: 600 }}>{t.groupSize}:</span> {t.destinations[dest.key].groupSize}
-                            </div>
+                            {destDuration && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#3E5F68' }}>
+                                <Clock style={{ width: 13, height: 13, color: colors.primary.teal }} />
+                                <span style={{ fontWeight: 600 }}>{t.duration}:</span> {destDuration}
+                              </div>
+                            )}
+                            {destGroupSize && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#3E5F68' }}>
+                                <Users style={{ width: 13, height: 13, color: colors.primary.teal }} />
+                                <span style={{ fontWeight: 600 }}>{t.groupSize}:</span> {destGroupSize}
+                              </div>
+                            )}
                           </div>
-                          <div style={{ marginBottom: 12 }}>
-                            <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, fontWeight: 600, color: '#0A2A33', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.highlights}</p>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                              {t.destinations[dest.key].highlights.map((h, i) => (
-                                <span key={i} style={{ background: '#EAF6F8', color: '#3E5F68', fontSize: 11, padding: '3px 10px', borderRadius: 100, border: '1px solid #C6DFE4' }}>{h}</span>
-                              ))}
+                          {destHighlights.length > 0 && (
+                            <div style={{ marginBottom: 12 }}>
+                              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, fontWeight: 600, color: '#0A2A33', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.highlights}</p>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                {destHighlights.map((h, i) => (
+                                  <span key={i} style={{ background: '#EAF6F8', color: '#3E5F68', fontSize: 11, padding: '3px 10px', borderRadius: 100, border: '1px solid #C6DFE4' }}>{h}</span>
+                                ))}
+                              </div>
                             </div>
-                          </div>
+                          )}
                           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
                             <span style={{ background: colors.primary.teal, color: 'white', fontSize: 11, padding: '4px 12px', borderRadius: 100, alignSelf: 'flex-start' }}>🗣️ {t.multiLang}</span>
                             <div style={{ display: 'flex', gap: 8 }}>
                               <button
-                                onClick={() => { setQuestionDest({ key: dest.key, title: t.destinations[dest.key].title }); setQuestionForm({ name: '', email: '', phone: '', message: '' }); setQuestionSuccess(false); }}
+                                onClick={() => { setQuestionDest({ key: destCardKey, title: destTitle }); setQuestionForm({ name: '', email: '', phone: '', message: '' }); setQuestionSuccess(false); }}
                                 className="hover:bg-[#00BCD4] hover:text-white transition-colors"
                                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, border: `2px solid ${colors.primary.teal}`, color: colors.primary.teal, background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
                               >
@@ -1087,7 +1152,8 @@ const LandingPage = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
           </div>
 
@@ -1288,6 +1354,123 @@ const LandingPage = () => {
         </section>
       )}
 
+      {/* PARTNERS — Who We Work With */}
+      {siteSettings.showPartners !== false && partners.filter(p => p.visible !== false).length > 0 && (
+        <section style={{ order: getSectionOrder('partners'), padding: '4rem 0', background: 'white' }}>
+          <style>{`
+            @keyframes marqueeRTL { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+            .partner-track { animation: marqueeRTL 28s linear infinite; will-change: transform; }
+            .partner-track:hover { animation-play-state: paused; }
+            @media (max-width: 640px) { .nav-logo { height: 60px !important; } }
+          `}</style>
+          <div style={{ maxWidth: 1280, margin: '0 auto', textAlign: 'center', padding: '0 1.5rem', marginBottom: 40 }}>
+            <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+              {language === 'ru' ? '— ПАРТНЁРЫ' : language === 'he' ? '— שותפים' : '— PARTNERS'}
+            </p>
+            <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.02em', color: '#073944' }}>
+              {language === 'ru' ? 'С кем мы работаем' : language === 'he' ? 'עם מי אנו עובדים' : 'Who We Work With'}
+            </h2>
+          </div>
+          <div style={{ overflow: 'hidden', maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)' }}>
+            <div className="partner-track" style={{ display: 'flex', alignItems: 'center', gap: 64, width: 'max-content', paddingLeft: 32 }}>
+              {[...partners.filter(p => p.visible !== false), ...partners.filter(p => p.visible !== false)].map((p, idx) => {
+                const isSelected = selectedPartnerId === p.id;
+                return (
+                  <div
+                    key={`partner-${p.id}-${idx}`}
+                    onClick={() => setSelectedPartnerId(isSelected ? null : p.id)}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                      cursor: 'pointer',
+                      padding: '12px 20px',
+                      borderRadius: 14,
+                      border: isSelected ? '2px solid #00BCD4' : '2px solid transparent',
+                      background: isSelected ? '#EAF6F8' : 'transparent',
+                      boxShadow: isSelected ? '0 4px 16px rgba(0,188,212,0.22)' : 'none',
+                      transition: 'border 0.2s, background 0.2s, box-shadow 0.2s',
+                      flexShrink: 0,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    {p.logoUrl ? (
+                      <img
+                        src={p.logoUrl}
+                        alt={p.name}
+                        style={{
+                          height: 80,
+                          maxWidth: 180,
+                          objectFit: 'contain',
+                          filter: isSelected ? 'none' : 'grayscale(50%) opacity(0.6)',
+                          transition: 'filter 0.25s',
+                          display: 'block',
+                        }}
+                      />
+                    ) : (
+                      <div style={{ height: 80, display: 'flex', alignItems: 'center', fontSize: 20, fontWeight: 700, color: isSelected ? '#00BCD4' : '#78959D', letterSpacing: '-0.02em', transition: 'color 0.2s' }}>
+                        {p.name}
+                      </div>
+                    )}
+                    <span style={{ fontSize: 11, fontWeight: 600, color: isSelected ? '#00BCD4' : '#78959D', transition: 'color 0.2s' }}>{p.name}</span>
+                    {isSelected && p.website && (
+                      <a href={p.website} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                        style={{ fontSize: 11, color: '#00BCD4', textDecoration: 'underline', marginTop: 2 }}>
+                        Visit site →
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* STAFF — Our Staff */}
+      {siteSettings.showDrivers !== false && drivers.filter(d => d.visible !== false).length > 0 && (
+        <section style={{ order: getSectionOrder('drivers'), padding: '5rem 1.5rem', background: '#F5FBFC' }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 48 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+                {language === 'ru' ? '— КОМАНДА' : language === 'he' ? '— הצוות שלנו' : '— OUR TEAM'}
+              </p>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.02em', color: '#073944' }}>
+                {language === 'ru' ? 'Наш персонал' : language === 'he' ? 'הצוות שלנו' : 'Our Staff'}
+              </h2>
+            </div>
+            {(() => {
+              const visibleStaff = drivers.filter(d => d.visible !== false);
+              const isSingle = visibleStaff.length === 1;
+              return (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isSingle ? 'minmax(0, 320px)' : 'repeat(auto-fill, minmax(160px, 1fr))',
+                  gap: 20,
+                  justifyContent: isSingle ? 'center' : undefined,
+                  margin: isSingle ? '0 auto' : undefined,
+                  maxWidth: isSingle ? 320 : undefined,
+                }}>
+                  {visibleStaff.map(d => (
+                    <div key={d.id} style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(7,57,68,0.08)', border: '1px solid #D9EBEE' }}>
+                      {d.photoUrl ? (
+                        <img src={d.photoUrl} alt={d.name} style={{ width: '100%', height: 160, objectFit: 'cover', objectPosition: 'top' }} />
+                      ) : (
+                        <div style={{ height: 160, background: '#EAF6F8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48 }}>👤</div>
+                      )}
+                      <div style={{ padding: '12px 14px 16px' }}>
+                        <p style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 16, fontWeight: 500, color: '#073944', marginBottom: 3 }}>{d.name}</p>
+                        {d.since && <p style={{ fontSize: 11, color: colors.primary.teal, fontWeight: 600, marginBottom: 6 }}>Since {d.since}</p>}
+                        {d.languages && <p style={{ fontSize: 11, color: '#78959D', marginBottom: 6 }}>🌐 {d.languages}</p>}
+                        {d.bio && <p style={{ fontSize: 12, color: '#3E5F68', lineHeight: 1.5 }}>{d.bio}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        </section>
+      )}
+
       {/* CONTACT */}
       {siteSettings.showContact !== false && (
         <section id="contact" style={{ order: getSectionOrder('contact'), padding: '5rem 1.5rem', background: '#EAF6F8' }}>
@@ -1355,13 +1538,13 @@ const LandingPage = () => {
             <div>
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>Tours</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {destinations.slice(0, 4).map(d => <span key={d.key} style={{ color: '#C6DFE4', fontSize: 14 }}>{t.destinations[d.key].title}</span>)}
+                {destinations.slice(0, 4).map(d => <span key={d.type === 'custom' ? d.id : d.key} style={{ color: '#C6DFE4', fontSize: 14 }}>{d.type === 'custom' ? d.title : t.destinations[d.key]?.title}</span>)}
               </div>
             </div>
             <div>
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>{language === 'ru' ? 'Ещё' : language === 'he' ? 'עוד' : 'More'}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {destinations.slice(4).map(d => <span key={d.key} style={{ color: '#C6DFE4', fontSize: 14 }}>{t.destinations[d.key].title}</span>)}
+                {destinations.slice(4).map(d => <span key={d.type === 'custom' ? d.id : d.key} style={{ color: '#C6DFE4', fontSize: 14 }}>{d.type === 'custom' ? d.title : t.destinations[d.key]?.title}</span>)}
               </div>
             </div>
             <div>

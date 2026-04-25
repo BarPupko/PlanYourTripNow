@@ -120,8 +120,25 @@ service cloud.firestore {
     }
 
     // ─── Site Settings ───────────────────────────────────────────────────────
-    // Landing page reads section order and visibility flags; admin writes.
     match /siteSettings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Partners ────────────────────────────────────────────────────────────
+    match /partners/{partnerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Drivers ─────────────────────────────────────────────────────────────
+    match /drivers/{driverId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Custom Destinations ─────────────────────────────────────────────────
+    match /customDestinations/{destId} {
       allow read: if true;
       allow write: if isAdmin();
     }

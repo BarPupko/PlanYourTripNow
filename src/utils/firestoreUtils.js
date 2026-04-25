@@ -379,3 +379,30 @@ export const updateBlogComment = async (commentId, updates) => {
 export const deleteBlogComment = async (commentId) => {
   await deleteDoc(doc(db, 'blogComments', commentId));
 };
+
+// ── Partners ──────────────────────────────────────────────────────────────────
+export const getPartners = async () => {
+  const snap = await getDocs(collection(db, 'partners'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.order || 0) - (b.order || 0));
+};
+export const createPartner = async (data) => addDoc(collection(db, 'partners'), { ...data, createdAt: Timestamp.now() });
+export const updatePartner = async (id, updates) => updateDoc(doc(db, 'partners', id), updates);
+export const deletePartner = async (id) => deleteDoc(doc(db, 'partners', id));
+
+// ── Drivers ───────────────────────────────────────────────────────────────────
+export const getDrivers = async () => {
+  const snap = await getDocs(collection(db, 'drivers'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.order || 0) - (b.order || 0));
+};
+export const createDriver = async (data) => addDoc(collection(db, 'drivers'), { ...data, createdAt: Timestamp.now() });
+export const updateDriver = async (id, updates) => updateDoc(doc(db, 'drivers', id), updates);
+export const deleteDriver = async (id) => deleteDoc(doc(db, 'drivers', id));
+
+// ── Custom Destinations ───────────────────────────────────────────────────────
+export const getCustomDestinations = async () => {
+  const snap = await getDocs(collection(db, 'customDestinations'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.order || 0) - (b.order || 0));
+};
+export const createCustomDestination = async (data) => addDoc(collection(db, 'customDestinations'), { ...data, createdAt: Timestamp.now() });
+export const updateCustomDestination = async (id, updates) => updateDoc(doc(db, 'customDestinations', id), updates);
+export const deleteCustomDestination = async (id) => deleteDoc(doc(db, 'customDestinations', id));

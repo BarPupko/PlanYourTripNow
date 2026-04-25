@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock, Layout, ToggleLeft, ToggleRight, Users, BookOpen, CheckCheck, X, Eye, GripVertical, ChevronUp, ChevronDown, Share2, CornerDownRight } from 'lucide-react';
-import { getAllTrips, createTrip, deleteTrip, updateTrip, publishTrip, toggleFeedbackWebsite, getSiteSettings, updateSiteSettings, getAllBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost, getPendingBlogComments, approveBlogComment, deleteBlogComment, updateBlogComment } from '../utils/firestoreUtils';
+import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock, Layout, ToggleLeft, ToggleRight, Users, BookOpen, CheckCheck, X, Eye, GripVertical, ChevronUp, ChevronDown, Share2, CornerDownRight, Lock } from 'lucide-react';
+import { getAllTrips, createTrip, deleteTrip, updateTrip, publishTrip, toggleFeedbackWebsite, getSiteSettings, updateSiteSettings, getAllBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost, getPendingBlogComments, approveBlogComment, deleteBlogComment, updateBlogComment, getPartners, createPartner, updatePartner, deletePartner, getDrivers, createDriver, updateDriver, deleteDriver, getCustomDestinations, createCustomDestination, updateCustomDestination, deleteCustomDestination } from '../utils/firestoreUtils';
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import CreateTripModal from '../components/CreateTripModal';
@@ -46,7 +46,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('trips');
   const [siteSettings, setSiteSettings] = useState({});
   const [settingsSaving, setSettingsSaving] = useState(false);
-  const DEFAULT_SECTION_ORDER = ['trips', 'reviews', 'social', 'blog', 'contact'];
+  const DEFAULT_SECTION_ORDER = ['trips', 'partners', 'drivers', 'reviews', 'social', 'blog', 'contact'];
   const [sectionOrder, setSectionOrder] = useState(DEFAULT_SECTION_ORDER);
   const [draggingSection, setDraggingSection] = useState(null);
   const [dragOverSection, setDragOverSection] = useState(null);
@@ -75,6 +75,28 @@ const AdminDashboard = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [showUsersModal, setShowUsersModal] = useState(false);
+  // Partners
+  const [partners, setPartners] = useState([]);
+  const [partnersLoading, setPartnersLoading] = useState(false);
+  const [partnerForm, setPartnerForm] = useState(null); // null = closed, {} = new, {id,...} = editing
+  // Drivers
+  const [drivers, setDrivers] = useState([]);
+  const [driversLoading, setDriversLoading] = useState(false);
+  const [driverForm, setDriverForm] = useState(null);
+  // Custom destinations
+  const [customDests, setCustomDests] = useState([]);
+  const [customDestsLoading, setCustomDestsLoading] = useState(false);
+  const [destForm, setDestForm] = useState(null);
+  // Static destination visibility (keys to hide)
+  const STATIC_DESTS = [
+    { key: 'toronto', label: 'Toronto' },
+    { key: 'niagara', label: 'Niagara Falls' },
+    { key: 'tremblant', label: 'Mont-Tremblant' },
+    { key: 'quebec', label: 'Quebec City' },
+    { key: 'barrie', label: 'Barrie' },
+    { key: 'detroit', label: 'Detroit' },
+    { key: 'chicago', label: 'Chicago' },
+  ];
 
   useEffect(() => {
     loadTrips();
@@ -118,6 +140,12 @@ const AdminDashboard = () => {
       .then(snap => setAllFeedbacks(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
       .catch(() => {})
       .finally(() => setFeedbacksLoading(false));
+    setPartnersLoading(true);
+    getPartners().then(setPartners).catch(() => {}).finally(() => setPartnersLoading(false));
+    setDriversLoading(true);
+    getDrivers().then(setDrivers).catch(() => {}).finally(() => setDriversLoading(false));
+    setCustomDestsLoading(true);
+    getCustomDestinations().then(setCustomDests).catch(() => {}).finally(() => setCustomDestsLoading(false));
   }, [activeTab]);
 
   const loadBlogData = () => {
@@ -141,11 +169,13 @@ const AdminDashboard = () => {
 
   // Section order & visibility — persisted in siteSettings.sectionOrder
   const SECTION_CONFIG = [
-    { key: 'trips',   label: 'Upcoming Trips',         icon: '🗺️',  visKey: 'showDestinations' },
-    { key: 'reviews', label: 'Reviews & Testimonials',  icon: '⭐',  visKey: 'showTestimonials', alsoKey: 'showPeople' },
-    { key: 'social',  label: 'Social Media',            icon: '📱',  visKey: 'showSocial' },
-    { key: 'blog',    label: 'Blog Posts',              icon: '📝',  visKey: 'showBlog' },
-    { key: 'contact', label: 'Contact Form',            icon: '✉️',  visKey: 'showContact' },
+    { key: 'trips',    label: 'Upcoming Trips',         icon: '🗺️',  visKey: 'showDestinations' },
+    { key: 'partners', label: 'Who We Work With',       icon: '🤝',  visKey: 'showPartners' },
+    { key: 'drivers',  label: 'Our Staff',               icon: '👤',  visKey: 'showDrivers' },
+    { key: 'reviews',  label: 'Reviews & Testimonials', icon: '⭐',  visKey: 'showTestimonials', alsoKey: 'showPeople' },
+    { key: 'social',   label: 'Social Media',           icon: '📱',  visKey: 'showSocial' },
+    { key: 'blog',     label: 'Blog Posts',             icon: '📝',  visKey: 'showBlog' },
+    { key: 'contact',  label: 'Contact Form',           icon: '✉️',  visKey: 'showContact' },
   ];
 
   const handleToggleSectionVisibility = async (cfg) => {
@@ -202,6 +232,71 @@ const AdminDashboard = () => {
     try {
       await updateSiteSettings({ customTestimonials });
     } catch (e) { console.error(e); } finally { setTestimonialsSaving(false); }
+  };
+
+  // ── Partners ──────────────────────────────────────────────────────────────
+  const handleSavePartner = async (form) => {
+    if (form.id) await updatePartner(form.id, { name: form.name, logoUrl: form.logoUrl, website: form.website });
+    else await createPartner({ name: form.name, logoUrl: form.logoUrl, website: form.website, visible: true });
+    setPartnerForm(null);
+    getPartners().then(setPartners).catch(() => {});
+  };
+  const handleTogglePartner = async (p) => {
+    await updatePartner(p.id, { visible: !p.visible });
+    setPartners(prev => prev.map(x => x.id === p.id ? { ...x, visible: !x.visible } : x));
+  };
+  const handleDeletePartner = async (id) => {
+    if (!confirm('Delete this partner?')) return;
+    await deletePartner(id);
+    setPartners(prev => prev.filter(x => x.id !== id));
+  };
+
+  // ── Drivers ───────────────────────────────────────────────────────────────
+  const handleSaveDriver = async (form) => {
+    const data = { name: form.name, photoUrl: form.photoUrl, since: form.since, languages: form.languages, bio: form.bio };
+    if (form.id) await updateDriver(form.id, data);
+    else await createDriver({ ...data, visible: true });
+    setDriverForm(null);
+    getDrivers().then(setDrivers).catch(() => {});
+  };
+  const handleToggleDriver = async (d) => {
+    await updateDriver(d.id, { visible: !d.visible });
+    setDrivers(prev => prev.map(x => x.id === d.id ? { ...x, visible: !x.visible } : x));
+  };
+  const handleDeleteDriver = async (id) => {
+    if (!confirm('Delete this driver?')) return;
+    await deleteDriver(id);
+    setDrivers(prev => prev.filter(x => x.id !== id));
+  };
+
+  // ── Custom Destinations ───────────────────────────────────────────────────
+  const handleSaveCustomDest = async (form) => {
+    const data = {
+      title: form.title, description: form.description, image: form.image,
+      duration: form.duration, groupSize: form.groupSize,
+      highlights: form.highlights.split(',').map(h => h.trim()).filter(Boolean),
+      durationCategory: form.durationCategory, country: form.country,
+    };
+    if (form.id) await updateCustomDestination(form.id, data);
+    else await createCustomDestination({ ...data, visible: true });
+    setDestForm(null);
+    getCustomDestinations().then(setCustomDests).catch(() => {});
+  };
+  const handleToggleCustomDest = async (d) => {
+    await updateCustomDestination(d.id, { visible: !d.visible });
+    setCustomDests(prev => prev.map(x => x.id === d.id ? { ...x, visible: !x.visible } : x));
+  };
+  const handleDeleteCustomDest = async (id) => {
+    if (!confirm('Delete this destination?')) return;
+    await deleteCustomDestination(id);
+    setCustomDests(prev => prev.filter(x => x.id !== id));
+  };
+  const handleToggleStaticDest = async (key) => {
+    const hidden = siteSettings.hiddenDestinations || [];
+    const next = hidden.includes(key) ? hidden.filter(k => k !== key) : [...hidden, key];
+    const updated = { ...siteSettings, hiddenDestinations: next };
+    setSiteSettings(updated);
+    await updateSiteSettings({ hiddenDestinations: next });
   };
 
   const handleToggleFeedbackShow = async (fb) => {
@@ -545,14 +640,15 @@ const AdminDashboard = () => {
                 const on = siteSettings[cfg.visKey] !== false;
                 const isDragging = draggingSection === idx;
                 const isOver = dragOverSection === idx;
+                const isLocked = key === 'partners';
                 return (
                   <div
                     key={key}
-                    draggable
-                    onDragStart={e => handleSectionDragStart(e, idx)}
-                    onDragOver={e => handleSectionDragOver(e, idx)}
-                    onDrop={e => handleSectionDrop(e, idx)}
-                    onDragEnd={handleSectionDragEnd}
+                    draggable={!isLocked}
+                    onDragStart={isLocked ? undefined : e => handleSectionDragStart(e, idx)}
+                    onDragOver={isLocked ? undefined : e => handleSectionDragOver(e, idx)}
+                    onDrop={isLocked ? undefined : e => handleSectionDrop(e, idx)}
+                    onDragEnd={isLocked ? undefined : handleSectionDragEnd}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all select-none ${
                       isDragging ? 'opacity-40' : ''
                     } ${
@@ -561,8 +657,11 @@ const AdminDashboard = () => {
                         : on ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'
                     }`}
                   >
-                    {/* Drag handle */}
-                    <GripVertical className="w-5 h-5 text-gray-300 cursor-grab flex-shrink-0" />
+                    {/* Drag handle — hidden/locked for partners */}
+                    {isLocked
+                      ? <Lock className="w-4 h-4 text-gray-300 flex-shrink-0" title="Position locked on desktop" />
+                      : <GripVertical className="w-5 h-5 text-gray-300 cursor-grab flex-shrink-0" />
+                    }
 
                     {/* Icon + label */}
                     <span className="text-xl flex-shrink-0">{cfg.icon}</span>
@@ -573,25 +672,27 @@ const AdminDashboard = () => {
                     {/* Position badge */}
                     <span className="text-xs text-gray-300 font-mono flex-shrink-0">#{idx + 1}</span>
 
-                    {/* Up / Down arrows */}
-                    <div className="flex flex-col gap-0.5 flex-shrink-0">
-                      <button
-                        onClick={() => moveSectionInOrder(idx, -1)}
-                        disabled={idx === 0}
-                        className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20 transition-colors"
-                        title="Move up"
-                      >
-                        <ChevronUp className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => moveSectionInOrder(idx, 1)}
-                        disabled={idx === sectionOrder.length - 1}
-                        className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20 transition-colors"
-                        title="Move down"
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {/* Up / Down arrows — hidden for locked rows */}
+                    {!isLocked && (
+                      <div className="flex flex-col gap-0.5 flex-shrink-0">
+                        <button
+                          onClick={() => moveSectionInOrder(idx, -1)}
+                          disabled={idx === 0}
+                          className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20 transition-colors"
+                          title="Move up"
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => moveSectionInOrder(idx, 1)}
+                          disabled={idx === sectionOrder.length - 1}
+                          className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20 transition-colors"
+                          title="Move down"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
 
                     {/* Visibility toggle */}
                     <button
@@ -628,6 +729,195 @@ const AdminDashboard = () => {
             ))}
           </div>
         )}
+
+          {/* ── DESTINATIONS MANAGER ──────────────────────────────── */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">🗺️ Destinations</h3>
+                <p className="text-sm text-gray-500 mt-0.5">Toggle built-in destinations and add custom ones.</p>
+              </div>
+              <button onClick={() => setDestForm({ title: '', description: '', image: '', duration: '', groupSize: '', highlights: '', durationCategory: 'day', country: 'ca' })}
+                className="flex items-center gap-1.5 px-3 py-2 text-white text-sm font-semibold rounded-lg hover:opacity-90"
+                style={{ backgroundColor: colors.primary.teal }}>
+                <Plus className="w-4 h-4" /> Add New
+              </button>
+            </div>
+
+            {/* Static destinations toggle */}
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Built-in</p>
+            <div className="space-y-1.5 mb-4">
+              {STATIC_DESTS.map(d => {
+                const hidden = (siteSettings.hiddenDestinations || []).includes(d.key);
+                return (
+                  <div key={d.key} className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 bg-gray-50">
+                    <span className="text-sm text-gray-700 font-medium">{d.label}</span>
+                    <button onClick={() => handleToggleStaticDest(d.key)} title={hidden ? 'Show' : 'Hide'}>
+                      {hidden ? <ToggleLeft className="w-7 h-7 text-gray-300" /> : <ToggleRight className="w-7 h-7" style={{ color: colors.primary.teal }} />}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Custom destinations */}
+            {customDestsLoading ? <p className="text-sm text-gray-400">Loading…</p> : customDests.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Custom</p>
+                <div className="space-y-1.5 mb-4">
+                  {customDests.map(d => (
+                    <div key={d.id} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-gray-100 bg-gray-50">
+                      {d.image && <img src={d.image} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />}
+                      <span className="flex-1 text-sm font-medium text-gray-700 truncate">{d.title}</span>
+                      <button onClick={() => setDestForm({ ...d, highlights: (d.highlights || []).join(', ') })} className="p-1 text-gray-400 hover:text-gray-600"><Edit className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleToggleCustomDest(d)} title={d.visible ? 'Hide' : 'Show'}>
+                        {d.visible !== false ? <ToggleRight className="w-7 h-7" style={{ color: colors.primary.teal }} /> : <ToggleLeft className="w-7 h-7 text-gray-300" />}
+                      </button>
+                      <button onClick={() => handleDeleteCustomDest(d.id)} className="p-1 text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Add/Edit custom destination form */}
+            {destForm !== null && (
+              <div className="border-2 border-[#00BCD4] rounded-xl p-4 space-y-3 bg-[#f0faf8]">
+                <p className="text-sm font-bold text-gray-800">{destForm.id ? 'Edit Destination' : 'New Destination'}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">Title *</label>
+                    <input value={destForm.title} onChange={e => setDestForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Ottawa" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" /></div>
+                  <div className="col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                    <textarea rows={2} value={destForm.description} onChange={e => setDestForm(p => ({ ...p, description: e.target.value }))} placeholder="Short description…" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none resize-none bg-white" /></div>
+                  <div className="col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">Image URL</label>
+                    <input value={destForm.image} onChange={e => setDestForm(p => ({ ...p, image: e.target.value }))} placeholder="https://…" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" /></div>
+                  <div><label className="block text-xs font-semibold text-gray-600 mb-1">Duration</label>
+                    <input value={destForm.duration} onChange={e => setDestForm(p => ({ ...p, duration: e.target.value }))} placeholder="e.g. Full day" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" /></div>
+                  <div><label className="block text-xs font-semibold text-gray-600 mb-1">Group Size</label>
+                    <input value={destForm.groupSize} onChange={e => setDestForm(p => ({ ...p, groupSize: e.target.value }))} placeholder="e.g. 8–15" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" /></div>
+                  <div className="col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">Highlights (comma-separated)</label>
+                    <input value={destForm.highlights} onChange={e => setDestForm(p => ({ ...p, highlights: e.target.value }))} placeholder="e.g. Parliament Hill, Rideau Canal" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" /></div>
+                  <div><label className="block text-xs font-semibold text-gray-600 mb-1">Trip Length</label>
+                    <select value={destForm.durationCategory} onChange={e => setDestForm(p => ({ ...p, durationCategory: e.target.value }))} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white">
+                      <option value="hours">A few hours</option><option value="day">Full day</option><option value="multi">Multi-day</option>
+                    </select></div>
+                  <div><label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+                    <select value={destForm.country} onChange={e => setDestForm(p => ({ ...p, country: e.target.value }))} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white">
+                      <option value="ca">🇨🇦 Canada</option><option value="us">🇺🇸 USA</option><option value="other">🌍 Other</option>
+                    </select></div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => setDestForm(null)} className="flex-1 py-2 border-2 border-gray-200 rounded-lg text-sm text-gray-600 font-semibold hover:bg-gray-50">Cancel</button>
+                  <button onClick={() => handleSaveCustomDest(destForm)} disabled={!destForm.title.trim()} className="flex-1 py-2 text-white rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40" style={{ backgroundColor: colors.primary.teal }}>Save</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── PARTNERS MANAGER ──────────────────────────────────── */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">🤝 Who We Work With</h3>
+                <p className="text-sm text-gray-500 mt-0.5">Partner logos shown on the landing page.</p>
+              </div>
+              <button onClick={() => setPartnerForm({ name: '', logoUrl: '', website: '' })}
+                className="flex items-center gap-1.5 px-3 py-2 text-white text-sm font-semibold rounded-lg hover:opacity-90"
+                style={{ backgroundColor: colors.primary.teal }}>
+                <Plus className="w-4 h-4" /> Add
+              </button>
+            </div>
+            {partnersLoading ? <p className="text-sm text-gray-400">Loading…</p> : partners.length === 0 && partnerForm === null ? (
+              <p className="text-sm text-gray-400 text-center py-4">No partners yet.</p>
+            ) : (
+              <div className="space-y-2 mb-3">
+                {partners.map(p => (
+                  <div key={p.id} className="flex items-center gap-3 px-3 py-2 rounded-xl border border-gray-100 bg-gray-50">
+                    {p.logoUrl ? <img src={p.logoUrl} alt={p.name} className="h-8 w-16 object-contain flex-shrink-0" /> : <span className="text-xs text-gray-400 w-16 flex-shrink-0">No logo</span>}
+                    <span className="flex-1 text-sm font-medium text-gray-700 truncate">{p.name}</span>
+                    <button onClick={() => setPartnerForm({ ...p })} className="p-1 text-gray-400 hover:text-gray-600"><Edit className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => handleTogglePartner(p)} title={p.visible ? 'Hide' : 'Show'}>
+                      {p.visible !== false ? <ToggleRight className="w-7 h-7" style={{ color: colors.primary.teal }} /> : <ToggleLeft className="w-7 h-7 text-gray-300" />}
+                    </button>
+                    <button onClick={() => handleDeletePartner(p.id)} className="p-1 text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {partnerForm !== null && (
+              <div className="border-2 border-[#00BCD4] rounded-xl p-4 space-y-3 bg-[#f0faf8]">
+                <p className="text-sm font-bold text-gray-800">{partnerForm.id ? 'Edit Partner' : 'Add Partner'}</p>
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1">Partner Name *</label>
+                  <input value={partnerForm.name} onChange={e => setPartnerForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Fox Rent A Car" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" /></div>
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1">Logo URL</label>
+                  <input value={partnerForm.logoUrl} onChange={e => setPartnerForm(p => ({ ...p, logoUrl: e.target.value }))} placeholder="https://…" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" />
+                  {partnerForm.logoUrl && <img src={partnerForm.logoUrl} alt="" className="mt-2 h-10 object-contain" />}</div>
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1">Website (optional)</label>
+                  <input value={partnerForm.website} onChange={e => setPartnerForm(p => ({ ...p, website: e.target.value }))} placeholder="https://…" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" /></div>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => setPartnerForm(null)} className="flex-1 py-2 border-2 border-gray-200 rounded-lg text-sm text-gray-600 font-semibold hover:bg-gray-50">Cancel</button>
+                  <button onClick={() => handleSavePartner(partnerForm)} disabled={!partnerForm.name.trim()} className="flex-1 py-2 text-white rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40" style={{ backgroundColor: colors.primary.teal }}>Save</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── STAFF MANAGER ─────────────────────────────────────── */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">👤 Our Staff</h3>
+                <p className="text-sm text-gray-500 mt-0.5">Staff profiles shown on the landing page.</p>
+              </div>
+              <button onClick={() => setDriverForm({ name: '', photoUrl: '', since: '', languages: '', bio: '' })}
+                className="flex items-center gap-1.5 px-3 py-2 text-white text-sm font-semibold rounded-lg hover:opacity-90"
+                style={{ backgroundColor: colors.primary.teal }}>
+                <Plus className="w-4 h-4" /> Add
+              </button>
+            </div>
+            {driversLoading ? <p className="text-sm text-gray-400">Loading…</p> : drivers.length === 0 && driverForm === null ? (
+              <p className="text-sm text-gray-400 text-center py-4">No staff yet.</p>
+            ) : (
+              <div className="space-y-2 mb-3">
+                {drivers.map(d => (
+                  <div key={d.id} className="flex items-center gap-3 px-3 py-2 rounded-xl border border-gray-100 bg-gray-50">
+                    {d.photoUrl ? <img src={d.photoUrl} alt={d.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-lg flex-shrink-0">👤</div>}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{d.name}</p>
+                      {d.since && <p className="text-xs text-gray-400">Since {d.since}</p>}
+                    </div>
+                    <button onClick={() => setDriverForm({ ...d })} className="p-1 text-gray-400 hover:text-gray-600"><Edit className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => handleToggleDriver(d)} title={d.visible ? 'Hide' : 'Show'}>
+                      {d.visible !== false ? <ToggleRight className="w-7 h-7" style={{ color: colors.primary.teal }} /> : <ToggleLeft className="w-7 h-7 text-gray-300" />}
+                    </button>
+                    <button onClick={() => handleDeleteDriver(d.id)} className="p-1 text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {driverForm !== null && (
+              <div className="border-2 border-[#00BCD4] rounded-xl p-4 space-y-3 bg-[#f0faf8]">
+                <p className="text-sm font-bold text-gray-800">{driverForm.id ? 'Edit Staff Member' : 'Add Staff Member'}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div><label className="block text-xs font-semibold text-gray-600 mb-1">Full Name *</label>
+                    <input value={driverForm.name} onChange={e => setDriverForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. David Levi" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" /></div>
+                  <div><label className="block text-xs font-semibold text-gray-600 mb-1">With Us Since</label>
+                    <input value={driverForm.since} onChange={e => setDriverForm(p => ({ ...p, since: e.target.value }))} placeholder="e.g. 2019" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" /></div>
+                  <div className="col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">Photo URL</label>
+                    <input value={driverForm.photoUrl} onChange={e => setDriverForm(p => ({ ...p, photoUrl: e.target.value }))} placeholder="https://…" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" />
+                    {driverForm.photoUrl && <img src={driverForm.photoUrl} alt="" className="mt-2 w-16 h-16 rounded-full object-cover" />}</div>
+                  <div><label className="block text-xs font-semibold text-gray-600 mb-1">Languages</label>
+                    <input value={driverForm.languages} onChange={e => setDriverForm(p => ({ ...p, languages: e.target.value }))} placeholder="e.g. Hebrew, English" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white" /></div>
+                  <div className="col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">Short Bio</label>
+                    <textarea rows={2} value={driverForm.bio} onChange={e => setDriverForm(p => ({ ...p, bio: e.target.value }))} placeholder="A few words about the team member…" className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none resize-none bg-white" /></div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => setDriverForm(null)} className="flex-1 py-2 border-2 border-gray-200 rounded-lg text-sm text-gray-600 font-semibold hover:bg-gray-50">Cancel</button>
+                  <button onClick={() => handleSaveDriver(driverForm)} disabled={!driverForm.name.trim()} className="flex-1 py-2 text-white rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40" style={{ backgroundColor: colors.primary.teal }}>Save</button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Testimonials Editor */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

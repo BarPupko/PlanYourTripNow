@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, MessageSquare, MapPin, Globe } from 'lucide-react';
+import { X, MessageSquare, MapPin, Globe, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { getAllQuestions, markQuestionRead } from '../utils/firestoreUtils';
 import colors from '../utils/colors';
 
@@ -13,6 +13,7 @@ const LANG_COLORS = {
 const QuestionsModal = ({ onClose, onCountChange }) => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedTranscripts, setExpandedTranscripts] = useState({});
 
   useEffect(() => {
     loadQuestions();
@@ -31,6 +32,9 @@ const QuestionsModal = ({ onClose, onCountChange }) => {
     setQuestions(prev => prev.map(q => q.id === question.id ? { ...q, read: true } : q));
     if (onCountChange) onCountChange(-1);
   };
+
+  const toggleTranscript = (id) =>
+    setExpandedTranscripts(prev => ({ ...prev, [id]: !prev[id] }));
 
   const formatDate = (ts) => {
     if (!ts) return '';
@@ -83,57 +87,92 @@ const QuestionsModal = ({ onClose, onCountChange }) => {
               <p className="text-gray-400 text-sm mt-1">Questions from visitors will appear here</p>
             </div>
           ) : (
-            questions.map((q) => (
-              <div
-                key={q.id}
-                onClick={() => handleMarkRead(q)}
-                className={`rounded-xl border p-4 cursor-pointer transition-all hover:shadow-md ${
-                  q.read
-                    ? 'bg-white border-gray-200'
-                    : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {/* Destination badge */}
-                    <span
-                      className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ backgroundColor: '#E6F7F8', color: colors.primary.teal }}
-                    >
-                      <MapPin className="w-3 h-3" />
-                      {q.destination}
-                    </span>
-                    {/* Language badge */}
-                    {q.language && (
-                      <span
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
-                        style={LANG_COLORS[q.language] || { bg: '#F3F4F6', text: '#374151' }}
-                      >
-                        <Globe className="w-3 h-3" />
-                        {LANG_LABELS[q.language] || q.language}
-                      </span>
+            questions.map((q) => {
+              const isChat = q.source === 'chat_widget';
+              const transcriptSep = '--- Chat Transcript ---';
+              const hasTranscript = isChat && q.message?.includes(transcriptSep);
+              const noteText = hasTranscript ? q.message.split(transcriptSep)[0].trim() : null;
+              const transcriptText = hasTranscript ? q.message.split(transcriptSep)[1]?.trim() : null;
+              const isExpanded = expandedTranscripts[q.id];
+
+              return (
+                <div
+                  key={q.id}
+                  onClick={() => handleMarkRead(q)}
+                  className={`rounded-xl border p-4 cursor-pointer transition-all hover:shadow-md ${
+                    q.read
+                      ? 'bg-white border-gray-200'
+                      : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {/* Source badge */}
+                      {isChat ? (
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">
+                          <MessageCircle className="w-3 h-3" /> Chat
+                        </span>
+                      ) : (
+                        <span
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+                          style={{ backgroundColor: '#E6F7F8', color: colors.primary.teal }}
+                        >
+                          <MapPin className="w-3 h-3" />
+                          {q.destination}
+                        </span>
+                      )}
+                      {/* Language badge */}
+                      {q.language && (
+                        <span
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+                          style={LANG_COLORS[q.language] || { bg: '#F3F4F6', text: '#374151' }}
+                        >
+                          <Globe className="w-3 h-3" />
+                          {LANG_LABELS[q.language] || q.language}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {!q.read && (
+                        <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-0.5" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Contact info */}
+                  <p className="font-semibold text-gray-900 text-sm">{q.name}</p>
+                  <p className="text-xs text-gray-500">{q.email}{q.phone ? ` · ${q.phone}` : ''}</p>
+
+                  {/* Message / transcript */}
+                  <div className="mt-2 border-t border-gray-100 pt-2">
+                    {hasTranscript ? (
+                      <>
+                        {noteText && (
+                          <p className="text-sm text-gray-700 leading-relaxed mb-2">{noteText}</p>
+                        )}
+                        <button
+                          onClick={e => { e.stopPropagation(); toggleTranscript(q.id); }}
+                          className="flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-800 transition-colors"
+                        >
+                          {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          {isExpanded ? 'Hide transcript' : 'Show chat transcript'}
+                        </button>
+                        {isExpanded && (
+                          <pre className="mt-2 text-xs text-gray-600 leading-relaxed bg-gray-50 rounded-lg p-3 whitespace-pre-wrap font-sans border border-gray-200 max-h-64 overflow-y-auto">
+                            {transcriptText}
+                          </pre>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-700 leading-relaxed">{q.message}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {!q.read && (
-                      <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-0.5" />
-                    )}
-                  </div>
+
+                  {/* Timestamp */}
+                  <p className="mt-2 text-[11px] text-gray-400">{formatDate(q.createdAt)}</p>
                 </div>
-
-                {/* Contact info */}
-                <p className="font-semibold text-gray-900 text-sm">{q.name}</p>
-                <p className="text-xs text-gray-500">{q.email}{q.phone ? ` · ${q.phone}` : ''}</p>
-
-                {/* Message */}
-                <p className="mt-2 text-sm text-gray-700 leading-relaxed border-t border-gray-100 pt-2">
-                  {q.message}
-                </p>
-
-                {/* Timestamp */}
-                <p className="mt-2 text-[11px] text-gray-400">{formatDate(q.createdAt)}</p>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
