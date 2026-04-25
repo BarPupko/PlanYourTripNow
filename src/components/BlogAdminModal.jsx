@@ -34,9 +34,10 @@ const CATEGORIES = [
   { value: 'Stories', label: 'Stories' },
 ];
 
-const BlogAdminModal = ({ post, onSave, onClose }) => {
+const BlogAdminModal = ({ post, authorName = '', onSave, onClose }) => {
   const [form, setForm] = useState({
     title: post?.title || '',
+    author: post?.author || authorName,
     excerpt: post?.excerpt || '',
     category: post?.category || '',
     content: post?.content || '',
@@ -187,6 +188,19 @@ const BlogAdminModal = ({ post, onSave, onClose }) => {
               onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
               className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm"
               placeholder="Post title"
+            />
+          </div>
+
+          {/* Author */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Author <span className="font-normal text-gray-400">(who wrote this article)</span>
+            </label>
+            <input
+              type="text" value={form.author}
+              onChange={e => setForm(p => ({ ...p, author: e.target.value }))}
+              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm"
+              placeholder="Author name"
             />
           </div>
 

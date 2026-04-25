@@ -108,9 +108,32 @@ export default function ChatWidget({ language = 'en' }) {
     setLoading(true);
     try {
       const history = messages.slice(-10);
-      const chatWithYefim = httpsCallable(functions, 'chatWithYefim');
-      const result = await chatWithYefim({ message: text, history, language });
-      const reply = result.data.reply || '';
+      let reply = '';
+
+      try {
+        // Primary: Firebase Cloud Function (API key stays on server)
+        const chatWithYefim = httpsCallable(functions, 'chatWithYefim');
+        const result = await chatWithYefim({ message: text, history, language });
+        reply = result.data.reply || '';
+      } catch {
+        // Fallback: direct OpenAI call (uses VITE key baked into build)
+        const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+        if (!apiKey) throw new Error('no_key');
+        const chatMessages = [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...history.map(m => ({ role: m.role, content: m.content })),
+          { role: 'user', content: text }
+        ];
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({ model: 'gpt-4o-mini', messages: chatMessages, max_tokens: 400, temperature: 0.7 })
+        });
+        if (!res.ok) throw new Error(`OpenAI ${res.status}`);
+        const json = await res.json();
+        reply = json.choices?.[0]?.message?.content?.trim() || '';
+      }
+
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (err) {
       console.error('Chat error:', err);

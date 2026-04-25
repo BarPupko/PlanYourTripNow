@@ -4,12 +4,11 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
 /**
- * Returns { isAdmin, adminData, loading }
- * adminData = { displayName, email, ... } from admins/{uid} in Firestore
+ * Returns { isAdmin, adminData, user, loading }
  *
- * To grant admin access: add a document to the `admins` Firestore collection
- * with the document ID = the user's Firebase UID, e.g.:
- *   admins/aBcDeFgH123  →  { displayName: "Bar", email: "bar@example.com" }
+ * Full admin:  add a doc to `admins/{uid}`  →  adminData.role = 'admin'
+ * Blog writer: add a doc to `writers/{uid}` →  adminData.role = 'writer'
+ *              Writers can only see the Blog tab in AdminDashboard.
  */
 const useAdmin = () => {
   const [user, authLoading] = useAuthState(auth);
@@ -28,22 +27,37 @@ const useAdmin = () => {
 
     const check = async () => {
       try {
-        const snap = await getDoc(doc(db, 'admins', user.uid));
-        console.log('[useAdmin] uid:', user.uid, '| doc exists:', snap.exists(), '| data:', snap.data());
-        if (snap.exists()) {
-          const data = snap.data();
+        // Check full-admin collection first
+        const adminSnap = await getDoc(doc(db, 'admins', user.uid));
+        if (adminSnap.exists()) {
+          const data = adminSnap.data();
           setIsAdmin(true);
           setAdminData({
             displayName: data.displayName || user.displayName || user.email,
+            role: 'admin',
             ...data,
           });
-        } else {
-          console.warn('[useAdmin] No admin doc found for uid:', user.uid);
-          setIsAdmin(false);
-          setAdminData(null);
+          return;
         }
+
+        // Check writer collection
+        const writerSnap = await getDoc(doc(db, 'writers', user.uid));
+        if (writerSnap.exists()) {
+          const data = writerSnap.data();
+          setIsAdmin(false);
+          setAdminData({
+            displayName: data.displayName || user.displayName || user.email,
+            role: 'writer',
+            ...data,
+          });
+          return;
+        }
+
+        // No recognised role
+        setIsAdmin(false);
+        setAdminData(null);
       } catch (err) {
-        console.error('[useAdmin] Error reading admin doc:', err.message);
+        console.error('[useAdmin] Error reading role doc:', err.message);
         setIsAdmin(false);
         setAdminData(null);
       } finally {

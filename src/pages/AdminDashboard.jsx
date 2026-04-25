@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock, Layout, ToggleLeft, ToggleRight, Users, BookOpen, CheckCheck, X, Eye, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
-import { getAllTrips, createTrip, deleteTrip, updateTrip, publishTrip, toggleFeedbackWebsite, getSiteSettings, updateSiteSettings, getAllBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost, getPendingBlogComments, approveBlogComment, deleteBlogComment } from '../utils/firestoreUtils';
+import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock, Layout, ToggleLeft, ToggleRight, Users, BookOpen, CheckCheck, X, Eye, GripVertical, ChevronUp, ChevronDown, Share2, CornerDownRight } from 'lucide-react';
+import { getAllTrips, createTrip, deleteTrip, updateTrip, publishTrip, toggleFeedbackWebsite, getSiteSettings, updateSiteSettings, getAllBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost, getPendingBlogComments, approveBlogComment, deleteBlogComment, updateBlogComment } from '../utils/firestoreUtils';
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import CreateTripModal from '../components/CreateTripModal';
 import BlogAdminModal from '../components/BlogAdminModal';
+import UsersModal from '../components/UsersModal';
 import BlogPostModal from '../components/BlogPostModal';
 import BulkInvoicesModal from '../components/BulkInvoicesModal';
 import MigrationModal from '../components/MigrationModal';
@@ -15,7 +16,6 @@ import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
 import Header from '../components/Header';
 import TypewriterGreeting from '../components/TypewriterGreeting';
-import ChatWidget from '../components/ChatWidget';
 import useAdmin from '../hooks/useAdmin';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
@@ -71,6 +71,10 @@ const AdminDashboard = () => {
   const [togglingPost, setTogglingPost] = useState(null);
   const [deletingBlogId, setDeletingBlogId] = useState(null);
   const [previewBlogPost, setPreviewBlogPost] = useState(null);
+  const [copiedBlogId, setCopiedBlogId] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [showUsersModal, setShowUsersModal] = useState(false);
 
   useEffect(() => {
     loadTrips();
@@ -82,6 +86,12 @@ const AdminDashboard = () => {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Writers only see the Blog tab
+  const isWriter = adminData?.role === 'writer';
+  useEffect(() => {
+    if (isWriter) setActiveTab('blog');
+  }, [isWriter]);
 
   // Real-time listener for unread questions count
   useEffect(() => {
@@ -239,6 +249,12 @@ const AdminDashboard = () => {
     } catch (e) { console.error(e); } finally { setTogglingPost(null); }
   };
 
+  const handleCopyBlogLink = (postId) => {
+    navigator.clipboard.writeText(`${window.location.origin}/blog/${postId}`);
+    setCopiedBlogId(postId);
+    setTimeout(() => setCopiedBlogId(null), 2000);
+  };
+
   const handleApproveComment = async (commentId) => {
     await approveBlogComment(commentId);
     setPendingComments(prev => prev.filter(c => c.id !== commentId));
@@ -247,6 +263,15 @@ const AdminDashboard = () => {
   const handleDeleteComment = async (commentId) => {
     await deleteBlogComment(commentId);
     setPendingComments(prev => prev.filter(c => c.id !== commentId));
+  };
+
+  const handleSubmitReply = async (commentId) => {
+    if (!replyText.trim()) return;
+    const replyAuthor = adminData?.displayName || 'IVRITours';
+    await updateBlogComment(commentId, { reply: replyText.trim(), replyAuthor });
+    setPendingComments(prev => prev.map(c => c.id === commentId ? { ...c, reply: replyText.trim(), replyAuthor } : c));
+    setReplyingTo(null);
+    setReplyText('');
   };
 
   const loadTrips = async () => {
@@ -471,18 +496,19 @@ const AdminDashboard = () => {
       <Header
         onOpenMigration={isAdmin ? () => setShowMigration(true) : undefined}
         onDownloadInvoices={isAdmin ? () => setShowBulkInvoices(true) : undefined}
-        questionCount={questionCount}
-        onOpenQuestions={() => setShowQuestions(true)}
+        questionCount={isAdmin ? questionCount : 0}
+        onOpenQuestions={isAdmin ? () => setShowQuestions(true) : undefined}
+        onOpenUsers={isAdmin ? () => setShowUsersModal(true) : undefined}
       />
 
       {/* Tab bar */}
       <div className="border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-1">
           {[
-            { key: 'trips', label: 'Trips', icon: <Clock className="w-4 h-4" /> },
-            { key: 'landing', label: 'Landing Page', icon: <Layout className="w-4 h-4" /> },
-            { key: 'blog', label: 'Blog', icon: <BookOpen className="w-4 h-4" /> },
-          ].map(({ key, label, icon }) => (
+            { key: 'trips',   label: 'Trips',        icon: <Clock className="w-4 h-4" />,    adminOnly: true },
+            { key: 'landing', label: 'Landing Page',  icon: <Layout className="w-4 h-4" />,  adminOnly: true },
+            { key: 'blog',    label: 'Blog',          icon: <BookOpen className="w-4 h-4" />, adminOnly: false },
+          ].filter(tab => !tab.adminOnly || isAdmin).map(({ key, label, icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
@@ -796,6 +822,11 @@ const AdminDashboard = () => {
                           {post.publishedAt.toDate?.().toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       )}
+                      {copiedBlogId === post.id && (
+                        <p className="text-[11px] text-green-600 mt-1 font-mono break-all">
+                          ✓ Copied: {window.location.origin}/blog/{post.id}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button
@@ -807,6 +838,13 @@ const AdminDashboard = () => {
                         {post.published
                           ? <ToggleRight className="w-8 h-8" style={{ color: colors.primary.teal }} />
                           : <ToggleLeft className="w-8 h-8 text-gray-300" />}
+                      </button>
+                      <button
+                        onClick={() => handleCopyBlogLink(post.id)}
+                        className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Copy shareable link"
+                      >
+                        {copiedBlogId === post.id ? <Check className="w-4 h-4 text-green-500" /> : <Share2 className="w-4 h-4" />}
                       </button>
                       <button
                         onClick={() => setPreviewBlogPost(post)}
@@ -876,23 +914,68 @@ const AdminDashboard = () => {
                           <p className="text-[11px] text-gray-400 mb-1">On: <span className="font-medium">{matchingPost.title}</span></p>
                         )}
                         <p className="text-sm text-gray-700 leading-relaxed">{c.content}</p>
+                        {c.reply && (
+                          <div className="mt-2 pl-3 border-l-2 border-[#00BCD4]">
+                            <p className="text-[11px] font-bold text-[#00BCD4] mb-0.5">Your reply</p>
+                            <p className="text-xs text-gray-600">{c.reply}</p>
+                          </div>
+                        )}
+                        {replyingTo === c.id && (
+                          <div className="mt-3 flex gap-2 items-start">
+                            <CornerDownRight className="w-4 h-4 text-gray-400 mt-2 flex-shrink-0" />
+                            <textarea
+                              rows={2}
+                              autoFocus
+                              value={replyText}
+                              onChange={e => setReplyText(e.target.value)}
+                              placeholder="Write your reply…"
+                              className="flex-1 px-3 py-2 text-xs border-2 border-[#00BCD4] rounded-lg focus:outline-none resize-none"
+                            />
+                            <div className="flex flex-col gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => handleSubmitReply(c.id)}
+                                disabled={!replyText.trim()}
+                                className="px-2.5 py-1.5 text-white rounded-lg text-xs font-semibold disabled:opacity-40 transition-opacity"
+                                style={{ backgroundColor: colors.primary.teal }}
+                              >
+                                <Send className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => { setReplyingTo(null); setReplyText(''); }}
+                                className="px-2.5 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-xs hover:bg-gray-200 transition-colors"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex gap-1.5 flex-shrink-0">
+                      <div className="flex flex-col gap-1.5 flex-shrink-0">
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => handleApproveComment(c.id)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-200 transition-colors"
+                            title="Approve"
+                          >
+                            <CheckCheck className="w-3.5 h-3.5" />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleDeleteComment(c.id)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-red-100 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-200 transition-colors"
+                            title="Reject"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            Reject
+                          </button>
+                        </div>
                         <button
-                          onClick={() => handleApproveComment(c.id)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-200 transition-colors"
-                          title="Approve"
+                          onClick={() => { setReplyingTo(replyingTo === c.id ? null : c.id); setReplyText(c.reply || ''); }}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors"
+                          title="Reply"
                         >
-                          <CheckCheck className="w-3.5 h-3.5" />
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleDeleteComment(c.id)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-red-100 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-200 transition-colors"
-                          title="Reject"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          Reject
+                          <CornerDownRight className="w-3.5 h-3.5" />
+                          {c.reply ? 'Edit reply' : 'Reply'}
                         </button>
                       </div>
                     </div>
@@ -1335,6 +1418,7 @@ const AdminDashboard = () => {
       {showBlogModal && (
         <BlogAdminModal
           post={editingBlogPost}
+          authorName={adminData?.displayName || ''}
           onSave={handleSaveBlogPost}
           onClose={() => { setShowBlogModal(false); setEditingBlogPost(null); }}
         />
@@ -1349,7 +1433,8 @@ const AdminDashboard = () => {
         />
       )}
 
-      <ChatWidget language={language} />
+      {/* Users Modal */}
+      {showUsersModal && <UsersModal onClose={() => setShowUsersModal(false)} />}
     </div>
   );
 };

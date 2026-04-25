@@ -8,6 +8,7 @@ import GiftCardReveal from './pages/GiftCardReveal';
 import GiftCardPurchase from './pages/GiftCardPurchase';
 import FeedbackForm from './pages/FeedbackForm';
 import FeedbacksDashboard from './pages/FeedbacksDashboard';
+import BlogPostPage from './pages/BlogPostPage';
 import PrivateRoute from './components/PrivateRoute';
 import { LanguageProvider } from './contexts/LanguageContext';
 
@@ -27,6 +28,7 @@ function App() {
           />
           <Route path="/PlanYourTripNow/login" element={<Login />} />
           <Route path="/register/:tripId" element={<RegistrationForm />} />
+          <Route path="/PlanYourTripNow/register/:tripId" element={<RegistrationForm />} />
           <Route path="/gift/:giftCardId" element={<GiftCardReveal />} />
           <Route path="/feedback/:tripId/:token" element={<FeedbackForm />} />
           <Route
@@ -37,6 +39,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/blog/:postId" element={<BlogPostPage />} />
           <Route path="/gift-card-purchase" element={<GiftCardPurchase />} />
           <Route
             path="/PlanYourTripNow/gift-cards"

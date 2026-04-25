@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Send, CheckCircle2, MessageSquare, Image as ImageIcon, Share2, Check, CornerDownRight } from 'lucide-react';
-import { createBlogComment, getApprovedBlogComments, updateBlogComment } from '../utils/firestoreUtils';
+import { useParams, Link } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Send, CheckCircle2, MessageSquare, Image as ImageIcon, ArrowLeft, Share2, Check } from 'lucide-react';
+import { getBlogPostById, createBlogComment, getApprovedBlogComments, updateBlogComment } from '../utils/firestoreUtils';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import colors from '../utils/colors';
 
-// Renders [[IMG:label|url]] markers as expandable inline buttons
+// Renders [[IMG:label|url]] markers as expandable inline buttons (for old plain-text posts)
 const InlineImageButton = ({ label, url }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -25,17 +26,12 @@ const InlineImageButton = ({ label, url }) => {
         <span className="text-xs opacity-70">{open ? '▲' : '▼'}</span>
       </button>
       {open && (
-        <img
-          src={url}
-          alt={label}
-          className="mt-2 rounded-xl w-full object-cover max-h-80 shadow-md"
-        />
+        <img src={url} alt={label} className="mt-2 rounded-xl w-full object-cover max-h-80 shadow-md" />
       )}
     </span>
   );
 };
 
-// Parse content string and split out [[IMG:label|url]] markers
 const parseContent = (text) => {
   if (!text) return null;
   const parts = [];
@@ -56,51 +52,60 @@ const parseContent = (text) => {
   return parts;
 };
 
-const BlogPostModal = ({ post, onClose, previewMode = false }) => {
+const BlogPostPage = () => {
+  const { postId } = useParams();
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
-  const [shareCopied, setShareCopied] = useState(false);
-
-  const handleShare = () => {
-    if (!post?.id) return;
-    const url = `${window.location.origin}/blog/${post.id}`;
-    navigator.clipboard.writeText(url);
-    setShareCopied(true);
-    setTimeout(() => setShareCopied(false), 2000);
-  };
   const [comments, setComments] = useState([]);
-  const [commentsLoading, setCommentsLoading] = useState(!previewMode);
+  const [commentsLoading, setCommentsLoading] = useState(true);
   const [commentForm, setCommentForm] = useState({ name: '', email: '', content: '' });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
-  const [replyingTo, setReplyingTo] = useState(null);
-  const [replyText, setReplyText] = useState('');
+  const [adminReplyingTo, setAdminReplyingTo] = useState(null);
+  const [adminReplyText, setAdminReplyText] = useState('');
+
+  useEffect(() => onAuthStateChanged(auth, setAdminUser), []);
 
   useEffect(() => {
-    if (previewMode || !post?.id) return;
-    setCommentsLoading(true);
+    getBlogPostById(postId)
+      .then(data => {
+        if (!data || !data.published) { setNotFound(true); }
+        else { setPost(data); }
+      })
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
+  }, [postId]);
+
+  useEffect(() => {
+    if (!post?.id) return;
     getApprovedBlogComments(post.id)
       .then(setComments)
       .catch(() => {})
       .finally(() => setCommentsLoading(false));
-  }, [post?.id, previewMode]);
+  }, [post?.id]);
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
-
-  useEffect(() => {
-    return onAuthStateChanged(auth, setAdminUser);
-  }, []);
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title: post?.title, url }); } catch { /* user cancelled */ }
+    } else {
+      navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
+  };
 
   const handleAdminReply = async (commentId) => {
-    if (!replyText.trim()) return;
+    if (!adminReplyText.trim()) return;
     const replyAuthor = adminUser?.displayName || 'IVRITours';
-    await updateBlogComment(commentId, { reply: replyText.trim(), replyAuthor });
-    setComments(prev => prev.map(c => c.id === commentId ? { ...c, reply: replyText.trim(), replyAuthor } : c));
-    setReplyingTo(null);
-    setReplyText('');
+    await updateBlogComment(commentId, { reply: adminReplyText.trim(), replyAuthor });
+    setComments(prev => prev.map(c => c.id === commentId ? { ...c, reply: adminReplyText.trim(), replyAuthor } : c));
+    setAdminReplyingTo(null);
+    setAdminReplyText('');
   };
 
   const handleSubmitComment = async (e) => {
@@ -123,105 +128,130 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
     }
   };
 
-  const images = post?.images || [];
-  const isHtmlContent = post?.content && /<[a-z][\s\S]*>/i.test(post.content);
-  const renderedContent = isHtmlContent ? null : parseContent(post?.content || '');
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-400 text-sm">Loading…</div>
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-8 text-center">
+        <p className="text-xl font-bold text-gray-700 mb-2">Post not found</p>
+        <p className="text-sm text-gray-400 mb-6">This post may have been removed or is not yet published.</p>
+        <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: colors.primary.teal }}>
+          <ArrowLeft className="w-4 h-4" /> Back to home
+        </Link>
+      </div>
+    );
+  }
+
+  const images = post.images || [];
+  const isHtmlContent = post.content && /<[a-z][\s\S]*>/i.test(post.content);
+  const renderedContent = isHtmlContent ? null : parseContent(post.content || '');
 
   return (
-    <div
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-start p-6 pb-2 sticky top-0 bg-white rounded-t-2xl z-10 border-b border-gray-100">
-          <div className="flex-1 pr-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug">{post?.title}</h2>
-            {previewMode && (
-              <span className="inline-block mt-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                Preview — not yet published
+    <div className="min-h-screen bg-gray-50">
+      {/* Top nav bar */}
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
+          <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors" style={{ color: colors.primary.teal }}>
+            <ArrowLeft className="w-4 h-4" />
+            Back to Ivri Tours
+          </Link>
+        </div>
+      </div>
+
+      {/* Post card */}
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+
+          {/* Cover image */}
+          {images.length > 0 && (
+            <div className="relative">
+              <img
+                src={images[imageIndex]}
+                alt={`Post image ${imageIndex + 1}`}
+                className="w-full h-64 sm:h-80 object-cover"
+              />
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setImageIndex(i => (i - 1 + images.length) % images.length)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1.5 hover:bg-black/60 transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setImageIndex(i => (i + 1) % images.length)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1.5 hover:bg-black/60 transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                  <div className="flex justify-center gap-1.5 absolute bottom-3 left-0 right-0">
+                    {images.map((_, i) => (
+                      <button key={i} onClick={() => setImageIndex(i)}
+                        className={`h-2 rounded-full transition-all ${i === imageIndex ? 'w-5' : 'w-2 bg-white/60'}`}
+                        style={i === imageIndex ? { backgroundColor: 'white' } : {}}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Header */}
+          <div className="px-6 pt-6 pb-2">
+            {post.category && (
+              <span className="inline-block mb-3 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ backgroundColor: colors.primary.teal }}>
+                {post.category}
               </span>
             )}
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {!previewMode && post?.id && (
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">{post.title}</h1>
+
+            <div className="flex items-center justify-between gap-3 mt-3">
+              <div className="flex items-center gap-3 text-sm text-gray-400 flex-wrap">
+                {post.author && <span className="font-medium text-gray-600">By {post.author}</span>}
+                {post.author && post.publishedAt && <span>·</span>}
+                {post.publishedAt && (
+                  <span>
+                    {post.publishedAt.toDate?.().toLocaleDateString('en-CA', {
+                      year: 'numeric', month: 'long', day: 'numeric',
+                    })}
+                  </span>
+                )}
+              </div>
               <button
                 onClick={handleShare}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all"
-                style={{ borderColor: shareCopied ? '#10B981' : colors.primary.teal, color: shareCopied ? '#10B981' : colors.primary.teal }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all flex-shrink-0"
+                style={{
+                  borderColor: shareCopied ? '#10B981' : colors.primary.teal,
+                  color: shareCopied ? '#10B981' : colors.primary.teal,
+                }}
               >
-                {shareCopied ? <Check className="w-3 h-3" /> : <Share2 className="w-3 h-3" />}
+                {shareCopied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
                 {shareCopied ? 'Copied!' : 'Share'}
               </button>
-            )}
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors mt-0.5">
-              <X className="w-6 h-6" />
-            </button>
+            </div>
           </div>
-        </div>
 
-        {/* Date */}
-        {post?.publishedAt && !previewMode && (
-          <p className="px-6 pt-2 text-sm text-gray-400">
-            {post.publishedAt.toDate?.().toLocaleDateString('en-CA', {
-              year: 'numeric', month: 'long', day: 'numeric',
-            })}
-          </p>
-        )}
-
-        {/* Image Gallery */}
-        {images.length > 0 && (
-          <div className="relative mt-4 mx-6">
-            <img
-              src={images[imageIndex]}
-              alt={`Post image ${imageIndex + 1}`}
-              className="w-full h-64 sm:h-80 object-cover rounded-xl"
+          {/* Content */}
+          {isHtmlContent ? (
+            <div
+              className="blog-content px-6 py-4 text-gray-700 text-sm sm:text-base leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: post.content }}
             />
-            {images.length > 1 && (
-              <>
-                <button
-                  onClick={() => setImageIndex(i => (i - 1 + images.length) % images.length)}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1.5 hover:bg-black/60 transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setImageIndex(i => (i + 1) % images.length)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1.5 hover:bg-black/60 transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-                <div className="flex justify-center gap-1.5 mt-3">
-                  {images.map((_, i) => (
-                    <button key={i} onClick={() => setImageIndex(i)}
-                      className={`h-2 rounded-full transition-all ${i === imageIndex ? 'w-5' : 'w-2 bg-gray-300'}`}
-                      style={i === imageIndex ? { backgroundColor: colors.primary.teal } : {}}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
+          ) : (
+            <div className="px-6 py-4 text-gray-700 text-sm sm:text-base leading-relaxed">
+              {renderedContent}
+            </div>
+          )}
 
-        {/* Content */}
-        {isHtmlContent ? (
-          <div
-            className="blog-content px-6 mt-5 text-gray-700 text-sm sm:text-base leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
-        ) : (
-          <div className="px-6 mt-5 text-gray-700 text-sm sm:text-base leading-relaxed">
-            {renderedContent}
-          </div>
-        )}
-
-        {/* Comments — hidden in preview mode */}
-        {!previewMode && (
-          <div className="px-6 mt-8 pb-6">
+          {/* Comments */}
+          <div className="px-6 pb-8 mt-4">
             <div className="border-t pt-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" style={{ color: colors.primary.teal }} />
@@ -253,40 +283,33 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
                           <p className="text-sm text-gray-700 leading-relaxed">{c.reply}</p>
                         </div>
                       )}
-                      {adminUser && replyingTo === c.id && (
+                      {adminUser && adminReplyingTo === c.id && (
                         <div className="mt-3 flex gap-2 items-start">
-                          <CornerDownRight className="w-4 h-4 text-gray-400 mt-2 flex-shrink-0" />
                           <textarea
-                            rows={2} autoFocus value={replyText}
-                            onChange={e => setReplyText(e.target.value)}
+                            rows={2} autoFocus
+                            value={adminReplyText}
+                            onChange={e => setAdminReplyText(e.target.value)}
                             placeholder="Write your reply…"
                             className="flex-1 px-3 py-2 text-xs border-2 rounded-lg focus:outline-none resize-none"
                             style={{ borderColor: colors.primary.teal }}
                           />
-                          <div className="flex flex-col gap-1 flex-shrink-0">
-                            <button
-                              onClick={() => handleAdminReply(c.id)}
-                              disabled={!replyText.trim()}
+                          <div className="flex flex-col gap-1">
+                            <button onClick={() => handleAdminReply(c.id)} disabled={!adminReplyText.trim()}
                               className="px-2.5 py-1.5 text-white rounded-lg text-xs font-semibold disabled:opacity-40"
-                              style={{ backgroundColor: colors.primary.teal }}
-                            >
+                              style={{ backgroundColor: colors.primary.teal }}>
                               <Send className="w-3.5 h-3.5" />
                             </button>
-                            <button
-                              onClick={() => { setReplyingTo(null); setReplyText(''); }}
-                              className="px-2.5 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-xs"
-                            >
-                              <X className="w-3.5 h-3.5" />
+                            <button onClick={() => { setAdminReplyingTo(null); setAdminReplyText(''); }}
+                              className="px-2.5 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-xs">
+                              ✕
                             </button>
                           </div>
                         </div>
                       )}
-                      {adminUser && replyingTo !== c.id && (
-                        <button
-                          onClick={() => { setReplyingTo(c.id); setReplyText(c.reply || ''); }}
+                      {adminUser && adminReplyingTo !== c.id && (
+                        <button onClick={() => { setAdminReplyingTo(c.id); setAdminReplyText(c.reply || ''); }}
                           className="mt-2 text-[11px] font-semibold hover:underline"
-                          style={{ color: colors.primary.teal }}
-                        >
+                          style={{ color: colors.primary.teal }}>
                           {c.reply ? 'Edit reply' : '↩ Reply'}
                         </button>
                       )}
@@ -332,16 +355,7 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
               )}
             </div>
           </div>
-        )}
-
-        {/* Preview mode footer */}
-        {previewMode && (
-          <div className="px-6 pb-6 mt-6">
-            <div className="text-center text-sm text-gray-400 border-t pt-4">
-              Comments section will appear here for visitors
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       <style>{`
@@ -369,4 +383,4 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
   );
 };
 
-export default BlogPostModal;
+export default BlogPostPage;

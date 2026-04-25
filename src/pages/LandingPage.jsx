@@ -9,6 +9,7 @@ import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'fire
 import { db } from '../firebase';
 import LanguageSelector from '../components/LanguageSelector';
 import ChatWidget from '../components/ChatWidget';
+import WeatherWidget from '../components/WeatherWidget';
 import BlogPostModal from '../components/BlogPostModal';
 import { createQuestion, getWebsiteFeedbacks, getSiteSettings, getPublishedBlogPosts } from '../utils/firestoreUtils';
 import siteLogo from '../assets/site_logo.png';
@@ -19,6 +20,7 @@ const LandingPage = () => {
   const [showWelcome, setShowWelcome] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [showCookieConsent, setShowCookieConsent] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [accessibilitySettings, setAccessibilitySettings] = useState({
     fontSize: 100,
@@ -820,8 +822,10 @@ const LandingPage = () => {
       <nav style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(234,246,248,0.88)', backdropFilter: 'blur(14px) saturate(140%)', borderBottom: '1px solid #C6DFE4' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 76 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* <div style={{ width: 34, height: 34, borderRadius: '50%', background: colors.primary.teal, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontFamily: '"Fraunces", Georgia, serif', fontStyle: 'italic', fontSize: 17, fontWeight: 600 }}>i</div> */}
-            <img src={siteLogo} alt="IVRITours" style={{ height: 60, width: 'auto', display: 'block' }} />
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ display: 'block', lineHeight: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+              <img src={siteLogo} alt="IVRITours" style={{ height: 60, width: 'auto', display: 'block' }} />
+            </button>
+            <WeatherWidget compact={true} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div className="relative">
@@ -1062,15 +1066,24 @@ const LandingPage = () => {
                           </div>
                           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
                             <span style={{ background: colors.primary.teal, color: 'white', fontSize: 11, padding: '4px 12px', borderRadius: 100, alignSelf: 'flex-start' }}>🗣️ {t.multiLang}</span>
-                            <button
-                              onClick={() => { setQuestionDest({ key: dest.key, title: t.destinations[dest.key].title }); setQuestionForm({ name: '', email: '', phone: '', message: '' }); setQuestionSuccess(false); }}
-                              className="hover:bg-[#00BCD4] hover:text-white transition-colors"
-                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, border: `2px solid ${colors.primary.teal}`, color: colors.primary.teal, background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-                            >
-                              <MessageCircle style={{ width: 14, height: 14 }} />
-                              {t.askQuestion}
-                        </button>
-                      </div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <button
+                                onClick={() => { setQuestionDest({ key: dest.key, title: t.destinations[dest.key].title }); setQuestionForm({ name: '', email: '', phone: '', message: '' }); setQuestionSuccess(false); }}
+                                className="hover:bg-[#00BCD4] hover:text-white transition-colors"
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, border: `2px solid ${colors.primary.teal}`, color: colors.primary.teal, background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                              >
+                                <MessageCircle style={{ width: 14, height: 14 }} />
+                                {t.askQuestion}
+                              </button>
+                              <a
+                                href="tel:6473026846"
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, border: '2px solid #25D366', color: '#25D366', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+                                className="hover:bg-[#25D366] hover:text-white transition-colors"
+                              >
+                                📞 Call us
+                              </a>
+                            </div>
+                          </div>
                     </div>
                   </div>
                 </div>
@@ -1364,6 +1377,9 @@ const LandingPage = () => {
                 <button onClick={() => navigate('/gift-card-purchase')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C6DFE4', fontSize: 14, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, padding: 0 }}>
                   <Gift style={{ width: 14, height: 14 }} />{tGift.purchaseGiftCard}
                 </button>
+                <button onClick={() => setShowTerms(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C6DFE4', fontSize: 14, textAlign: 'left', padding: 0 }}>
+                  {language === 'he' ? 'תנאי שימוש' : language === 'ru' ? 'Условия использования' : 'Terms of Use'}
+                </button>
               </div>
             </div>
           </div>
@@ -1377,6 +1393,77 @@ const LandingPage = () => {
       </footer>
 
       {selectedBlogPost && <BlogPostModal post={selectedBlogPost} onClose={() => setSelectedBlogPost(null)} />}
+
+      {/* Terms of Use lightbox */}
+      {showTerms && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4"
+          onClick={() => setShowTerms(false)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center px-6 py-4 border-b sticky top-0 bg-white rounded-t-2xl">
+              <h2 className="text-lg font-bold text-gray-900">
+                {language === 'he' ? 'תנאי שימוש' : language === 'ru' ? 'Условия использования' : 'Terms of Use'}
+              </h2>
+              <button onClick={() => setShowTerms(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-6 text-sm text-gray-700 leading-relaxed">
+
+              {/* Cancellation Policy */}
+              <div>
+                <h3 className="text-base font-bold text-gray-900 mb-3" style={{ color: colors.primary.teal }}>Cancellation Policy</h3>
+                <ol className="list-decimal list-inside space-y-2">
+                  <li>Cancellations made <strong>7 days or more</strong> before the trip date will receive a full refund.</li>
+                  <li>Cancellations made <strong>4 days</strong> before the trip date will receive a <strong>50% refund</strong>.</li>
+                  <li>Cancellations made <strong>less than 3 days</strong> before the trip date are <strong>non-refundable</strong>.</li>
+                  <li><strong>No-shows</strong> on the trip date are non-refundable.</li>
+                  <li>Trip organizers reserve the right to cancel trips due to weather, safety concerns, or insufficient participation, in which case full refunds will be provided.</li>
+                </ol>
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* Waiver */}
+              <div>
+                <h3 className="text-base font-bold text-gray-900 mb-3" style={{ color: colors.primary.teal }}>Waiver of Liability & Assumption of Risk</h3>
+                <p className="mb-3">By participating in any IVRITours trip or activity, you acknowledge and agree to the following:</p>
+                <ol className="list-decimal list-inside space-y-2">
+                  <li>You are voluntarily participating and understand that participation involves inherent risks, including but not limited to personal injury, property damage, or death.</li>
+                  <li>You <strong>waive, release, and discharge</strong> IVRITours, its officers, employees, and agents from any and all liability for any loss, damage, injury, or death that may occur during your participation.</li>
+                  <li>You <strong>assume all risks</strong> associated with participation, whether known or unknown.</li>
+                  <li>You agree to <strong>indemnify and hold harmless</strong> IVRITours from any claims, actions, or losses arising from your participation.</li>
+                  <li>You <strong>consent</strong> to receive emergency medical treatment if necessary.</li>
+                </ol>
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* General */}
+              <div>
+                <h3 className="text-base font-bold text-gray-900 mb-3" style={{ color: colors.primary.teal }}>General</h3>
+                <p>These terms apply to all trips and activities organized by IVRITours. By registering for a trip you confirm that you have read, understood, and agree to these terms in full.</p>
+                <p className="mt-2">For questions, contact us through the contact form on this website.</p>
+              </div>
+            </div>
+
+            <div className="px-6 pb-5">
+              <button
+                onClick={() => setShowTerms(false)}
+                className="w-full py-2.5 rounded-xl text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: colors.primary.teal }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {scrollY > 300 && (
         <button onClick={() => navigate('/gift-card-purchase')} className="animate-float" style={{ position: 'fixed', bottom: 32, left: 32, background: 'white', borderRadius: '50%', boxShadow: '0 10px 30px rgba(0,188,212,0.3)', padding: 16, border: 'none', cursor: 'pointer', zIndex: 50 }} title={language === 'ru' ? 'Купить подарочную карту' : language === 'he' ? 'קנה כרטיס מתנה' : 'Purchase Gift Card'}>

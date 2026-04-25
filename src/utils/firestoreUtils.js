@@ -311,6 +311,33 @@ export const deleteBlogPost = async (postId) => {
   await deleteDoc(doc(db, 'blogPosts', postId));
 };
 
+export const getBlogPostById = async (postId) => {
+  const snap = await getDoc(doc(db, 'blogPosts', postId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+};
+
+// ─── User / Role management ──────────────────────────────────────────────────
+
+export const getRoleUsers = async () => {
+  const [adminSnap, writerSnap] = await Promise.all([
+    getDocs(collection(db, 'admins')),
+    getDocs(collection(db, 'writers')),
+  ]);
+  const admins = adminSnap.docs.map(d => ({ uid: d.id, role: 'admin', ...d.data() }));
+  const writers = writerSnap.docs.map(d => ({ uid: d.id, role: 'writer', ...d.data() }));
+  return [...admins, ...writers];
+};
+
+export const setUserRole = async (uid, role, displayName, email = '') => {
+  const colName = role === 'admin' ? 'admins' : 'writers';
+  await setDoc(doc(db, colName, uid), { displayName, email, createdAt: Timestamp.now() });
+};
+
+export const removeUserRole = async (uid, role) => {
+  const colName = role === 'admin' ? 'admins' : 'writers';
+  await deleteDoc(doc(db, colName, uid));
+};
+
 // ─── Blog Comment operations ─────────────────────────────────────────────────
 
 export const createBlogComment = async (commentData) => {
@@ -343,6 +370,10 @@ export const getPendingBlogComments = async () => {
 
 export const approveBlogComment = async (commentId) => {
   await updateDoc(doc(db, 'blogComments', commentId), { approved: true });
+};
+
+export const updateBlogComment = async (commentId, updates) => {
+  await updateDoc(doc(db, 'blogComments', commentId), updates);
 };
 
 export const deleteBlogComment = async (commentId) => {

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, ArrowLeft, Gift, MessageCircle, HelpCircle, Settings, Menu, X, FileText, Star, Bell, MessageSquare } from 'lucide-react';
+import { LogOut, ArrowLeft, Gift, MessageCircle, HelpCircle, Settings, Menu, X, FileText, Star, Bell, MessageSquare, Users } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import IVRILogo from './IrviLogo';
@@ -11,7 +11,7 @@ import { translations } from '../utils/translations';
 import colors from '../utils/colors';
 import { startTour } from '../utils/tour';
 
-const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout = true, onOpenMigration, onDownloadInvoices, questionCount = 0, onOpenQuestions }) => {
+const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout = true, onOpenMigration, onDownloadInvoices, questionCount = 0, onOpenQuestions, onOpenUsers }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
@@ -51,11 +51,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
   // Pages where clicking the logo should warn before leaving
   const isAdminArea = isAdminDashboard || isGiftCardsPage || location.pathname.startsWith('/PlanYourTripNow/admin');
   const handleLogoClick = () => {
-    if (isAdminArea) {
-      navigate('/PlanYourTripNow/admin');
-    } else {
-      setShowHomeConfirm(true);
-    }
+    navigate('/');
   };
 
   return (
@@ -201,6 +197,15 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
                       <Star className="w-4 h-4 text-amber-400" />
                       Feedbacks
                     </button>
+                    {onOpenUsers && (
+                      <button
+                        onClick={() => { onOpenUsers(); setShowMenu(false); }}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <Users className="w-4 h-4" style={{ color: colors.primary.teal }} />
+                        Users
+                      </button>
+                    )}
                     <a
                       href="https://wa.me/14155238886"
                       target="_blank"
