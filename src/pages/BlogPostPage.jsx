@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Send, CheckCircle2, MessageSquare, Image as ImageIcon, ArrowLeft, Share2, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Send, CheckCircle2, MessageSquare, Image as ImageIcon, ArrowLeft, Share2, Check, MapPin } from 'lucide-react';
 import { getBlogPostById, createBlogComment, getApprovedBlogComments, updateBlogComment } from '../utils/firestoreUtils';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import colors from '../utils/colors';
+import TranslateButton from '../components/TranslateButton';
+import LocationMapModal, { getPostLocationInfo } from '../components/LocationMapModal';
 
 // Renders [[IMG:label|url]] markers as expandable inline buttons (for old plain-text posts)
 const InlineImageButton = ({ label, url }) => {
@@ -67,6 +69,7 @@ const BlogPostPage = () => {
   const [adminUser, setAdminUser] = useState(null);
   const [adminReplyingTo, setAdminReplyingTo] = useState(null);
   const [adminReplyText, setAdminReplyText] = useState('');
+  const [locModal, setLocModal] = useState(null);
 
   useEffect(() => onAuthStateChanged(auth, setAdminUser), []);
 
@@ -223,6 +226,23 @@ const BlogPostPage = () => {
                     })}
                   </span>
                 )}
+                {(() => {
+                  const locInfo = getPostLocationInfo(post);
+                  if (!locInfo) return null;
+                  return (
+                    <>
+                      <span>·</span>
+                      <button
+                        onClick={() => setLocModal(locInfo)}
+                        className="flex items-center gap-1 hover:underline"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.primary.teal, padding: 0, fontSize: 'inherit', fontFamily: 'inherit' }}
+                      >
+                        <MapPin style={{ width: 12, height: 12 }} />
+                        {locInfo.name}
+                      </button>
+                    </>
+                  );
+                })()}
               </div>
               <button
                 onClick={handleShare}
@@ -358,6 +378,8 @@ const BlogPostPage = () => {
         </div>
       </div>
 
+      <TranslateButton floating />
+
       <style>{`
         .blog-content h2 { font-size: 1.3rem; font-weight: 700; margin: 1rem 0 0.4rem; color: #111827; }
         .blog-content h3 { font-size: 1.05rem; font-weight: 700; margin: 0.75rem 0 0.3rem; color: #111827; }
@@ -379,6 +401,15 @@ const BlogPostPage = () => {
         .blog-content strong, .blog-content b { font-weight: 700; }
         .blog-content em, .blog-content i { font-style: italic; }
       `}</style>
+
+      {locModal && (
+        <LocationMapModal
+          name={locModal.name}
+          lat={locModal.lat}
+          lng={locModal.lng}
+          onClose={() => setLocModal(null)}
+        />
+      )}
     </div>
   );
 };

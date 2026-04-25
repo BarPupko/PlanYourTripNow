@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Send, CheckCircle2, MessageSquare, Image as ImageIcon, Share2, Check, CornerDownRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Send, CheckCircle2, MessageSquare, Image as ImageIcon, Share2, Check, CornerDownRight, MapPin } from 'lucide-react';
 import { createBlogComment, getApprovedBlogComments, updateBlogComment } from '../utils/firestoreUtils';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import TranslateButton from './TranslateButton';
 import colors from '../utils/colors';
+import LocationMapModal, { getPostLocationInfo } from './LocationMapModal';
 
 // Renders [[IMG:label|url]] markers as expandable inline buttons
 const InlineImageButton = ({ label, url }) => {
@@ -75,6 +77,7 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
   const [adminUser, setAdminUser] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
+  const [locModal, setLocModal] = useState(null);
 
   useEffect(() => {
     if (previewMode || !post?.id) return;
@@ -148,14 +151,17 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {!previewMode && post?.id && (
-              <button
-                onClick={handleShare}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all"
-                style={{ borderColor: shareCopied ? '#10B981' : colors.primary.teal, color: shareCopied ? '#10B981' : colors.primary.teal }}
-              >
-                {shareCopied ? <Check className="w-3 h-3" /> : <Share2 className="w-3 h-3" />}
-                {shareCopied ? 'Copied!' : 'Share'}
-              </button>
+              <>
+                <TranslateButton compact />
+                <button
+                  onClick={handleShare}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all"
+                  style={{ borderColor: shareCopied ? '#10B981' : colors.primary.teal, color: shareCopied ? '#10B981' : colors.primary.teal }}
+                >
+                  {shareCopied ? <Check className="w-3 h-3" /> : <Share2 className="w-3 h-3" />}
+                  {shareCopied ? 'Copied!' : 'Share'}
+                </button>
+              </>
             )}
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors mt-0.5">
               <X className="w-6 h-6" />
@@ -163,13 +169,34 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
           </div>
         </div>
 
-        {/* Date */}
-        {post?.publishedAt && !previewMode && (
-          <p className="px-6 pt-2 text-sm text-gray-400">
-            {post.publishedAt.toDate?.().toLocaleDateString('en-CA', {
-              year: 'numeric', month: 'long', day: 'numeric',
-            })}
-          </p>
+        {/* Date + Location */}
+        {(post?.publishedAt || post?.location) && !previewMode && (
+          <div className="px-6 pt-2 flex items-center gap-3 flex-wrap text-sm text-gray-400">
+            {post.publishedAt && (
+              <span>
+                {post.publishedAt.toDate?.().toLocaleDateString('en-CA', {
+                  year: 'numeric', month: 'long', day: 'numeric',
+                })}
+              </span>
+            )}
+            {(() => {
+              const locInfo = getPostLocationInfo(post);
+              if (!locInfo) return null;
+              return (
+                <>
+                  {post.publishedAt && <span>·</span>}
+                  <button
+                    onClick={() => setLocModal(locInfo)}
+                    className="flex items-center gap-1 hover:underline"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.primary.teal, padding: 0, fontSize: 'inherit', fontFamily: 'inherit' }}
+                  >
+                    <MapPin style={{ width: 12, height: 12 }} />
+                    {locInfo.name}
+                  </button>
+                </>
+              );
+            })()}
+          </div>
         )}
 
         {/* Image Gallery */}
@@ -365,6 +392,15 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
         .blog-content strong, .blog-content b { font-weight: 700; }
         .blog-content em, .blog-content i { font-style: italic; }
       `}</style>
+
+      {locModal && (
+        <LocationMapModal
+          name={locModal.name}
+          lat={locModal.lat}
+          lng={locModal.lng}
+          onClose={() => setLocModal(null)}
+        />
+      )}
     </div>
   );
 };

@@ -34,12 +34,28 @@ const CATEGORIES = [
   { value: 'Stories', label: 'Stories' },
 ];
 
+const LOCATIONS = [
+  { value: '', label: 'None' },
+  { value: 'toronto', label: 'Toronto, ON' },
+  { value: 'niagara', label: 'Niagara Falls, ON' },
+  { value: 'quebec', label: 'Quebec City, QC' },
+  { value: 'mont-tremblant', label: 'Mont-Tremblant, QC' },
+  { value: 'chicago', label: 'Chicago, IL' },
+  { value: 'detroit', label: 'Detroit, MI' },
+  { value: 'barrie', label: 'Barrie, ON' },
+  { value: 'custom', label: '📍 Custom location…' },
+];
+
 const BlogAdminModal = ({ post, authorName = '', onSave, onClose }) => {
   const [form, setForm] = useState({
     title: post?.title || '',
     author: post?.author || authorName,
     excerpt: post?.excerpt || '',
     category: post?.category || '',
+    location: post?.location || '',
+    locationCustomName: post?.locationCustomName || '',
+    locationLat: post?.locationLat ? String(post.locationLat) : '',
+    locationLng: post?.locationLng ? String(post.locationLng) : '',
     content: post?.content || '',
     published: post?.published ?? false,
     images: post?.images || [],
@@ -54,6 +70,9 @@ const BlogAdminModal = ({ post, authorName = '', onSave, onClose }) => {
   const fileInputRef = useRef(null);
   const editorRef = useRef(null);
   const savedRangeRef = useRef(null);
+  const customMapContainerRef = useRef(null);
+  const customLeafletMapRef = useRef(null);
+  const customMarkerRef = useRef(null);
 
   // Set initial HTML content once on mount — don't re-sync from state to avoid fighting contentEditable
   useEffect(() => {
@@ -61,6 +80,102 @@ const BlogAdminModal = ({ post, authorName = '', onSave, onClose }) => {
       editorRef.current.innerHTML = post?.content || '';
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Custom location map — init/destroy when location type changes
+  useEffect(() => {
+    if (form.location !== 'custom') {
+      if (customLeafletMapRef.current) {
+        customLeafletMapRef.current.remove();
+        customLeafletMapRef.current = null;
+        customMarkerRef.current = null;
+      }
+      return;
+    }
+
+    const ensureLeaflet = (cb) => {
+      if (!document.querySelector('#leaflet-css')) {
+        const link = document.createElement('link');
+        link.id = 'leaflet-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+      }
+      if (window.L) { setTimeout(cb, 60); return; }
+      if (!document.querySelector('#leaflet-js')) {
+        const s = document.createElement('script');
+        s.id = 'leaflet-js';
+        s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        s.onload = () => setTimeout(cb, 60);
+        document.body.appendChild(s);
+      } else {
+        const poll = setInterval(() => { if (window.L) { clearInterval(poll); setTimeout(cb, 60); } }, 100);
+        return () => clearInterval(poll);
+      }
+    };
+
+    ensureLeaflet(() => {
+      if (!customMapContainerRef.current || customLeafletMapRef.current) return;
+      const L = window.L;
+      const lat0 = form.locationLat ? Number(form.locationLat) : 45.5;
+      const lng0 = form.locationLng ? Number(form.locationLng) : -75.0;
+      const zoom0 = form.locationLat && form.locationLng ? 11 : 5;
+
+      const map = L.map(customMapContainerRef.current, { center: [lat0, lng0], zoom: zoom0, scrollWheelZoom: true });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 18,
+      }).addTo(map);
+
+      const addOrMoveMarker = (lat, lng) => {
+        if (customMarkerRef.current) {
+          customMarkerRef.current.setLatLng([lat, lng]);
+        } else {
+          customMarkerRef.current = L.marker([lat, lng], { draggable: true }).addTo(map);
+          customMarkerRef.current.on('dragend', (e) => {
+            const p = e.target.getLatLng();
+            setForm(prev => ({ ...prev, locationLat: p.lat.toFixed(6), locationLng: p.lng.toFixed(6) }));
+          });
+        }
+      };
+
+      if (form.locationLat && form.locationLng) addOrMoveMarker(lat0, lng0);
+
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        addOrMoveMarker(lat, lng);
+        setForm(prev => ({ ...prev, locationLat: lat.toFixed(6), locationLng: lng.toFixed(6) }));
+      });
+
+      customLeafletMapRef.current = map;
+    });
+
+    return () => {
+      if (customLeafletMapRef.current) {
+        customLeafletMapRef.current.remove();
+        customLeafletMapRef.current = null;
+        customMarkerRef.current = null;
+      }
+    };
+  }, [form.location]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync marker when lat/lng inputs change manually
+  useEffect(() => {
+    if (form.location !== 'custom' || !customLeafletMapRef.current || !window.L) return;
+    const lat = Number(form.locationLat);
+    const lng = Number(form.locationLng);
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+    const L = window.L;
+    const map = customLeafletMapRef.current;
+    if (customMarkerRef.current) {
+      customMarkerRef.current.setLatLng([lat, lng]);
+    } else {
+      customMarkerRef.current = L.marker([lat, lng], { draggable: true }).addTo(map);
+      customMarkerRef.current.on('dragend', (e) => {
+        const p = e.target.getLatLng();
+        setForm(prev => ({ ...prev, locationLat: p.lat.toFixed(6), locationLng: p.lng.toFixed(6) }));
+      });
+    }
+  }, [form.locationLat, form.locationLng, form.location]);
 
   const handleEditorInput = () => {
     if (editorRef.current) {
@@ -217,18 +332,79 @@ const BlogAdminModal = ({ post, authorName = '', onSave, onClose }) => {
             />
           </div>
 
-          {/* Category */}
+          {/* Category + Location row */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Category <span className="font-normal text-gray-400">(shown as a badge)</span>
-            </label>
-            <select
-              value={form.category}
-              onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm bg-white"
-            >
-              {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Category <span className="font-normal text-gray-400">(badge)</span>
+                </label>
+                <select
+                  value={form.category}
+                  onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm bg-white"
+                >
+                  {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Location <span className="font-normal text-gray-400">(pins on map)</span>
+                </label>
+                <select
+                  value={form.location}
+                  onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
+                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm bg-white"
+                >
+                  {LOCATIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Custom location panel */}
+            {form.location === 'custom' && (
+              <div style={{ marginTop: 12, padding: 14, background: '#f8fbfc', borderRadius: 12, border: '1.5px solid #C6DFE4' }}>
+                <div className="mb-3">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Location name</label>
+                  <input
+                    type="text"
+                    value={form.locationCustomName}
+                    onChange={e => setForm(p => ({ ...p, locationCustomName: e.target.value }))}
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm"
+                    placeholder="e.g. Algonquin Park"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Latitude</label>
+                    <input
+                      type="number" step="any"
+                      value={form.locationLat}
+                      onChange={e => setForm(p => ({ ...p, locationLat: e.target.value }))}
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm"
+                      placeholder="e.g. 45.5017"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Longitude</label>
+                    <input
+                      type="number" step="any"
+                      value={form.locationLng}
+                      onChange={e => setForm(p => ({ ...p, locationLng: e.target.value }))}
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm"
+                      placeholder="e.g. -73.5673"
+                    />
+                  </div>
+                </div>
+                <p style={{ fontSize: 11, color: '#78959D', marginBottom: 8, fontFamily: '"JetBrains Mono", monospace', letterSpacing: '0.06em' }}>
+                  OR CLICK ON THE MAP TO DROP A PIN
+                </p>
+                <div
+                  ref={customMapContainerRef}
+                  style={{ height: 260, borderRadius: 8, overflow: 'hidden', border: '1px solid #C6DFE4' }}
+                />
+              </div>
+            )}
           </div>
 
           {/* ── Rich text editor ── */}

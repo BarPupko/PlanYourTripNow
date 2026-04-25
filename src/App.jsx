@@ -9,6 +9,7 @@ import GiftCardPurchase from './pages/GiftCardPurchase';
 import FeedbackForm from './pages/FeedbackForm';
 import FeedbacksDashboard from './pages/FeedbacksDashboard';
 import BlogPostPage from './pages/BlogPostPage';
+import BlogIndexPage from './pages/BlogIndexPage';
 import PrivateRoute from './components/PrivateRoute';
 import { LanguageProvider } from './contexts/LanguageContext';
 
@@ -39,6 +40,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/blog" element={<BlogIndexPage />} />
           <Route path="/blog/:postId" element={<BlogPostPage />} />
           <Route path="/gift-card-purchase" element={<GiftCardPurchase />} />
           <Route

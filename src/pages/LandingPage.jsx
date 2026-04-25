@@ -915,7 +915,7 @@ const LandingPage = () => {
       <section className="hero-section" style={{ background: '#EAF6F8', padding: '5rem 1.5rem 4rem' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
-            <div>
+            <div className="hero-content">
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 16 }}>
                 {language === 'ru' ? '— Туристическое агентство' : language === 'he' ? '— סוכנות טיולים' : '— Travel Studio'}
               </p>
@@ -1369,12 +1369,12 @@ const LandingPage = () => {
                   {language === 'ru' ? <>Отправления <em style={{ fontStyle: 'italic' }}>из студии.</em></> : language === 'he' ? <>שגרים <em style={{ fontStyle: 'italic' }}>מהאולפן.</em></> : <>Dispatches from the <em style={{ fontStyle: 'italic' }}>studio.</em></>}
                 </h2>
               </div>
-              <span
-                onClick={() => setSelectedBlogPost(blogPosts[0])}
+              <button
+                onClick={() => navigate('/blog')}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#0A2A33', fontSize: 14, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 4, paddingBottom: 4, flexShrink: 0 }}
               >
                 {language === 'ru' ? 'Все записи →' : language === 'he' ? 'כל הכתבות →' : 'Read all entries →'}
-              </span>
+              </button>
             </div>
             {/* Cards — borderless editorial grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -1385,7 +1385,7 @@ const LandingPage = () => {
                 const wordCount = (post.content || '').split(/\s+/).filter(Boolean).length;
                 const readTime = Math.max(1, Math.ceil(wordCount / 200));
                 return (
-                  <div key={post.id} onClick={() => setSelectedBlogPost(post)} className="group" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column' }}>
+                  <div key={post.id} onClick={() => navigate(`/blog/${post.id}`)} className="group" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ borderRadius: 12, overflow: 'hidden', aspectRatio: '1/1', position: 'relative', marginBottom: 20 }}>
                       {post.images?.[0] ? (
                         <img src={post.images[0]} alt={post.title} className="group-hover:scale-105" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} />
@@ -1779,9 +1779,20 @@ const LandingPage = () => {
         .high-contrast { filter: contrast(2); }
         .high-contrast * { border-color: #000 !important; }
         @media (max-width: 767px) {
+          .hero-section { padding: 3rem 1rem 2.5rem !important; position: relative !important; overflow: hidden !important; }
           .hero-grid { grid-template-columns: 1fr !important; }
-          .hero-image-wrap { display: none !important; }
-          .hero-section { padding: 3rem 1rem 2.5rem !important; }
+          .hero-image-wrap {
+            position: absolute !important;
+            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            border-radius: 0 !important;
+            aspect-ratio: unset !important;
+            box-shadow: none !important;
+            z-index: 0 !important;
+            opacity: 0.5 !important;
+            filter: blur(1px) !important;
+            overflow: hidden !important;
+          }
+          .hero-content { position: relative !important; z-index: 1 !important; }
           .hero-stats { grid-template-columns: repeat(2, 1fr) !important; }
           .section-pad { padding: 3rem 1rem !important; }
         }
