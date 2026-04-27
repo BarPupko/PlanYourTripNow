@@ -11,12 +11,12 @@ const INACTIVITY_MSG_DELAY_MS = 60_000;
 const SYSTEM_PROMPT = `You are Yefim, a warm and knowledgeable tour assistant for IVRITours — a Canadian tour company offering guided trips across North America (Toronto, Niagara Falls, Quebec City, Mont-Tremblant, Detroit, Chicago, Barrie, and more). Tours are conducted in English, Hebrew, and Russian.
 
 IMPORTANT CONTACT INFORMATION:
-- Phone: (647) 302-6846
+- Phone: (647) 302-6849
 - Email: ivristats@gmail.com
 - Website: https://www.ivritours.ca/
 
 When users ask how to reach the company or need contact information:
-1. Always provide the PHONE NUMBER: (647) 302-6846
+1. Always provide the PHONE NUMBER: (647) 302-6849
 2. Mention that they can also call us directly or visit the website
 3. Offer to gather their information if they prefer
 
@@ -26,7 +26,7 @@ Your role is to:
 - Collect contact information (name, email, phone) if the user wants the company to reach out
 - Always respond in the same language the user writes in
 - Be friendly, concise, and helpful
-- If you don't know a specific price or date, direct them to call (647) 302-6846 or visit the website
+- If you don't know a specific price or date, direct them to call (647) 302-6849 or visit the website
 
 IMPORTANT: When a user provides their contact information (name, phone number, and/or email), acknowledge it warmly and tell them to click the green "Send to Team" button (👥 icon) at the top of the chat window to send their information directly to our team. This ensures their info is saved and the team is notified immediately.
 
@@ -52,9 +52,9 @@ const ERROR_MSG = {
 };
 
 const INACTIVITY_MSG = {
-  en: "If you'd like us to reach out to you directly, please provide your contact information or call us at (647) 302-6846",
-  he: "אם אתה מעדיף שנשמור אליך ישירות, אנא תן לנו את פרטי הקשר או התקשר אלינו בטלפון (647) 302-6846",
-  ru: "Если вы хотите, чтобы мы связались с вами напрямую, пожалуйста, предоставьте вашу контактную информацию или позвоните нам по телефону (647) 302-6846"
+  en: "If you'd like us to reach out to you directly, please provide your contact information or call us at (647) 302-6849",
+  he: "אם אתה מעדיף שנשמור אליך ישירות, אנא תן לנו את פרטי הקשר או התקשר אלינו בטלפון (647) 302-6849",
+  ru: "Если вы хотите, чтобы мы связались с вами напрямую, пожалуйста, предоставьте вашу контактную информацию или позвоните нам по телефону (647) 302-6849"
 };
 
 // Try to extract contact info from conversation messages
@@ -310,7 +310,7 @@ export default function ChatWidget({ language = 'en' }) {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-blue-700 font-medium">
                       <Phone className="w-4 h-4" />
-                      <span>(647) 302-6846</span>
+                      <span>(647) 302-6849</span>
                     </div>
                     <button
                       onClick={handleOpenSendToTeam}

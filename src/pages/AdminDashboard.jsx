@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock, Layout, ToggleLeft, ToggleRight, Users, BookOpen, CheckCheck, X, Eye, GripVertical, ChevronUp, ChevronDown, Share2, CornerDownRight, Lock } from 'lucide-react';
+import { Plus, Copy, Check, Trash2, Edit, MessageCircle, Send, Clock, Layout, ToggleLeft, ToggleRight, Users, BookOpen, CheckCheck, X, Eye, GripVertical, ChevronUp, ChevronDown, Share2, CornerDownRight, Lock, ImagePlus, Loader2 } from 'lucide-react';
 import { getAllTrips, createTrip, deleteTrip, updateTrip, publishTrip, toggleFeedbackWebsite, getSiteSettings, updateSiteSettings, getAllBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost, getPendingBlogComments, approveBlogComment, deleteBlogComment, updateBlogComment, getPartners, createPartner, updatePartner, deletePartner, getDrivers, createDriver, updateDriver, deleteDriver, getCustomDestinations, createCustomDestination, updateCustomDestination, deleteCustomDestination } from '../utils/firestoreUtils';
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebase';
 import CreateTripModal from '../components/CreateTripModal';
 import BlogAdminModal from '../components/BlogAdminModal';
 import UsersModal from '../components/UsersModal';
@@ -46,6 +47,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('trips');
   const [siteSettings, setSiteSettings] = useState({});
   const [settingsSaving, setSettingsSaving] = useState(false);
+  const [heroUploading, setHeroUploading] = useState(false);
   const DEFAULT_SECTION_ORDER = ['trips', 'partners', 'drivers', 'reviews', 'social', 'blog', 'contact'];
   const [sectionOrder, setSectionOrder] = useState(DEFAULT_SECTION_ORDER);
   const [draggingSection, setDraggingSection] = useState(null);
@@ -641,6 +643,100 @@ const AdminDashboard = () => {
       {/* Landing Page Tab */}
       {activeTab === 'landing' && (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+          {/* Hero Image */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+              <ImagePlus className="w-5 h-5" style={{ color: colors.primary.teal }} />
+              Hero Image
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">The photo shown beside the headline on the landing page. Upload a file or paste a URL.</p>
+
+            <div className="flex flex-col sm:flex-row gap-4 items-start">
+              {/* Preview */}
+              <div style={{ width: 180, height: 135, borderRadius: 10, overflow: 'hidden', border: '1.5px solid #C6DFE4', background: '#073944', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {siteSettings.heroImage ? (
+                  <img src={siteSettings.heroImage} alt="Hero preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <ImagePlus className="w-8 h-8" style={{ color: '#78959D' }} />
+                )}
+              </div>
+
+              <div className="flex-1 space-y-3">
+                {/* File upload */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Upload from device</label>
+                  <label
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#00BCD4] cursor-pointer transition-colors text-sm text-gray-500 hover:text-[#00BCD4]"
+                    style={{ width: 'fit-content' }}
+                  >
+                    {heroUploading
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
+                      : <><ImagePlus className="w-4 h-4" /> Choose image</>
+                    }
+                    <input
+                      type="file" accept="image/*" className="hidden"
+                      disabled={heroUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setHeroUploading(true);
+                        try {
+                          const storageRef = ref(storage, `site/hero_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`);
+                          await uploadBytes(storageRef, file);
+                          const url = await getDownloadURL(storageRef);
+                          const updated = { ...siteSettings, heroImage: url };
+                          setSiteSettings(updated);
+                          await updateSiteSettings({ heroImage: url });
+                        } catch (err) {
+                          console.error('Hero upload failed:', err);
+                          alert('Upload failed. Please try again.');
+                        } finally {
+                          setHeroUploading(false);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {/* URL input */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Or paste an image URL</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      placeholder="https://…"
+                      defaultValue={siteSettings.heroImage || ''}
+                      key={siteSettings.heroImage}
+                      className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none"
+                      onBlur={async (e) => {
+                        const url = e.target.value.trim();
+                        if (!url || url === siteSettings.heroImage) return;
+                        const updated = { ...siteSettings, heroImage: url };
+                        setSiteSettings(updated);
+                        await updateSiteSettings({ heroImage: url });
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Remove */}
+                {siteSettings.heroImage && (
+                  <button
+                    onClick={async () => {
+                      const updated = { ...siteSettings, heroImage: '' };
+                      setSiteSettings(updated);
+                      await updateSiteSettings({ heroImage: '' });
+                    }}
+                    className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    Remove image (use default)
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Section Manager */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

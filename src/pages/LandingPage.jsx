@@ -47,6 +47,7 @@ const LandingPage = () => {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(3);
   const carouselPausedRef = useRef(false);
+  const maxCarouselIndexRef = useRef(0);
   // Question modal state
   const [questionDest, setQuestionDest] = useState(null); // { key, title }
   const [questionForm, setQuestionForm] = useState({ name: '', email: '', phone: '', message: '' });
@@ -136,13 +137,13 @@ const LandingPage = () => {
     const interval = setInterval(() => {
       if (carouselPausedRef.current) return;
       setCarouselIndex(prev => {
-        const fLen = destFilter === 'all' ? destinations.length : destinations.filter(d => d.durationCategory === destFilter).length;
-        const maxIndex = Math.max(0, fLen - itemsPerView);
+        const maxIndex = maxCarouselIndexRef.current;
+        if (maxIndex === 0) return 0;
         return prev >= maxIndex ? 0 : prev + 1;
       });
     }, 4000);
     return () => clearInterval(interval);
-  }, [itemsPerView, destFilter]);
+  }, []);
 
   useEffect(() => { setCarouselIndex(0); }, [destFilter]);
 
@@ -618,6 +619,11 @@ const LandingPage = () => {
     ? destinations
     : destinations.filter(d => d.durationCategory === destFilter);
 
+  const maxCarouselIndex = Math.max(0, filteredDestinations.length - itemsPerView);
+  const canScroll = maxCarouselIndex > 0;
+  const effectiveCarouselIndex = Math.min(carouselIndex, maxCarouselIndex);
+  maxCarouselIndexRef.current = maxCarouselIndex;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSending(true);
@@ -833,8 +839,8 @@ const LandingPage = () => {
 
       {/* ── TOP BAR — language picker, scrolls away naturally ──── */}
       <div style={{ background: '#0A2A33', height: 36, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem' }}>
-        <a href="tel:6473026846" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, textDecoration: 'none', letterSpacing: '0.02em' }}>
-          📞 647-302-6846
+        <a href="tel:6473026849" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, textDecoration: 'none', letterSpacing: '0.02em' }}>
+          📞 647-302-6849
         </a>
         <div style={{ display: 'flex', gap: 2 }}>
           {[
@@ -932,8 +938,12 @@ const LandingPage = () => {
                 </a>
               </div>
             </div>
-            <div className="hero-image-wrap" style={{ borderRadius: 16, overflow: 'hidden', aspectRatio: '4/3', boxShadow: '0 20px 60px rgba(7,57,68,0.15)' }}>
-              <img src="https://images.unsplash.com/photo-1517935706615-2717063c2225?w=1200&q=80" alt="CN Tower Toronto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div className="hero-image-wrap" style={{ borderRadius: 16, overflow: 'hidden', aspectRatio: '4/3', boxShadow: '0 20px 60px rgba(7,57,68,0.15)', background: '#073944', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img
+                src={siteSettings.heroImage || 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=1200&q=80'}
+                alt="Hero"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
             </div>
           </div>
         </div>
@@ -1072,16 +1082,18 @@ const LandingPage = () => {
               ))}
             </div>
             <div className="relative" onMouseEnter={() => { carouselPausedRef.current = true; }} onMouseLeave={() => { carouselPausedRef.current = false; }}>
-              <button
-                onClick={() => setCarouselIndex(prev => Math.max(0, prev - 1))}
-                disabled={carouselIndex === 0}
-                className="disabled:opacity-30"
-                style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%) translateX(-16px)', zIndex: 10, width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-              >
-                <ChevronLeft style={{ width: 20, height: 20, color: '#0A2A33' }} />
-              </button>
+              {canScroll && (
+                <button
+                  onClick={() => setCarouselIndex(prev => Math.max(0, prev - 1))}
+                  disabled={effectiveCarouselIndex === 0}
+                  className="disabled:opacity-30"
+                  style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%) translateX(-16px)', zIndex: 10, width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                >
+                  <ChevronLeft style={{ width: 20, height: 20, color: '#0A2A33' }} />
+                </button>
+              )}
               <div style={{ overflow: 'hidden' }}>
-                <div style={{ display: 'flex', transition: 'transform 0.5s ease', transform: `translateX(-${carouselIndex * (100 / itemsPerView)}%)` }}>
+                <div style={{ display: 'flex', transition: 'transform 0.5s ease', transform: `translateX(-${effectiveCarouselIndex * (100 / itemsPerView)}%)` }}>
                   {filteredDestinations.length === 0 ? (
                     <div style={{ minWidth: '100%', padding: '3rem', textAlign: 'center', color: '#78959D', fontSize: 16 }}>
                       {language === 'ru' ? 'Нет направлений в этой категории' : language === 'he' ? 'אין יעדים בקטגוריה זו' : 'No destinations in this category'}
@@ -1141,7 +1153,7 @@ const LandingPage = () => {
                                 {t.askQuestion}
                               </button>
                               <a
-                                href="tel:6473026846"
+                                href="tel:6473026849"
                                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, border: '2px solid #25D366', color: '#25D366', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
                                 className="hover:bg-[#25D366] hover:text-white transition-colors"
                               >
@@ -1157,20 +1169,24 @@ const LandingPage = () => {
             </div>
           </div>
 
-              <button
-                onClick={() => setCarouselIndex(prev => Math.min(filteredDestinations.length - itemsPerView, prev + 1))}
-                disabled={carouselIndex >= filteredDestinations.length - itemsPerView}
-                className="disabled:opacity-30"
-                style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%) translateX(16px)', zIndex: 10, width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-              >
-                <ChevronRight style={{ width: 20, height: 20, color: '#0A2A33' }} />
-              </button>
+              {canScroll && (
+                <button
+                  onClick={() => setCarouselIndex(prev => Math.min(maxCarouselIndex, prev + 1))}
+                  disabled={carouselIndex >= maxCarouselIndex}
+                  className="disabled:opacity-30"
+                  style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%) translateX(16px)', zIndex: 10, width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                >
+                  <ChevronRight style={{ width: 20, height: 20, color: '#0A2A33' }} />
+                </button>
+              )}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
-              {Array.from({ length: Math.max(1, filteredDestinations.length - itemsPerView + 1) }).map((_, i) => (
-                <button key={i} onClick={() => setCarouselIndex(i)} style={{ width: 10, height: 10, borderRadius: '50%', background: i === carouselIndex ? colors.primary.teal : '#C6DFE4', transform: i === carouselIndex ? 'scale(1.3)' : 'scale(1)', border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0 }} />
-              ))}
-            </div>
+            {canScroll && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
+                {Array.from({ length: maxCarouselIndex + 1 }).map((_, i) => (
+                  <button key={i} onClick={() => setCarouselIndex(i)} style={{ width: 10, height: 10, borderRadius: '50%', background: i === effectiveCarouselIndex ? colors.primary.teal : '#C6DFE4', transform: i === effectiveCarouselIndex ? 'scale(1.3)' : 'scale(1)', border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0 }} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}
