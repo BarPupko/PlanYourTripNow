@@ -60,6 +60,7 @@ const parseContent = (text) => {
 
 const BlogPostModal = ({ post, onClose, previewMode = false }) => {
   const [imageIndex, setImageIndex] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
   const handleShare = () => {
@@ -201,33 +202,97 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
 
         {/* Image Gallery */}
         {images.length > 0 && (
-          <div className="relative mt-4 mx-6">
+          <div className="mt-4 mx-6">
+            {/* Thumbnail strip */}
+            <div
+              className="relative rounded-xl overflow-hidden cursor-zoom-in"
+              style={{ background: '#0a0a0a' }}
+              onClick={() => setLightbox(true)}
+              title="Click to view full image"
+            >
+              <img
+                src={images[imageIndex]}
+                alt={`Post image ${imageIndex + 1}`}
+                style={{ width: '100%', maxHeight: 340, objectFit: 'contain', display: 'block', transition: 'opacity 0.25s' }}
+              />
+              {/* Expand hint */}
+              <div style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(0,0,0,0.55)', borderRadius: 6, padding: '3px 9px', fontSize: 11, color: 'rgba(255,255,255,0.85)', pointerEvents: 'none', fontFamily: '"JetBrains Mono", monospace', letterSpacing: '0.04em' }}>
+                🔍 expand
+              </div>
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={e => { e.stopPropagation(); setImageIndex(i => (i - 1 + images.length) % images.length); }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1.5 hover:bg-black/60 transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); setImageIndex(i => (i + 1) % images.length); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1.5 hover:bg-black/60 transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Dot nav */}
+            {images.length > 1 && (
+              <div className="flex justify-center gap-1.5 mt-3">
+                {images.map((_, i) => (
+                  <button key={i} onClick={() => setImageIndex(i)}
+                    className="h-2 rounded-full transition-all"
+                    style={{ width: i === imageIndex ? 20 : 8, backgroundColor: i === imageIndex ? colors.primary.teal : '#D1D5DB' }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Lightbox */}
+        {lightbox && images.length > 0 && (
+          <div
+            onClick={() => setLightbox(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', animation: 'lbFadeIn 0.2s ease' }}
+          >
+            <style>{`@keyframes lbFadeIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}`}</style>
+
+            {/* Close */}
+            <button
+              onClick={() => setLightbox(false)}
+              style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}
+            >
+              <X style={{ width: 20, height: 20 }} />
+            </button>
+
+            {/* Image */}
             <img
               src={images[imageIndex]}
               alt={`Post image ${imageIndex + 1}`}
-              className="w-full h-64 sm:h-80 object-cover rounded-xl"
+              onClick={e => e.stopPropagation()}
+              style={{ maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain', borderRadius: 8, boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}
             />
+
+            {/* Prev / Next */}
             {images.length > 1 && (
               <>
                 <button
-                  onClick={() => setImageIndex(i => (i - 1 + images.length) % images.length)}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1.5 hover:bg-black/60 transition-colors"
+                  onClick={e => { e.stopPropagation(); setImageIndex(i => (i - 1 + images.length) % images.length); }}
+                  style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft style={{ width: 22, height: 22 }} />
                 </button>
                 <button
-                  onClick={() => setImageIndex(i => (i + 1) % images.length)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1.5 hover:bg-black/60 transition-colors"
+                  onClick={e => { e.stopPropagation(); setImageIndex(i => (i + 1) % images.length); }}
+                  style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight style={{ width: 22, height: 22 }} />
                 </button>
-                <div className="flex justify-center gap-1.5 mt-3">
-                  {images.map((_, i) => (
-                    <button key={i} onClick={() => setImageIndex(i)}
-                      className={`h-2 rounded-full transition-all ${i === imageIndex ? 'w-5' : 'w-2 bg-gray-300'}`}
-                      style={i === imageIndex ? { backgroundColor: colors.primary.teal } : {}}
-                    />
-                  ))}
+                {/* Counter */}
+                <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: '"JetBrains Mono", monospace' }}>
+                  {imageIndex + 1} / {images.length}
                 </div>
               </>
             )}
