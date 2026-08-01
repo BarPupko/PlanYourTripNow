@@ -8,29 +8,7 @@ import colors from '../utils/colors';
 const PROMPT_DELAY_MS = 60_000;
 const INACTIVITY_MSG_DELAY_MS = 60_000;
 
-const SYSTEM_PROMPT = `You are Yefim, a warm and knowledgeable tour assistant for IVRITours — a Canadian tour company offering guided trips across North America (Toronto, Niagara Falls, Quebec City, Mont-Tremblant, Detroit, Chicago, Barrie, and more). Tours are conducted in English, Hebrew, and Russian.
-
-IMPORTANT CONTACT INFORMATION:
-- Phone: (647) 302-6849
-- Email: ivristats@gmail.com
-- Website: https://www.ivritours.ca/
-
-When users ask how to reach the company or need contact information:
-1. Always provide the PHONE NUMBER: (647) 302-6849
-2. Mention that they can also call us directly or visit the website
-3. Offer to gather their information if they prefer
-
-Your role is to:
-- Help with questions about destinations, tour schedules, pricing, what to bring, registration
-- Answer questions related to IVRITours activities and services
-- Collect contact information (name, email, phone) if the user wants the company to reach out
-- Always respond in the same language the user writes in
-- Be friendly, concise, and helpful
-- If you don't know a specific price or date, direct them to call (647) 302-6849 or visit the website
-
-IMPORTANT: When a user provides their contact information (name, phone number, and/or email), acknowledge it warmly and tell them to click the green "Send to Team" button (👥 icon) at the top of the chat window to send their information directly to our team. This ensures their info is saved and the team is notified immediately.
-
-If a user wants the company to contact them, ask for: name, phone number, email, and what they're interested in. Then remind them to use the Send to Team button.`;
+// Yefim's persona lives server-side in the chatWithYefim function (functions/index.js)
 
 const YEFIM_INTRO = {
   en: "Hello, my name is Yefim 👋 I would like to help you with anything you need related to our tours, please feel free to ask!",
@@ -135,29 +113,11 @@ export default function ChatWidget({ language = 'en' }) {
     setLoading(true);
     try {
       const history = messages.slice(-10);
-      let reply = '';
 
-      try {
-        const chatWithYefim = httpsCallable(functions, 'chatWithYefim');
-        const result = await chatWithYefim({ message: text, history, language });
-        reply = result.data.reply || '';
-      } catch {
-        const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-        if (!apiKey) throw new Error('no_key');
-        const chatMessages = [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...history.map(m => ({ role: m.role, content: m.content })),
-          { role: 'user', content: text }
-        ];
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-          body: JSON.stringify({ model: 'gpt-4o-mini', messages: chatMessages, max_tokens: 400, temperature: 0.7 })
-        });
-        if (!res.ok) throw new Error(`OpenAI ${res.status}`);
-        const json = await res.json();
-        reply = json.choices?.[0]?.message?.content?.trim() || '';
-      }
+      // Always via the callable — the model API key stays server-side
+      const chatWithYefim = httpsCallable(functions, 'chatWithYefim');
+      const result = await chatWithYefim({ message: text, history, language });
+      const reply = result.data.reply || '';
 
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (err) {

@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const Anthropic = require('@anthropic-ai/sdk');
 const PDFDocument = require('pdfkit');
 const nodemailer = require('nodemailer');
 const path = require('path');
@@ -38,6 +39,46 @@ const formatDate = (ts) => {
 };
 
 admin.initializeApp();
+
+// ─── Claude (Anthropic) ──────────────────────────────────────────────────────
+
+const CLAUDE_MODEL = 'claude-opus-5';
+
+// Server-side fallback: if Claude's safety classifiers decline a request, the API
+// re-runs it on Anthropic's recommended fallback model within the same call.
+const CLAUDE_FALLBACK = {
+  betas: ['server-side-fallback-2026-07-01'],
+  fallbacks: 'default',
+};
+
+let anthropicClient = null;
+
+// Lazily built so a missing key surfaces as a clean error, not a cold-start crash.
+// ANTHROPIC_API_KEY is the SDK's own convention (and what functions/.env sets on deploy);
+// CLAUDE_API_KEY is accepted as an alias for local emulator runs.
+const getAnthropic = () => {
+  const apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
+  if (!apiKey) return null;
+  if (!anthropicClient) anthropicClient = new Anthropic({ apiKey });
+  return anthropicClient;
+};
+
+// Concatenate the text blocks of a Messages response.
+// Claude can decline a request with stop_reason 'refusal' on a successful HTTP 200,
+// in which case content is empty or partial — check that before reading it.
+const claudeText = (message) => {
+  if (message.stop_reason === 'refusal') {
+    const category = message.stop_details?.category || 'unspecified';
+    const err = new Error(`Claude declined this request (${category})`);
+    err.isRefusal = true;
+    throw err;
+  }
+  return message.content
+    .filter(block => block.type === 'text')
+    .map(block => block.text)
+    .join('')
+    .trim();
+};
 
 // Admin email configuration
 const ADMIN_EMAIL = 'ivristats@gmail.com';
@@ -644,45 +685,156 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
 });
 
 /**
- * Callable function to generate AI itinerary via OpenAI (keeps API key server-side)
+ * Callable function to generate an AI itinerary via Claude (keeps API key server-side)
  */
-exports.generateItinerary = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
-  }
+exports.generateItinerary = functions
+  .runWith({ timeoutSeconds: 300, memory: '512MB' })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+    }
 
-  const { prompt } = data;
-  if (!prompt) throw new functions.https.HttpsError('invalid-argument', 'prompt is required');
+    const { prompt } = data;
+    if (!prompt) throw new functions.https.HttpsError('invalid-argument', 'prompt is required');
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new functions.https.HttpsError('internal', 'OpenAI API key not configured');
+    const anthropic = getAnthropic();
+    if (!anthropic) throw new functions.https.HttpsError('internal', 'Anthropic API key not configured');
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 2000,
-      temperature: 0.7,
-    }),
+    let message;
+    try {
+      // Streamed so a long itinerary can't trip the HTTP request timeout
+      const stream = anthropic.beta.messages.stream({
+        ...CLAUDE_FALLBACK,
+        model: CLAUDE_MODEL,
+        max_tokens: 16000,
+        thinking: { type: 'adaptive' },
+        output_config: { effort: 'medium' },
+        messages: [{ role: 'user', content: prompt }],
+      });
+      message = await stream.finalMessage();
+    } catch (e) {
+      console.error('[generateItinerary] Claude error:', e.message);
+      throw new functions.https.HttpsError('internal', 'Claude request failed');
+    }
+
+    let text;
+    try {
+      text = claudeText(message);
+    } catch (e) {
+      if (e.isRefusal) {
+        console.error('[generateItinerary] refusal:', e.message);
+        throw new functions.https.HttpsError('failed-precondition', e.message);
+      }
+      throw e;
+    }
+
+    if (!text) throw new functions.https.HttpsError('internal', 'Empty response from Claude');
+
+    return { text };
   });
 
-  if (!response.ok) {
-    const err = await response.text();
-    console.error('OpenAI error:', err);
-    throw new functions.https.HttpsError('internal', 'OpenAI request failed');
-  }
+// Nullable field helper for the structured-output schemas below.
+// Numeric/length constraints aren't supported, so every shape stays this simple.
+const nullable = (type) => ({ anyOf: [{ type }, { type: 'null' }] });
 
-  const json = await response.json();
-  const text = json.choices?.[0]?.message?.content?.trim() || '';
-  if (!text) throw new functions.https.HttpsError('internal', 'Empty response from OpenAI');
+const TOUR_SCHEMA = {
+  type: 'object',
+  properties: {
+    title: { type: 'string', description: 'Short tour name in the original language of the message, without emoji' },
+    date: { ...nullable('string'), description: 'Tour date as YYYY-MM-DD, or null if no date can be determined' },
+    endDate: { ...nullable('string'), description: 'Last day as YYYY-MM-DD for multi-day tours, otherwise the same as date' },
+    startTime: { ...nullable('string'), description: '24-hour departure time as HH:MM, or null if not stated' },
+    endTime: { ...nullable('string'), description: '24-hour return time as HH:MM, or null if not stated' },
+    price: { ...nullable('number'), description: 'Price per person in CAD as a plain number, or null' },
+    deposit: { ...nullable('number'), description: 'Deposit in CAD as a plain number, or null if not mentioned' },
+    location: { ...nullable('string'), description: 'Main destination, venue, or city, or null' },
+    description: { type: 'string', description: 'Clean marketing description in the original language: keep the experience and the programme, remove prices, phone numbers, and booking instructions' },
+    highlights: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Programme bullet points in the original language, without emoji prefixes. Empty array if none.',
+    },
+  },
+  required: ['title', 'date', 'endDate', 'startTime', 'endTime', 'price', 'deposit', 'location', 'description', 'highlights'],
+  additionalProperties: false,
+};
 
-  return { text };
-});
+/**
+ * Callable function to parse a pasted tour announcement (Russian/English/Hebrew)
+ * into structured trip fields. Used by the admin dashboard quick-create chat.
+ */
+exports.parseTripFromText = functions
+  .runWith({ timeoutSeconds: 120 })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+    }
+
+    const { text } = data;
+    if (!text || typeof text !== 'string' || !text.trim()) {
+      throw new functions.https.HttpsError('invalid-argument', 'text is required');
+    }
+
+    const anthropic = getAnthropic();
+    if (!anthropic) throw new functions.https.HttpsError('internal', 'Anthropic API key not configured');
+
+    const today = new Intl.DateTimeFormat('en-CA', {
+      year: 'numeric', month: '2-digit', day: '2-digit', timeZone: TZ,
+    }).format(new Date());
+
+    const prompt = `Extract this tour/trip announcement (Russian, English, or Hebrew) into structured data for a tour operator's system.
+
+Today's date is ${today}. All tours take place in the ${TZ} timezone.
+
+Rules:
+- Resolve dates relative to today. A month and day with no year means the next occurrence of that date — never a date in the past.
+- Prices written as "$109", "109$", or "109 CAD" all become 109.
+- If several dates are announced, use the NEW or additional date the message is about.
+- If no date can be determined, set date to null and still fill in everything else you found.
+
+Message:
+${text}`;
+
+    let message;
+    try {
+      message = await anthropic.beta.messages.create({
+        ...CLAUDE_FALLBACK,
+        model: CLAUDE_MODEL,
+        max_tokens: 8000,
+        thinking: { type: 'adaptive' },
+        output_config: {
+          effort: 'medium',
+          format: { type: 'json_schema', schema: TOUR_SCHEMA },
+        },
+        messages: [{ role: 'user', content: prompt }],
+      });
+    } catch (e) {
+      console.error('[parseTripFromText] Claude error:', e.message);
+      throw new functions.https.HttpsError('internal', 'Claude request failed');
+    }
+
+    let raw;
+    try {
+      raw = claudeText(message);
+    } catch (e) {
+      if (e.isRefusal) throw new functions.https.HttpsError('failed-precondition', e.message);
+      throw e;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      console.error('[parseTripFromText] Unparseable response:', raw);
+      throw new functions.https.HttpsError('internal', 'Could not read the tour details from that text');
+    }
+
+    if (!parsed.date) {
+      throw new functions.https.HttpsError('failed-precondition', 'No tour date found in that text');
+    }
+
+    return { trip: parsed };
+  });
 
 /**
  * Callable function to resend confirmation email
@@ -882,6 +1034,23 @@ async function downloadAndUploadMedia(mediaUrl, tripTitle) {
   return `https://storage.googleapis.com/${bucket.name}/${filename}`;
 }
 
+const WHATSAPP_TOUR_SCHEMA = {
+  type: 'object',
+  properties: {
+    isTourAnnouncement: { type: 'boolean', description: 'False if this text is not a tour announcement' },
+    title: { ...nullable('string'), description: 'Tour name in the original language' },
+    date: { ...nullable('string'), description: 'Tour date as YYYY-MM-DD' },
+    startTime: { ...nullable('string'), description: '24-hour departure time as HH:MM, or null' },
+    endTime: { ...nullable('string'), description: '24-hour return time as HH:MM, or null' },
+    price: { ...nullable('number'), description: 'Adult price in CAD as a plain number, or null' },
+    childPrice: { ...nullable('number'), description: 'Child price in CAD, or null if not mentioned' },
+    deposit: { ...nullable('number'), description: 'Deposit in CAD, or null if not mentioned' },
+    description: { ...nullable('string'), description: 'Clean marketing text for the website, without prices or booking instructions' },
+  },
+  required: ['isTourAnnouncement', 'title', 'date', 'startTime', 'endTime', 'price', 'childPrice', 'deposit', 'description'],
+  additionalProperties: false,
+};
+
 /**
  * Creates a draft trip from a tour announcement forwarded via WhatsApp.
  * Triggered by messages starting with 📢, !newtour, !тур, or "новый тур:".
@@ -897,43 +1066,43 @@ async function handleNewTourCommand(rawMessage, reqBody, language) {
       : '❓ Please add the tour announcement text after 📢\n\nExample:\n📢 March 26 tour "From Past to Future"...';
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+  const anthropic = getAnthropic();
+  if (!anthropic) {
     return language === 'ru'
-      ? '❌ OpenAI API ключ не настроен.'
-      : '❌ OpenAI API key is not configured.';
+      ? '❌ Anthropic API ключ не настроен.'
+      : '❌ Anthropic API key is not configured.';
   }
 
-  const prompt = `Extract tour/trip information from this announcement text. Return ONLY valid JSON with no markdown or extra text.
+  const today = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric', month: '2-digit', day: '2-digit', timeZone: TZ,
+  }).format(new Date());
 
-Required fields: "title" (string), "date" (YYYY-MM-DD), "price" (number in CAD).
-Optional fields: "startTime" (HH:MM 24h), "endTime" (HH:MM 24h), "childPrice" (number), "deposit" (number), "description" (clean marketing text suitable for a website — remove prices/booking instructions, keep the experience description).
+  const prompt = `Extract tour/trip information from this announcement text.
 
-If this is NOT a tour announcement, return exactly: {"isTourAnnouncement": false}
+Today's date is ${today}. A month and day with no year means the next occurrence of that date — never a date in the past.
+Set isTourAnnouncement to false (and leave the other fields null) if this is not a tour announcement.
+The description should be clean marketing text suitable for a website — keep the experience description, remove prices and booking instructions.
 
 Text:
 ${tourText}`;
 
   let parsed;
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+    // effort 'low' — a short extraction, and the Twilio webhook is latency-sensitive
+    const message = await anthropic.beta.messages.create({
+      ...CLAUDE_FALLBACK,
+      model: CLAUDE_MODEL,
+      max_tokens: 4000,
+      thinking: { type: 'adaptive' },
+      output_config: {
+        effort: 'low',
+        format: { type: 'json_schema', schema: WHATSAPP_TOUR_SCHEMA },
       },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.1,
-        max_tokens: 500,
-      }),
+      messages: [{ role: 'user', content: prompt }],
     });
-    const json = await response.json();
-    const raw = json.choices?.[0]?.message?.content?.trim() || '{}';
-    parsed = JSON.parse(raw);
+    parsed = JSON.parse(claudeText(message));
   } catch (e) {
-    console.error('OpenAI parse error:', e);
+    console.error('[handleNewTourCommand] Claude parse error:', e.message);
     return language === 'ru'
       ? '❌ Ошибка при обработке объявления. Попробуйте ещё раз.'
       : '❌ Error processing the announcement. Please try again.';
@@ -2405,16 +2574,18 @@ exports.onQuestionCreated = functions.firestore
     }
   });
 
-// AI Chat — Yefim persona powered by OpenAI (key loaded from functions/.env)
-exports.chatWithYefim = functions.https.onCall(async (data, context) => {
+// AI Chat — Yefim persona powered by Claude (key loaded from functions/.env)
+exports.chatWithYefim = functions
+  .runWith({ timeoutSeconds: 120 })
+  .https.onCall(async (data, context) => {
     const { message, history = [], language = 'en' } = data;
     if (!message || typeof message !== 'string') {
       throw new functions.https.HttpsError('invalid-argument', 'message is required');
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new functions.https.HttpsError('failed-precondition', 'OpenAI API key not configured');
+    const anthropic = getAnthropic();
+    if (!anthropic) {
+      throw new functions.https.HttpsError('failed-precondition', 'Anthropic API key not configured');
     }
 
     const systemPrompt = `You are Yefim, a warm and knowledgeable tour assistant for IVRITours — a Canadian tour company offering guided trips across North America (Toronto, Niagara Falls, Quebec City, Mont-Tremblant, Detroit, Chicago, Barrie, and more). Tours are conducted in English, Hebrew, and Russian.
@@ -2437,31 +2608,32 @@ Your role is to:
 - Be friendly, concise, and helpful
 - If you don't know a specific price or date, direct them to call (647) 302-6846 or visit the website
 
-If a user wants the company to contact them, ask for: name, phone number, email, and what they're interested in.`;
+If a user wants the company to contact them, ask for: name, phone number, email, and what they're interested in.
 
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
-      { role: 'user', content: message }
-    ];
+This is a small chat bubble on a website, so keep replies short — two or three sentences, or a few
+short bullets at most. Answer the question directly without preamble or a recap of what was asked.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 400, temperature: 0.7 })
-    });
+    // The widget seeds the transcript with Yefim's greeting, so history can start with an
+    // assistant turn — Claude requires the first message to be from the user.
+    const trimmed = history.slice(-10).map(m => ({ role: m.role, content: m.content }));
+    while (trimmed.length && trimmed[0].role !== 'user') trimmed.shift();
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('[chatWithYefim] OpenAI error:', err);
-      throw new functions.https.HttpsError('internal', 'OpenAI request failed');
+    let reply;
+    try {
+      const response = await anthropic.beta.messages.create({
+        ...CLAUDE_FALLBACK,
+        model: CLAUDE_MODEL,
+        max_tokens: 4000, // headroom: max_tokens covers thinking plus the reply
+        thinking: { type: 'adaptive' },
+        output_config: { effort: 'low' }, // a visitor is waiting on this reply
+        system: systemPrompt,
+        messages: [...trimmed, { role: 'user', content: message }],
+      });
+      reply = claudeText(response);
+    } catch (e) {
+      console.error('[chatWithYefim] Claude error:', e.message);
+      throw new functions.https.HttpsError('internal', 'Claude request failed');
     }
 
-    const json = await response.json();
-    const reply = json.choices?.[0]?.message?.content?.trim() || '';
     return { reply };
-  }
-);
+  });

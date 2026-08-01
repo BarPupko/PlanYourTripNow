@@ -13,11 +13,16 @@ import WeatherWidget from '../components/WeatherWidget';
 import BlogPostModal from '../components/BlogPostModal';
 import { createQuestion, getWebsiteFeedbacks, getSiteSettings, getPublishedBlogPosts, getPartners, getDrivers, getCustomDestinations } from '../utils/firestoreUtils';
 import siteLogo from '../assets/site_logo.png';
+import mergeLogo from '../assets/merged_announcement_logo.png';
+
+// Bump this key to re-show the merge announcement to visitors who dismissed it.
+const MERGE_NOTICE_KEY = 'mergeNoticeDismissed.v1';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const { language, setLanguage } = useLanguage();
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showMergeNotice, setShowMergeNotice] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [showCookieConsent, setShowCookieConsent] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -246,6 +251,10 @@ const LandingPage = () => {
       setTimeout(() => setShowCookieConsent(true), 2000);
     }
 
+    if (!localStorage.getItem(MERGE_NOTICE_KEY)) {
+      setShowMergeNotice(true);
+    }
+
     const handleScroll = () => {
       setScrollY(window.scrollY);
     };
@@ -270,6 +279,12 @@ const LandingPage = () => {
 
   const translations = {
     en: {
+      // Site merge announcement (ivritours.com + ivritours.ca)
+      mergeBadge: "ivritours.com is now ivritours.ca",
+      mergeTitle: "A new home for IVRITours",
+      mergeBody: "Our two websites have been brought together into one. Same trusted team, same tours across the USA and Canada — now easier to browse, book and manage in a single place. Welcome aboard.",
+      mergeCta: "Explore our tours",
+      mergeDismiss: "Dismiss announcement",
       welcome: "Welcome to IVRITours!",
       welcomeMsg: "Discover breathtaking destinations with expert tour guides in multiple languages. Your adventure begins here!",
       getStarted: "Get Started",
@@ -366,6 +381,12 @@ const LandingPage = () => {
       ]
     },
     he: {
+      // Site merge announcement (ivritours.com + ivritours.ca)
+      mergeBadge: "ivritours.com הוא עכשיו ivritours.ca",
+      mergeTitle: "בית חדש ל-IVRITours",
+      mergeBody: "איחדנו את שני האתרים שלנו לאתר אחד. אותו צוות מנוסה, אותם טיולים בארה\"ב ובקנדה — עכשיו הכול במקום אחד, נוח יותר לעיון, להזמנה ולניהול. ברוכים הבאים!",
+      mergeCta: "לצפייה בטיולים",
+      mergeDismiss: "סגירת ההודעה",
       welcome: "ברוכים הבאים ל-IVRITours!",
       welcomeMsg: "גלו יעדים עוצרי נשימה עם מדריכי טיולים מומחים במספר שפות. ההרפתקה שלכם מתחילה כאן!",
       getStarted: "בואו נתחיל",
@@ -462,6 +483,12 @@ const LandingPage = () => {
       ]
     },
     ru: {
+      // Site merge announcement (ivritours.com + ivritours.ca)
+      mergeBadge: "ivritours.com теперь ivritours.ca",
+      mergeTitle: "У IVRITours новый дом",
+      mergeBody: "Мы объединили два наших сайта в один. Та же команда, те же туры по США и Канаде — теперь всё удобно собрано в одном месте. Добро пожаловать!",
+      mergeCta: "Смотреть туры",
+      mergeDismiss: "Закрыть объявление",
       welcome: "Добро пожаловать в IVRITours!",
       welcomeMsg: "Откройте для себя захватывающие дух направления с опытными гидами на нескольких языках. Ваше приключение начинается здесь!",
       getStarted: "Начать",
@@ -667,6 +694,11 @@ const LandingPage = () => {
   const declineCookies = () => {
     localStorage.setItem('cookieConsent', 'declined');
     setShowCookieConsent(false);
+  };
+
+  const dismissMergeNotice = () => {
+    localStorage.setItem(MERGE_NOTICE_KEY, 'true');
+    setShowMergeNotice(false);
   };
 
   return (
@@ -878,6 +910,14 @@ const LandingPage = () => {
           .nav-logo { height: 50px !important; }
           .nav-inner { height: 64px !important; }
         }
+        html { scroll-behavior: smooth; }
+        /* The nav is sticky (140px tall, 64px on mobile), so anchor targets need
+           clearance or the section heading lands underneath it. */
+        #destinations, #trips, #contact { scroll-margin-top: 156px; }
+        @media (max-width: 640px) {
+          #destinations, #trips, #contact { scroll-margin-top: 80px; }
+        }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
       `}</style>
       <nav style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(234,246,248,0.92)', backdropFilter: 'blur(14px) saturate(140%)', borderBottom: '1px solid #C6DFE4' }}>
         <div className="nav-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 140 }}>
@@ -916,6 +956,62 @@ const LandingPage = () => {
           </div>
         </div>
       </nav>
+
+      {/* ── SITE MERGE ANNOUNCEMENT (ivritours.com + ivritours.ca) ── */}
+      {showMergeNotice && (
+        <>
+          <style>{`
+            @media (max-width: 860px) {
+              .merge-inner { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
+              .merge-cta { width: 100%; text-align: center; }
+            }
+          `}</style>
+          <section
+            role="region"
+            aria-label={t.mergeTitle}
+            style={{ background: 'linear-gradient(135deg, #073944 0%, #0B5361 100%)', color: '#FFFFFF', padding: '1.75rem 1.5rem', position: 'relative' }}
+          >
+            <div
+              className="merge-inner"
+              style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}
+            >
+              {/* Logo sits on a white chip — the mark's dark blocks would vanish on the teal band */}
+              <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '14px 18px', flexShrink: 0, boxShadow: '0 6px 20px rgba(0,0,0,0.18)', lineHeight: 0 }}>
+                <img src={mergeLogo} alt="IVRITours" style={{ height: 46, width: 'auto', display: 'block' }} />
+              </div>
+
+              <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+                <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7FD9E8', marginBottom: 8 }}>
+                  {t.mergeBadge}
+                </p>
+                <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 400, fontSize: 'clamp(1.35rem, 3vw, 1.9rem)', lineHeight: 1.2, letterSpacing: '-0.015em', marginBottom: 8 }}>
+                  {t.mergeTitle}
+                </h2>
+                <p style={{ fontSize: 15, lineHeight: 1.6, color: '#CFE9EE', maxWidth: '68ch' }}>
+                  {t.mergeBody}
+                </p>
+              </div>
+
+              <a
+                href="#destinations"
+                className="merge-cta"
+                style={{ flexShrink: 0, display: 'inline-block', padding: '12px 26px', background: colors.primary.teal, color: '#FFFFFF', borderRadius: 8, fontWeight: 600, textDecoration: 'none', fontSize: 15 }}
+              >
+                {t.mergeCta}
+              </a>
+            </div>
+
+            <button
+              onClick={dismissMergeNotice}
+              aria-label={t.mergeDismiss}
+              title={t.mergeDismiss}
+              style={{ position: 'absolute', top: 10, [language === 'he' ? 'left' : 'right']: 12, background: 'transparent', border: 'none', color: '#7FD9E8', cursor: 'pointer', padding: 6, lineHeight: 0, borderRadius: 6 }}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </section>
+        </>
+      )}
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
       <section className="hero-section" style={{ background: '#EAF6F8', padding: '5rem 1.5rem 4rem' }}>
@@ -1047,7 +1143,7 @@ const LandingPage = () => {
       )}
       {/* DESTINATIONS CAROUSEL */}
       {siteSettings.showDestinations !== false && (
-        <section style={{ padding: '5rem 1.5rem', background: '#EAF6F8' }}>
+        <section id="destinations" style={{ padding: '5rem 1.5rem', background: '#EAF6F8' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             <div style={{ marginBottom: 32 }}>
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>

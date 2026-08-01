@@ -17,6 +17,7 @@ import EditTripModal from '../components/EditTripModal';
 import TripViewModal from '../components/TripViewModal';
 import Header from '../components/Header';
 import TypewriterGreeting from '../components/TypewriterGreeting';
+import QuickTripChat from '../components/QuickTripChat';
 import useAdmin from '../hooks/useAdmin';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
@@ -1464,7 +1465,9 @@ const AdminDashboard = () => {
                       : new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
                     }
                   </div>
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                  {/* Paste a tour announcement → creates the trip and hands back its link */}
+                  <QuickTripChat onCreated={loadTrips} />
+                  <h2 className="mt-3 text-lg sm:text-xl font-semibold text-gray-900 truncate">
                     {viewFilter === 'date' ? `${t.tripsOn || 'Trips on'} ${selectedDate.toLocaleDateString()}` :
                      viewFilter === 'all' ? t.allTrips :
                      viewFilter === 'upcoming' ? t.currentTrips :
