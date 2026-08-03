@@ -23,7 +23,7 @@ const LandingPage = () => {
   const { language, setLanguage } = useLanguage();
   const [showWelcome, setShowWelcome] = useState(false);
   const [showMergeNotice, setShowMergeNotice] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const [showCookieConsent, setShowCookieConsent] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
@@ -255,8 +255,11 @@ const LandingPage = () => {
       setShowMergeNotice(true);
     }
 
+    // Store the threshold as a boolean, not the raw offset: setting raw scrollY
+    // re-rendered this whole component on every scroll frame, which starved
+    // Chrome's smooth-scroll animation and made anchor links stall mid-scroll.
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      setShowBackToTop(window.scrollY > 300);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -1820,7 +1823,7 @@ const LandingPage = () => {
         </div>
       )}
 
-      {scrollY > 300 && (
+      {showBackToTop && (
         <button onClick={() => navigate('/gift-card-purchase')} className="animate-float" style={{ position: 'fixed', bottom: 32, left: 32, background: 'white', borderRadius: '50%', boxShadow: '0 10px 30px rgba(0,188,212,0.3)', padding: 16, border: 'none', cursor: 'pointer', zIndex: 50 }} title={language === 'ru' ? 'Купить подарочную карту' : language === 'he' ? 'קנה כרטיס מתנה' : 'Purchase Gift Card'}>
           <Gift style={{ width: 32, height: 32, color: colors.primary.teal }} />
         </button>
