@@ -184,8 +184,6 @@ const LandingPage = () => {
     if (t.includes('tremblant') || t.includes('трамблан') || t.includes('טרמבלן')) return 'https://images.unsplash.com/photo-1729477458908-0a59d8026ed8?q=80&w=800';
     if (t.includes('quebec') || t.includes('квебек') || t.includes('קוויבק')) return 'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=800&q=80';
     if (t.includes('barrie') || t.includes('simco') || t.includes('симко') || t.includes('ברי')) return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80';
-    if (t.includes('detroit') || t.includes('детройт') || t.includes('דטרויט')) return 'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=800&q=80';
-    if (t.includes('chicago') || t.includes('чикаго') || t.includes('שיקגו')) return 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80';
     if (t.includes('fish') || t.includes('рыб') || t.includes('דיג')) return 'https://images.unsplash.com/photo-1467809297455-d89a8a6fea83?w=800&q=80';
     if (t.includes('ski') || t.includes('snow') || t.includes('лыж') || t.includes('סקי')) return 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&q=80';
     return 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80';
@@ -285,13 +283,13 @@ const LandingPage = () => {
       // Site merge announcement (ivritours.com + ivritours.ca)
       mergeBadge: "ivritours.com is now ivritours.ca",
       mergeTitle: "A new home for IVRITours",
-      mergeBody: "Our two websites have been brought together into one. Same trusted team, same tours across the USA and Canada — now easier to browse, book and manage in a single place. Welcome aboard.",
+      mergeBody: "Our two websites have been brought together into one. Same trusted team, same tours across Canada — now easier to browse, book and manage in a single place. Welcome aboard.",
       mergeCta: "Explore our tours",
       mergeDismiss: "Dismiss announcement",
       welcome: "Welcome to IVRITours!",
       welcomeMsg: "Discover breathtaking destinations with expert tour guides in multiple languages. Your adventure begins here!",
       getStarted: "Get Started",
-      heroTitle: "Explore North America with IVRITours",
+      heroTitle: "Explore Canada with IVRITours",
       heroSubtitle: "Professional guided tours in English, Hebrew, and Russian",
       destinationsTitle: "Our Amazing Destinations",
       multiLang: "Multi-language Tours",
@@ -342,7 +340,7 @@ const LandingPage = () => {
         },
         quebec: {
           title: "Quebec City",
-          desc: "Step into Europe without leaving North America! Wander through the UNESCO World Heritage Old Quebec with its cobblestone streets, visit the majestic Château Frontenac, explore the historic Citadelle fortification, discover the charming Quartier Petit Champlain, and savor authentic French-Canadian cuisine and culture.",
+          desc: "Step into Europe without leaving Canada! Wander through the UNESCO World Heritage Old Quebec with its cobblestone streets, visit the majestic Château Frontenac, explore the historic Citadelle fortification, discover the charming Quartier Petit Champlain, and savor authentic French-Canadian cuisine and culture.",
           duration: "2-3 Days",
           groupSize: "12-20 people",
           highlights: ["Old Quebec UNESCO Site", "Château Frontenac", "Citadelle Tour", "Petit Champlain", "French Cuisine"]
@@ -353,20 +351,6 @@ const LandingPage = () => {
           duration: "6-8 hours",
           groupSize: "10-15 people",
           highlights: ["Lake Simcoe Beach", "Waterfront Parks", "Downtown Shopping", "Spirit Catcher", "Seasonal Activities"]
-        },
-        detroit: {
-          title: "Detroit",
-          desc: "Discover the Motor City's incredible transformation! Visit the Henry Ford Museum and Greenfield Village, explore the stunning Detroit Institute of Arts, walk along the beautiful RiverWalk, tour the historic Fox Theatre, experience the vibrant Eastern Market, and learn about Motown's musical legacy.",
-          duration: "Full Day (10-12 hours)",
-          groupSize: "15-20 people",
-          highlights: ["Henry Ford Museum", "DIA Art Museum", "Detroit RiverWalk", "Motown Museum", "Eastern Market"]
-        },
-        chicago: {
-          title: "Chicago",
-          desc: "Experience the magnificent Windy City! Marvel at world-famous architecture on a river cruise, visit Millennium Park and the iconic Cloud Gate (Bean), explore Navy Pier and Lake Michigan shoreline, enjoy deep-dish pizza, discover Art Institute treasures, and take in breathtaking views from Willis Tower Skydeck.",
-          duration: "2-3 Days",
-          groupSize: "15-25 people",
-          highlights: ["Architecture River Cruise", "Cloud Gate (Bean)", "Navy Pier", "Willis Tower Skydeck", "Deep-Dish Pizza"]
         }
       },
       askQuestion: "Ask a Question",
@@ -387,13 +371,13 @@ const LandingPage = () => {
       // Site merge announcement (ivritours.com + ivritours.ca)
       mergeBadge: "ivritours.com הוא עכשיו ivritours.ca",
       mergeTitle: "בית חדש ל-IVRITours",
-      mergeBody: "איחדנו את שני האתרים שלנו לאתר אחד. אותו צוות מנוסה, אותם טיולים בארה\"ב ובקנדה — עכשיו הכול במקום אחד, נוח יותר לעיון, להזמנה ולניהול. ברוכים הבאים!",
+      mergeBody: "איחדנו את שני האתרים שלנו לאתר אחד. אותו צוות מנוסה, אותם טיולים בקנדה — עכשיו הכול במקום אחד, נוח יותר לעיון, להזמנה ולניהול. ברוכים הבאים!",
       mergeCta: "לצפייה בטיולים",
       mergeDismiss: "סגירת ההודעה",
       welcome: "ברוכים הבאים ל-IVRITours!",
       welcomeMsg: "גלו יעדים עוצרי נשימה עם מדריכי טיולים מומחים במספר שפות. ההרפתקה שלכם מתחילה כאן!",
       getStarted: "בואו נתחיל",
-      heroTitle: "חקרו את צפון אמריקה עם IVRITours",
+      heroTitle: "חקרו את קנדה עם IVRITours",
       heroSubtitle: "סיורים מודרכים מקצועיים באנגלית, עברית ורוסית",
       destinationsTitle: "היעדים המדהימים שלנו",
       multiLang: "סיורים בריבוי שפות",
@@ -444,7 +428,7 @@ const LandingPage = () => {
         },
         quebec: {
           title: "קוויבק סיטי",
-          desc: "היכנסו לאירופה מבלי לעזוב את צפון אמריקה! טיילו בעיר העתיקה של קוויבק המוכרת על ידי אונסק\"ו עם רחובות מרוצפים, בקרו בשאטו פרונטנק המלכותי, חקרו את הציטדל ההיסטורי וטעמו מטבח צרפתי-קנדי אותנטי.",
+          desc: "היכנסו לאירופה מבלי לעזוב את קנדה! טיילו בעיר העתיקה של קוויבק המוכרת על ידי אונסק\"ו עם רחובות מרוצפים, בקרו בשאטו פרונטנק המלכותי, חקרו את הציטדל ההיסטורי וטעמו מטבח צרפתי-קנדי אותנטי.",
           duration: "2-3 ימים",
           groupSize: "12-20 אנשים",
           highlights: ["העיר העתיקה אונסק״ו", "שאטו פרונטנק", "סיור בציטדל", "פטי שמפליין", "מטבח צרפתי"]
@@ -455,20 +439,6 @@ const LandingPage = () => {
           duration: "6-8 שעות",
           groupSize: "10-15 אנשים",
           highlights: ["חוף אגם סימקו", "פארקי חוף", "קניות במרכז", "Spirit Catcher", "פעילויות עונתיות"]
-        },
-        detroit: {
-          title: "דטרויט",
-          desc: "גלו את השינוי המדהים של עיר המוטורים! בקרו במוזיאון הנרי פורד, חקרו את מכון האמנות של דטרויט המדהים, טיילו לאורך ה-RiverWalk היפהפה, בקרו בתיאטרון Fox ההיסטורי ולמדו על מורשת המוטאון המוזיקלית.",
-          duration: "יום מלא (10-12 שעות)",
-          groupSize: "15-20 אנשים",
-          highlights: ["מוזיאון הנרי פורד", "מוזיאון DIA", "Detroit RiverWalk", "מוזיאון מוטאון", "Eastern Market"]
-        },
-        chicago: {
-          title: "שיקגו",
-          desc: "חוו את העיר הסוערת המרהיבה! התפעלו מהאדריכלות המפורסמת בשיט בנהר, בקרו בפארק המילניום וב-Cloud Gate האיקוני, חקרו את Navy Pier וחוף אגם מישיגן, תהנו מפיצה עמוקה וקחו נופים עוצרי נשימה ממגדל Willis.",
-          duration: "2-3 ימים",
-          groupSize: "15-25 אנשים",
-          highlights: ["שיט אדריכלות בנהר", "Cloud Gate (Bean)", "Navy Pier", "Willis Tower Skydeck", "פיצה עמוקה"]
         }
       },
       askQuestion: "שאל שאלה",
@@ -489,13 +459,13 @@ const LandingPage = () => {
       // Site merge announcement (ivritours.com + ivritours.ca)
       mergeBadge: "ivritours.com теперь ivritours.ca",
       mergeTitle: "У IVRITours новый дом",
-      mergeBody: "Мы объединили два наших сайта в один. Та же команда, те же туры по США и Канаде — теперь всё удобно собрано в одном месте. Добро пожаловать!",
+      mergeBody: "Мы объединили два наших сайта в один. Та же команда, те же туры по Канаде — теперь всё удобно собрано в одном месте. Добро пожаловать!",
       mergeCta: "Смотреть туры",
       mergeDismiss: "Закрыть объявление",
       welcome: "Добро пожаловать в IVRITours!",
       welcomeMsg: "Откройте для себя захватывающие дух направления с опытными гидами на нескольких языках. Ваше приключение начинается здесь!",
       getStarted: "Начать",
-      heroTitle: "Исследуйте Северную Америку с IVRITours",
+      heroTitle: "Исследуйте Канаду с IVRITours",
       heroSubtitle: "Профессиональные экскурсии на английском, иврите и русском языках",
       destinationsTitle: "Наши удивительные направления",
       multiLang: "Многоязычные туры",
@@ -546,7 +516,7 @@ const LandingPage = () => {
         },
         quebec: {
           title: "Квебек-Сити",
-          desc: "Шагните в Европу, не покидая Северную Америку! Прогуляйтесь по Старому Квебеку, внесенному в список ЮНЕСКО, с его мощеными улицами, посетите величественный Шато Фронтенак, исследуйте историческую Цитадель, откройте для себя очаровательный квартал Пети-Шамплен и насладитесь аутентичной франко-канадской кухней.",
+          desc: "Шагните в Европу, не покидая Канаду! Прогуляйтесь по Старому Квебеку, внесенному в список ЮНЕСКО, с его мощеными улицами, посетите величественный Шато Фронтенак, исследуйте историческую Цитадель, откройте для себя очаровательный квартал Пети-Шамплен и насладитесь аутентичной франко-канадской кухней.",
           duration: "2-3 дня",
           groupSize: "12-20 человек",
           highlights: ["Старый Квебек ЮНЕСКО", "Шато Фронтенак", "Тур по Цитадели", "Пети-Шамплен", "Французская кухня"]
@@ -557,20 +527,6 @@ const LandingPage = () => {
           duration: "6-8 часов",
           groupSize: "10-15 человек",
           highlights: ["Пляж озера Симко", "Прибрежные парки", "Шопинг в центре", "Spirit Catcher", "Сезонные мероприятия"]
-        },
-        detroit: {
-          title: "Детройт",
-          desc: "Откройте для себя невероятную трансформацию Мотор-Сити! Посетите музей Генри Форда и Гринфилд-Виллидж, исследуйте потрясающий Детройтский институт искусств, прогуляйтесь по красивой набережной RiverWalk, совершите экскурсию по историческому театру Fox и узнайте о музыкальном наследии Motown.",
-          duration: "Полный день (10-12 часов)",
-          groupSize: "15-20 человек",
-          highlights: ["Музей Генри Форда", "Художественный музей DIA", "Detroit RiverWalk", "Музей Motown", "Eastern Market"]
-        },
-        chicago: {
-          title: "Чикаго",
-          desc: "Испытайте великолепный Город ветров! Полюбуйтесь всемирно известной архитектурой во время речного круиза, посетите Миллениум-парк и культовый Cloud Gate (Bean), исследуйте Navy Pier и береговую линию озера Мичиган, попробуйте глубокую пиццу и насладитесь захватывающими видами с Willis Tower Skydeck.",
-          duration: "2-3 дня",
-          groupSize: "15-25 человек",
-          highlights: ["Архитектурный круиз", "Cloud Gate (Bean)", "Navy Pier", "Willis Tower Skydeck", "Глубокая пицца"]
         }
       },
       askQuestion: "Задать вопрос",
@@ -634,14 +590,15 @@ const LandingPage = () => {
     { key: 'tremblant', image: 'https://images.unsplash.com/photo-1729477458908-0a59d8026ed8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', durationCategory: 'multi', country: 'ca' },
     { key: 'quebec',    image: 'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=800&q=80',  durationCategory: 'multi', country: 'ca' },
     { key: 'barrie',    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',  durationCategory: 'hours', country: 'ca' },
-    { key: 'detroit',   image: 'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?w=800&q=80',  durationCategory: 'day',   country: 'us' },
-    { key: 'chicago',   image: 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?w=800&q=80',  durationCategory: 'multi', country: 'us' },
   ].filter(d => !hiddenDestinations.includes(d.key));
 
+  // Canada only. US tours are discontinued, so any destination still stored
+  // with country 'us' — an older Firestore record, say — is filtered out here
+  // rather than relying on it having been deleted from the database.
   const destinations = [
     ...staticDestinations,
     ...customDestinations.filter(d => d.visible !== false).map(d => ({ ...d, type: 'custom' })),
-  ];
+  ].filter(d => d.country !== 'us');
 
   const NumOfDestination = destinations.length+70;
 
@@ -1025,7 +982,7 @@ const LandingPage = () => {
                 {language === 'ru' ? '— Туристическое агентство' : language === 'he' ? '— סוכנות טיולים' : '— Travel Studio'}
               </p>
               <h1 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2.2rem, 6vw, 4.5rem)', lineHeight: 1.05, letterSpacing: '-0.022em', color: '#073944', marginBottom: 24 }}>
-                {language === 'he' ? <>חקרו את <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>צפון אמריקה</em></> : language === 'ru' ? <>Исследуйте <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>Северную Америку</em></> : <>Explore <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>North America</em></>}
+                {language === 'he' ? <>חקרו את <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>קנדה</em></> : language === 'ru' ? <>Исследуйте <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>Канаду</em></> : <>Explore <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>Canada</em></>}
               </h1>
               <p style={{ fontSize: 17, lineHeight: 1.65, color: '#3E5F68', marginBottom: 32, maxWidth: '40ch' }}>{t.heroSubtitle}</p>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -1210,7 +1167,7 @@ const LandingPage = () => {
                       <div className="hover:-translate-y-2" style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(7,57,68,0.08)', border: '1px solid #D9EBEE', display: 'flex', flexDirection: 'column', height: '100%', transition: 'all 0.3s' }}>
                         <div style={{ height: 220, backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${dest.image})`, position: 'relative' }}>
                           <div style={{ position: 'absolute', top: 10, left: 10 }}>
-                            <span style={{ fontSize: 22, lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}>{dest.country === 'ca' ? '🇨🇦' : dest.country === 'us' ? '🇺🇸' : '🌍'}</span>
+                            <span style={{ fontSize: 22, lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}>{dest.country === 'ca' ? '🇨🇦' : '🌍'}</span>
                           </div>
                         </div>
                         <div style={{ padding: 20, display: 'flex', flexDirection: 'column', flex: 1 }}>

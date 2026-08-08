@@ -7,7 +7,7 @@ import colors from '../utils/colors';
 const WeatherWidget = ({ compact = false }) => {
   const { language } = useLanguage();
   const t = translations[language];
-  const [location, setLocation] = useState('New York');
+  const [location, setLocation] = useState('Toronto');
   const [locationInput, setLocationInput] = useState('');
   const [weather, setWeather] = useState(null);
   const [forecast, setForecast] = useState([]);
@@ -17,7 +17,7 @@ const WeatherWidget = ({ compact = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Popular locations
-  const popularLocations = ['Toronto', 'Ottawa', 'Barrie','Montreal','mont-tremblant','Chicago','New York', 'Miami',  'Boston'];
+  const popularLocations = ['Toronto', 'Ottawa', 'Barrie', 'Montreal', 'mont-tremblant', 'Quebec City', 'Niagara Falls'];
 
   useEffect(() => { 
     fetchWeather(location);

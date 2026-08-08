@@ -100,8 +100,6 @@ const AdminDashboard = () => {
     { key: 'tremblant', label: 'Mont-Tremblant' },
     { key: 'quebec', label: 'Quebec City' },
     { key: 'barrie', label: 'Barrie' },
-    { key: 'detroit', label: 'Detroit' },
-    { key: 'chicago', label: 'Chicago' },
   ];
 
   useEffect(() => {
@@ -919,7 +917,7 @@ const AdminDashboard = () => {
                     </select></div>
                   <div><label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
                     <select value={destForm.country} onChange={e => setDestForm(p => ({ ...p, country: e.target.value }))} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-[#00BCD4] focus:outline-none bg-white">
-                      <option value="ca">🇨🇦 Canada</option><option value="us">🇺🇸 USA</option><option value="other">🌍 Other</option>
+                      <option value="ca">🇨🇦 Canada</option><option value="other">🌍 Other</option>
                     </select></div>
                 </div>
                 <div className="flex gap-2 pt-1">

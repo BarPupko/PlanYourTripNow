@@ -14,8 +14,6 @@ const KNOWN_LOCATIONS = {
   niagara:       { name: 'Niagara Falls',  lat: 43.0962, lng: -79.0377 },
   quebec:        { name: 'Quebec City',    lat: 46.8139, lng: -71.2082 },
   'mont-tremblant': { name: 'Mont-Tremblant', lat: 46.1186, lng: -74.5961 },
-  chicago:       { name: 'Chicago',        lat: 41.8781, lng: -87.6298 },
-  detroit:       { name: 'Detroit',        lat: 42.3314, lng: -83.0458 },
   barrie:        { name: 'Barrie',         lat: 44.3894, lng: -79.6903 },
 };
 
@@ -263,7 +261,7 @@ const BlogIndexPage = () => {
             Dispatches from the <em style={{ fontStyle: 'italic' }}>road.</em>
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, maxWidth: '50ch' }}>
-            Stories, tips &amp; guides from our tours across North America.
+            Stories, tips &amp; guides from our tours across Canada.
             {posts.length > 0 && ` ${posts.length} entries and counting.`}
           </p>
         </div>

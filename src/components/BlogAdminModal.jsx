@@ -40,8 +40,6 @@ const LOCATIONS = [
   { value: 'niagara', label: 'Niagara Falls, ON' },
   { value: 'quebec', label: 'Quebec City, QC' },
   { value: 'mont-tremblant', label: 'Mont-Tremblant, QC' },
-  { value: 'chicago', label: 'Chicago, IL' },
-  { value: 'detroit', label: 'Detroit, MI' },
   { value: 'barrie', label: 'Barrie, ON' },
   { value: 'custom', label: '📍 Custom location…' },
 ];

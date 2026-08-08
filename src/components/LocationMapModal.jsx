@@ -10,8 +10,6 @@ const PRESET_LOCATIONS = {
   niagara:          { name: 'Niagara Falls, ON',  lat: 43.0962, lng: -79.0377 },
   quebec:           { name: 'Quebec City, QC',    lat: 46.8139, lng: -71.2082 },
   'mont-tremblant': { name: 'Mont-Tremblant, QC', lat: 46.1186, lng: -74.5961 },
-  chicago:          { name: 'Chicago, IL',        lat: 41.8781, lng: -87.6298 },
-  detroit:          { name: 'Detroit, MI',        lat: 42.3314, lng: -83.0458 },
   barrie:           { name: 'Barrie, ON',         lat: 44.3894, lng: -79.6903 },
 };
 
