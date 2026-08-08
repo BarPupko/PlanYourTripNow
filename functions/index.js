@@ -2637,3 +2637,18 @@ short bullets at most. Answer the question directly without preamble or a recap 
 
     return { reply };
   });
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PayPal — gift card purchase (see paypal.js)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const paypal = require('./paypal')({
+  admin,
+  functions,
+  transporter,
+  adminEmail: ADMIN_EMAIL,
+});
+
+exports.createGiftCardOrder = paypal.createGiftCardOrder;
+exports.captureGiftCardOrder = paypal.captureGiftCardOrder;
+exports.paypalWebhook = paypal.paypalWebhook;

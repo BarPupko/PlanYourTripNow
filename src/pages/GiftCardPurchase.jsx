@@ -1,24 +1,29 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Gift, CreditCard, DollarSign, Globe, User, Mail, MessageSquare, Calendar } from 'lucide-react';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { Gift, CreditCard, DollarSign, Globe, User, Mail, MessageSquare, Lock } from 'lucide-react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 import colors from '../utils/colors';
 import Header from '../components/Header';
 
+// Must match GIFT_CARD_MIN / GIFT_CARD_MAX in functions/paypal.js — the server
+// re-validates, so this is only here to fail fast before the redirect.
+const MIN_AMOUNT = 25;
+const MAX_AMOUNT = 2000;
+
 const GiftCardPurchase = () => {
-  const navigate = useNavigate();
+  // PayPal sends the buyer back here with ?cancelled=1 if they back out.
+  const cancelled = new URLSearchParams(window.location.search).has('cancelled');
   const [language, setLanguage] = useState('en'); // 'en' or 'ru'
   const [step, setStep] = useState(1); // 1: Details, 2: Payment
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     amount: '100',
     recipientName: '',
     recipientEmail: '',
     senderName: '',
     senderEmail: '',
-    message: '',
-    paymentMethod: 'credit-card' // 'credit-card' or 'paypal'
+    message: ''
   });
 
   const translations = {
@@ -34,25 +39,22 @@ const GiftCardPurchase = () => {
       senderEmail: "Your Email",
       message: "Personal Message (Optional)",
       messagePlaceholder: "Write a personal message for the recipient...",
-      paymentMethod: "Payment Method",
-      creditCard: "Credit / Debit Card",
-      paypal: "PayPal",
       back: "Back",
       continue: "Continue",
-      purchaseNow: "Purchase Gift Card",
-      processing: "Processing...",
+      payNow: "Pay with PayPal or Card",
+      processing: "Redirecting to PayPal...",
       customAmount: "Custom Amount",
       presetAmounts: "Preset Amounts",
-      cardDetails: "Card Details",
-      cardNumber: "Card Number",
-      expiryDate: "Expiry Date",
-      cvv: "CVV",
-      billingAddress: "Billing Address",
-      fullName: "Full Name on Card",
-      country: "Country",
-      zipCode: "ZIP / Postal Code",
-      paypalInfo: "You will be redirected to PayPal to complete your purchase",
-      securePayment: "Secure Payment Processing",
+      paypalInfo: "You'll be taken to PayPal to finish your purchase. You can pay with a credit or debit card there — a PayPal account isn't required.",
+      orderSummary: "Order Summary",
+      giftCardAmount: "Gift Card Amount",
+      to: "To",
+      from: "From",
+      total: "Total",
+      amountRange: `Amount must be between C$${MIN_AMOUNT} and C$${MAX_AMOUNT}`,
+      genericError: "Something went wrong starting the payment. Please try again.",
+      cancelled: "Your payment was cancelled. Nothing has been charged.",
+      securePayment: "Payment processed securely by PayPal",
       terms: "By purchasing, you agree to our terms and conditions"
     },
     ru: {
@@ -67,25 +69,22 @@ const GiftCardPurchase = () => {
       senderEmail: "Ваш Email",
       message: "Личное сообщение (Необязательно)",
       messagePlaceholder: "Напишите личное сообщение для получателя...",
-      paymentMethod: "Способ оплаты",
-      creditCard: "Кредитная / Дебетовая карта",
-      paypal: "PayPal",
       back: "Назад",
       continue: "Продолжить",
-      purchaseNow: "Купить подарочную карту",
-      processing: "Обработка...",
+      payNow: "Оплатить через PayPal или картой",
+      processing: "Перенаправляем в PayPal...",
       customAmount: "Своя сумма",
       presetAmounts: "Готовые суммы",
-      cardDetails: "Данные карты",
-      cardNumber: "Номер карты",
-      expiryDate: "Срок действия",
-      cvv: "CVV",
-      billingAddress: "Платежный адрес",
-      fullName: "Полное имя на карте",
-      country: "Страна",
-      zipCode: "Почтовый индекс",
-      paypalInfo: "Вы будете перенаправлены в PayPal для завершения покупки",
-      securePayment: "Безопасная обработка платежей",
+      paypalInfo: "Вы перейдёте на сайт PayPal для завершения покупки. Там можно оплатить кредитной или дебетовой картой — аккаунт PayPal не требуется.",
+      orderSummary: "Ваш заказ",
+      giftCardAmount: "Сумма подарочной карты",
+      to: "Кому",
+      from: "От кого",
+      total: "Итого",
+      amountRange: `Сумма должна быть от C$${MIN_AMOUNT} до C$${MAX_AMOUNT}`,
+      genericError: "Не удалось начать оплату. Пожалуйста, попробуйте ещё раз.",
+      cancelled: "Оплата отменена. Деньги не списаны.",
+      securePayment: "Безопасная обработка платежей через PayPal",
       terms: "Совершая покупку, вы соглашаетесь с нашими условиями"
     }
   };
@@ -96,52 +95,43 @@ const GiftCardPurchase = () => {
 
   const handleSubmitDetails = (e) => {
     e.preventDefault();
+    const amount = Number(formData.amount);
+    if (!Number.isFinite(amount) || amount < MIN_AMOUNT || amount > MAX_AMOUNT) {
+      setError(t.amountRange);
+      return;
+    }
+    setError('');
     setStep(2);
   };
 
   const handlePurchase = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
-      // In a real implementation, you would integrate with Stripe, PayPal, or another payment processor here
-      // For now, we'll create the gift card in Firestore
-
-      // Generate a unique barcode ID
-      const barcodeId = `IVRI${Date.now()}${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-
-      // Create expiry date (1 year from now)
-      const expiryDate = new Date();
-      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-
-      // Create gift card in Firestore
-      const giftCardData = {
-        amount: parseFloat(formData.amount),
+      // The card itself is created server-side as 'pending' and only becomes a
+      // real, readable gift card once PayPal confirms the payment.
+      const createOrder = httpsCallable(functions, 'createGiftCardOrder');
+      const { data } = await createOrder({
+        amount: Number(formData.amount),
         recipientName: formData.recipientName,
         recipientEmail: formData.recipientEmail,
         senderName: formData.senderName,
         senderEmail: formData.senderEmail,
         message: formData.message,
-        barcodeId,
-        expiryDate: Timestamp.fromDate(expiryDate),
-        redeemed: false,
-        createdAt: Timestamp.now(),
-        paymentMethod: formData.paymentMethod
-      };
+        language
+      });
 
-      const docRef = await addDoc(collection(db, 'giftCards'), giftCardData);
-
-      // In production, you would send an email to the recipient here
-      // For now, navigate to the gift card reveal page
-      alert(`Gift card created! Link: ${window.location.origin}/PlanYourTripNow/gift/${docRef.id}\n\nIn production, this would be emailed to the recipient.`);
-
-      navigate(`/gift/${docRef.id}`);
-    } catch (error) {
-      console.error('Error creating gift card:', error);
-      alert('Failed to create gift card. Please try again.');
-    } finally {
+      // Hand off to PayPal. The buyer comes back to /gift-card/complete.
+      window.location.href = data.redirectUrl;
+    } catch (err) {
+      console.error('Error starting gift card payment:', err);
+      setError(err.message || t.genericError);
       setLoading(false);
     }
+    // No finally: on success the page is navigating away, and clearing the
+    // spinner would flash the button back to life mid-redirect.
   };
 
   return (
@@ -169,6 +159,13 @@ const GiftCardPurchase = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">{t.title}</h1>
           <p className="text-xl text-gray-600">{t.subtitle}</p>
         </div>
+
+        {/* Came back from a cancelled PayPal checkout */}
+        {cancelled && (
+          <div className="max-w-xl mx-auto mb-8 bg-amber-50 border-2 border-amber-200 rounded-lg p-4 text-center">
+            <p className="text-sm text-amber-800">{t.cancelled}</p>
+          </div>
+        )}
 
         {/* Progress Steps */}
         <div className="flex items-center justify-center mb-12">
@@ -226,7 +223,8 @@ const GiftCardPurchase = () => {
                     type="number"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    min="10"
+                    min={MIN_AMOUNT}
+                    max={MAX_AMOUNT}
                     step="1"
                     className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-lg font-semibold"
                     placeholder="Enter amount..."
@@ -326,6 +324,12 @@ const GiftCardPurchase = () => {
                 </div>
               </div>
 
+              {error && (
+                <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
+
               {/* Continue Button */}
               <button
                 type="submit"
@@ -342,175 +346,61 @@ const GiftCardPurchase = () => {
                 {t.step2}
               </h2>
 
-              {/* Payment Method Selection */}
-              <div className="mb-8">
-                <label className="block text-sm font-medium text-gray-700 mb-4">
-                  {t.paymentMethod}
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, paymentMethod: 'credit-card' })}
-                    className={`p-6 rounded-xl border-2 transition-all ${
-                      formData.paymentMethod === 'credit-card'
-                        ? 'border-teal-500 bg-teal-50'
-                        : 'border-gray-300 bg-white hover:border-gray-400'
-                    }`}
-                  >
-                    <CreditCard className="w-8 h-8 mx-auto mb-3" style={{ color: colors.primary.teal }} />
-                    <p className="font-semibold text-gray-900">{t.creditCard}</p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, paymentMethod: 'paypal' })}
-                    className={`p-6 rounded-xl border-2 transition-all ${
-                      formData.paymentMethod === 'paypal'
-                        ? 'border-teal-500 bg-teal-50'
-                        : 'border-gray-300 bg-white hover:border-gray-400'
-                    }`}
-                  >
-                    <svg className="w-8 h-8 mx-auto mb-3" viewBox="0 0 24 24" fill="#00457C">
-                      <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.24a.77.77 0 0 1 .758-.64h8.433c2.767 0 4.608.617 5.473 1.833.838 1.182.896 2.844.175 5.083-.841 2.622-2.354 4.327-4.502 5.073-1.015.352-2.27.545-3.735.575l-.813.01c-.672 0-.988.275-1.069.861l-.022.104-.675 4.28-.031.163a.37.37 0 0 1-.363.306zm7.723-10.07c.112-.726.184-1.204.216-1.434.165-1.194-.003-1.988-.495-2.361-.563-.426-1.549-.639-2.931-.639H8.858c-.341 0-.635.24-.692.565l-1.445 9.157h2.079c.672 0 .988-.275 1.069-.861l.022-.104.675-4.28.031-.163a.77.77 0 0 1 .758-.64h.477c1.971 0 3.444-.798 4.417-2.391.445-.728.729-1.545.85-2.449z" />
-                    </svg>
-                    <p className="font-semibold text-gray-900">{t.paypal}</p>
-                  </button>
+              {/* PayPal handoff — no card fields here on purpose. Card data is
+                  entered on PayPal's own page, so it never touches this site. */}
+              <div className="bg-gray-50 border-2 border-gray-300 rounded-xl p-8 text-center">
+                <svg className="w-16 h-16 mx-auto mb-4" viewBox="0 0 24 24" fill="#00457C">
+                  <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.24a.77.77 0 0 1 .758-.64h8.433c2.767 0 4.608.617 5.473 1.833.838 1.182.896 2.844.175 5.083-.841 2.622-2.354 4.327-4.502 5.073-1.015.352-2.27.545-3.735.575l-.813.01c-.672 0-.988.275-1.069.861l-.022.104-.675 4.28-.031.163a.37.37 0 0 1-.363.306zm7.723-10.07c.112-.726.184-1.204.216-1.434.165-1.194-.003-1.988-.495-2.361-.563-.426-1.549-.639-2.931-.639H8.858c-.341 0-.635.24-.692.565l-1.445 9.157h2.079c.672 0 .988-.275 1.069-.861l.022-.104.675-4.28.031-.163a.77.77 0 0 1 .758-.64h.477c1.971 0 3.444-.798 4.417-2.391.445-.728.729-1.545.85-2.449z" />
+                </svg>
+                <p className="text-lg text-gray-700">
+                  {t.paypalInfo}
+                </p>
+                <div className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-500">
+                  <CreditCard className="w-4 h-4" />
+                  <span>Visa • Mastercard • Amex</span>
                 </div>
               </div>
 
-              {formData.paymentMethod === 'credit-card' ? (
-                /* Credit Card Form */
-                <div className="space-y-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <p className="text-sm text-blue-800">
-                      <strong>Note:</strong> This is a demo interface. In production, you would integrate with Stripe, Square, or another payment processor for secure credit card processing.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.cardNumber}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.expiryDate}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="MM/YY"
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.cvv}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="123"
-                        maxLength="4"
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.fullName}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="John Doe"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.country}
-                      </label>
-                      <select
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-                        required
-                      >
-                        <option value="CA">Canada</option>
-                        <option value="US">United States</option>
-                        <option value="RU">Russia</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.zipCode}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="M5V 3A8"
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* PayPal Info */
-                <div className="bg-gray-50 border-2 border-gray-300 rounded-xl p-8 text-center">
-                  <svg className="w-16 h-16 mx-auto mb-4" viewBox="0 0 24 24" fill="#00457C">
-                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.24a.77.77 0 0 1 .758-.64h8.433c2.767 0 4.608.617 5.473 1.833.838 1.182.896 2.844.175 5.083-.841 2.622-2.354 4.327-4.502 5.073-1.015.352-2.27.545-3.735.575l-.813.01c-.672 0-.988.275-1.069.861l-.022.104-.675 4.28-.031.163a.37.37 0 0 1-.363.306zm7.723-10.07c.112-.726.184-1.204.216-1.434.165-1.194-.003-1.988-.495-2.361-.563-.426-1.549-.639-2.931-.639H8.858c-.341 0-.635.24-.692.565l-1.445 9.157h2.079c.672 0 .988-.275 1.069-.861l.022-.104.675-4.28.031-.163a.77.77 0 0 1 .758-.64h.477c1.971 0 3.444-.798 4.417-2.391.445-.728.729-1.545.85-2.449z" />
-                  </svg>
-                  <p className="text-lg text-gray-700">
-                    {t.paypalInfo}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-4">
-                    <strong>Note:</strong> In production, this would integrate with PayPal's API
-                  </p>
-                </div>
-              )}
-
               {/* Order Summary */}
               <div className="mt-8 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl p-6 border-2" style={{ borderColor: colors.primary.teal }}>
-                <h3 className="font-bold text-lg mb-4">Order Summary</h3>
+                <h3 className="font-bold text-lg mb-4">{t.orderSummary}</h3>
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Gift Card Amount:</span>
-                    <span className="font-semibold">${formData.amount}</span>
+                    <span className="text-gray-700">{t.giftCardAmount}:</span>
+                    <span className="font-semibold">C${formData.amount}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">To:</span>
+                    <span className="text-gray-700">{t.to}:</span>
                     <span className="font-semibold">{formData.recipientName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">From:</span>
+                    <span className="text-gray-700">{t.from}:</span>
                     <span className="font-semibold">{formData.senderName}</span>
                   </div>
                 </div>
                 <div className="border-t-2 border-teal-200 pt-4 mt-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold">Total:</span>
+                    <span className="text-xl font-bold">{t.total}:</span>
                     <span className="text-3xl font-bold" style={{ color: colors.primary.teal }}>
-                      ${formData.amount}
+                      C${formData.amount}
                     </span>
                   </div>
                 </div>
               </div>
+
+              {error && (
+                <div className="mt-6 bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
 
               {/* Buttons */}
               <div className="flex gap-4 mt-8">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="flex-1 py-4 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold text-lg hover:bg-gray-50 transition-colors"
+                  disabled={loading}
+                  className="flex-1 py-4 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold text-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
                   {t.back}
                 </button>
@@ -520,12 +410,13 @@ const GiftCardPurchase = () => {
                   className="flex-1 py-4 text-white rounded-lg font-semibold text-lg hover:opacity-90 transition-opacity disabled:opacity-50"
                   style={{ backgroundColor: colors.primary.teal }}
                 >
-                  {loading ? t.processing : t.purchaseNow}
+                  {loading ? t.processing : t.payNow}
                 </button>
               </div>
 
               {/* Security Note */}
-              <p className="text-xs text-gray-500 text-center mt-6">
+              <p className="flex items-center justify-center gap-1.5 text-xs text-gray-500 text-center mt-6">
+                <Lock className="w-3 h-3" />
                 {t.securePayment} • {t.terms}
               </p>
             </form>

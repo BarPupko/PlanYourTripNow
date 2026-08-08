@@ -91,17 +91,30 @@ service cloud.firestore {
 
     // ─── Gift Cards ─────────────────────────────────────────────────────────
     match /giftCards/{giftCardId} {
-      // Public reveal page needs to read the gift card
-      allow read: if true;
+      // A card bought through PayPal exists as status:'pending' from the moment
+      // checkout starts, before any money has moved. Those must stay invisible —
+      // otherwise anyone could start a purchase, abandon it, and read a live
+      // card. Only the paypalWebhook/capture functions (admin SDK, which
+      // bypasses these rules) ever set status:'paid'.
+      // Cards created by an admin in the dashboard have no status field at all,
+      // so treat a missing status as issued.
+      function isIssued() {
+        return !('status' in resource.data) || resource.data.status == 'paid';
+      }
 
-      // Only admin can create/delete
+      // Public reveal page needs to read the gift card
+      allow read: if isAdmin() || isIssued();
+
+      // Only admin can create/delete. Public purchases are written server-side
+      // by createGiftCardOrder, which bypasses rules — do not open this up.
       allow create, delete: if isAdmin();
 
-      // Admin can update anything; public can only mark as viewed
+      // Admin can update anything; public can only mark an issued card as viewed
       allow update: if isAdmin()
-                    || request.resource.data.diff(resource.data)
-                         .affectedKeys()
-                         .hasOnly(['viewed', 'viewedAt']);
+                    || (isIssued()
+                        && request.resource.data.diff(resource.data)
+                             .affectedKeys()
+                             .hasOnly(['viewed', 'viewedAt']));
     }
 
     // ─── Blog Posts ──────────────────────────────────────────────────────────
