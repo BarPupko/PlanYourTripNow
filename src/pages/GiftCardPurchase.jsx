@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Gift, CreditCard, DollarSign, Globe, User, Mail, MessageSquare, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Gift, CreditCard, DollarSign, User, Mail, MessageSquare, Lock } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
-import colors from '../utils/colors';
-import Header from '../components/Header';
+import brand from '../utils/brand';
+import siteLogo from '../assets/ivrytours-logo.png';
+import siteLogoLight from '../assets/ivrytours-logo-light.png';
 
 // Must match GIFT_CARD_MIN / GIFT_CARD_MAX in functions/paypal.js — the server
 // re-validates, so this is only here to fail fast before the redirect.
@@ -11,6 +13,7 @@ const MIN_AMOUNT = 25;
 const MAX_AMOUNT = 2000;
 
 const GiftCardPurchase = () => {
+  const navigate = useNavigate();
   // PayPal sends the buyer back here with ?cancelled=1 if they back out.
   const cancelled = new URLSearchParams(window.location.search).has('cancelled');
   const [language, setLanguage] = useState('en'); // 'en' or 'ru'
@@ -135,59 +138,98 @@ const GiftCardPurchase = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100">
-      <Header showBackButton={false} showLogout={false} />
+    <div style={{ minHeight: '100vh', background: brand.cream }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .gc-logo { height: 52px !important; }
+          .gc-nav { height: 72px !important; }
+        }
+      `}</style>
 
-      {/* Language Toggle */}
-      <div className="absolute top-4 right-4 z-50">
-        <button
-          onClick={() => setLanguage(language === 'en' ? 'ru' : 'en')}
-          className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all"
-          style={{ color: colors.primary.teal }}
-        >
-          <Globe className="w-5 h-5" />
-          <span className="font-medium">{language === 'en' ? 'RU' : 'EN'}</span>
-        </button>
+      {/* Top utility bar — mirrors the landing page */}
+      <div style={{ background: brand.ink, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem' }}>
+        <a href="tel:6473026849" style={{ color: 'rgba(247,248,243,0.5)', fontSize: 11, textDecoration: 'none', letterSpacing: '0.02em' }}>
+          📞 647-302-6849
+        </a>
+        {/* This page keeps its own EN/RU toggle rather than the global language
+            selector: the gift-card emails and PayPal handoff only exist in those two. */}
+        <div style={{ display: 'flex', gap: 2 }}>
+          {[{ code: 'en', flag: '🇨🇦', label: 'EN' }, { code: 'ru', flag: '🇷🇺', label: 'RU' }].map(l => (
+            <button
+              key={l.code}
+              onClick={() => setLanguage(l.code)}
+              style={{
+                background: language === l.code ? brand.red : 'transparent',
+                color: language === l.code ? brand.cream : 'rgba(247,248,243,0.5)',
+                border: 'none', borderRadius: 5, padding: '3px 9px', fontSize: 11,
+                fontWeight: language === l.code ? 700 : 400, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.15s',
+              }}
+            >
+              {l.flag} {l.label}
+            </button>
+          ))}
+        </div>
       </div>
+
+      <nav style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(247,248,243,0.93)', backdropFilter: 'blur(14px) saturate(140%)', borderBottom: `1px solid ${brand.line}` }}>
+        <div className="gc-nav" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 124 }}>
+          <button onClick={() => navigate('/')} style={{ display: 'block', lineHeight: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }} title="Go to home page">
+            <img src={siteLogo} alt="IVRYTOURS INC" className="gc-logo" style={{ height: 100, width: 'auto', display: 'block' }} />
+          </button>
+        </div>
+      </nav>
 
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-block p-4 bg-white rounded-full shadow-lg mb-4">
-            <Gift className="w-16 h-16" style={{ color: colors.primary.teal }} />
+          <div className="inline-block p-4 rounded-full mb-5" style={{ background: '#FFFFFF', border: `1px solid ${brand.line}`, boxShadow: '0 10px 28px -12px rgba(15,29,58,0.35)' }}>
+            <Gift className="w-14 h-14" style={{ color: brand.red }} />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">{t.title}</h1>
-          <p className="text-xl text-gray-600">{t.subtitle}</p>
+          <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: brand.muted, marginBottom: 10 }}>
+            {language === 'ru' ? '— ПОДАРОЧНЫЕ КАРТЫ' : '— GIFT CARDS'}
+          </p>
+          <h1 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: brand.navy, marginBottom: 12 }}>
+            {t.title}
+          </h1>
+          <p style={{ fontSize: 17, lineHeight: 1.6, color: brand.body }}>{t.subtitle}</p>
         </div>
 
         {/* Came back from a cancelled PayPal checkout */}
         {cancelled && (
-          <div className="max-w-xl mx-auto mb-8 bg-amber-50 border-2 border-amber-200 rounded-lg p-4 text-center">
-            <p className="text-sm text-amber-800">{t.cancelled}</p>
+          <div className="max-w-xl mx-auto mb-8 rounded-lg p-4 text-center" style={{ background: '#FFFFFF', border: `1px solid ${brand.red}`, borderLeft: `4px solid ${brand.red}` }}>
+            <p className="text-sm" style={{ color: brand.navy }}>{t.cancelled}</p>
           </div>
         )}
 
         {/* Progress Steps */}
         <div className="flex items-center justify-center mb-12">
           <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-2 px-6 py-3 rounded-lg ${step === 1 ? 'text-white' : 'bg-white text-gray-600'}`} style={step === 1 ? { backgroundColor: colors.primary.teal } : {}}>
-              <span className="font-bold">1</span>
-              <span>{t.step1}</span>
-            </div>
-            <div className="w-12 h-1 bg-gray-300 rounded"></div>
-            <div className={`flex items-center gap-2 px-6 py-3 rounded-lg ${step === 2 ? 'text-white' : 'bg-white text-gray-600'}`} style={step === 2 ? { backgroundColor: colors.primary.teal } : {}}>
-              <span className="font-bold">2</span>
-              <span>{t.step2}</span>
-            </div>
+            {[{ n: 1, label: t.step1 }, { n: 2, label: t.step2 }].map(({ n, label }, i) => (
+              <div key={n} className="flex items-center gap-4">
+                {i > 0 && <div style={{ width: 48, height: 2, background: brand.line, borderRadius: 2 }} />}
+                <div
+                  className="flex items-center gap-2 px-6 py-3 rounded-lg"
+                  style={step === n
+                    ? { background: brand.blue, color: '#FFFFFF' }
+                    : { background: '#FFFFFF', color: brand.body, border: `1px solid ${brand.line}` }}
+                >
+                  <span style={{ fontFamily: '"JetBrains Mono", monospace', fontWeight: 700, fontSize: 13 }}>
+                    {String(n).padStart(2, '0')}
+                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 500 }}>{label}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Form Container */}
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div className="overflow-hidden" style={{ background: '#FFFFFF', borderRadius: 16, border: `1px solid ${brand.line}`, boxShadow: '0 4px 24px rgba(15,29,58,0.08)' }}>
           {step === 1 ? (
             /* Step 1: Gift Details */
             <form onSubmit={handleSubmitDetails} className="p-8">
-              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.primary.teal }}>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 500, fontSize: 24, color: brand.navy, marginBottom: 24 }}>
                 {t.step1}
               </h2>
 
@@ -203,12 +245,10 @@ const GiftCardPurchase = () => {
                       key={amount}
                       type="button"
                       onClick={() => setFormData({ ...formData, amount: amount.toString() })}
-                      className={`py-3 px-4 rounded-lg font-semibold transition-all ${
-                        formData.amount === amount.toString()
-                          ? 'text-white shadow-lg'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                      style={formData.amount === amount.toString() ? { backgroundColor: colors.primary.teal } : {}}
+                      className="py-3 px-4 rounded-lg font-semibold transition-all"
+                      style={formData.amount === amount.toString()
+                        ? { background: brand.blue, color: '#FFFFFF', border: `1.5px solid ${brand.blue}` }
+                        : { background: brand.creamAlt, color: brand.body, border: `1.5px solid ${brand.line}` }}
                     >
                       ${amount}
                     </button>
@@ -226,7 +266,7 @@ const GiftCardPurchase = () => {
                     min={MIN_AMOUNT}
                     max={MAX_AMOUNT}
                     step="1"
-                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent text-lg font-semibold"
+                    className="w-full pl-12 pr-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-[#1E396C] focus:border-transparent border-[#DCE0D4] text-lg font-semibold"
                     placeholder="Enter amount..."
                     required
                   />
@@ -235,7 +275,9 @@ const GiftCardPurchase = () => {
 
               {/* Recipient Information */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Recipient Information</h3>
+                <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 18, fontWeight: 500, color: brand.navy, marginBottom: 16 }}>
+                  {language === 'ru' ? 'Данные получателя' : 'Recipient Information'}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -247,7 +289,7 @@ const GiftCardPurchase = () => {
                         type="text"
                         value={formData.recipientName}
                         onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-[#1E396C] focus:border-transparent border-[#DCE0D4]"
                         required
                       />
                     </div>
@@ -262,7 +304,7 @@ const GiftCardPurchase = () => {
                         type="email"
                         value={formData.recipientEmail}
                         onChange={(e) => setFormData({ ...formData, recipientEmail: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-[#1E396C] focus:border-transparent border-[#DCE0D4]"
                         required
                       />
                     </div>
@@ -272,7 +314,9 @@ const GiftCardPurchase = () => {
 
               {/* Sender Information */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Information</h3>
+                <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 18, fontWeight: 500, color: brand.navy, marginBottom: 16 }}>
+                  {language === 'ru' ? 'Ваши данные' : 'Your Information'}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -284,7 +328,7 @@ const GiftCardPurchase = () => {
                         type="text"
                         value={formData.senderName}
                         onChange={(e) => setFormData({ ...formData, senderName: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-[#1E396C] focus:border-transparent border-[#DCE0D4]"
                         required
                       />
                     </div>
@@ -299,7 +343,7 @@ const GiftCardPurchase = () => {
                         type="email"
                         value={formData.senderEmail}
                         onChange={(e) => setFormData({ ...formData, senderEmail: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-[#1E396C] focus:border-transparent border-[#DCE0D4]"
                         required
                       />
                     </div>
@@ -318,15 +362,15 @@ const GiftCardPurchase = () => {
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     rows={4}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent resize-none"
+                    className="w-full pl-10 pr-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-[#1E396C] focus:border-transparent border-[#DCE0D4] resize-none"
                     placeholder={t.messagePlaceholder}
                   />
                 </div>
               </div>
 
               {error && (
-                <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-lg p-4">
-                  <p className="text-sm text-red-700">{error}</p>
+                <div className="mb-6 rounded-lg p-4 border-2 border-[#8E1F1B]/25 bg-[#8E1F1B]/5">
+                  <p className="text-sm" style={{ color: brand.redMuted }}>{error}</p>
                 </div>
               )}
 
@@ -334,7 +378,7 @@ const GiftCardPurchase = () => {
               <button
                 type="submit"
                 className="w-full py-4 text-white rounded-lg font-semibold text-lg hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: colors.primary.teal }}
+                style={{ backgroundColor: brand.blue }}
               >
                 {t.continue}
               </button>
@@ -342,46 +386,46 @@ const GiftCardPurchase = () => {
           ) : (
             /* Step 2: Payment */
             <form onSubmit={handlePurchase} className="p-8">
-              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.primary.teal }}>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 500, fontSize: 24, color: brand.navy, marginBottom: 24 }}>
                 {t.step2}
               </h2>
 
               {/* PayPal handoff — no card fields here on purpose. Card data is
                   entered on PayPal's own page, so it never touches this site. */}
-              <div className="bg-gray-50 border-2 border-gray-300 rounded-xl p-8 text-center">
+              <div className="rounded-xl p-8 text-center" style={{ background: brand.creamAlt, border: `1px solid ${brand.line}` }}>
                 <svg className="w-16 h-16 mx-auto mb-4" viewBox="0 0 24 24" fill="#00457C">
                   <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.24a.77.77 0 0 1 .758-.64h8.433c2.767 0 4.608.617 5.473 1.833.838 1.182.896 2.844.175 5.083-.841 2.622-2.354 4.327-4.502 5.073-1.015.352-2.27.545-3.735.575l-.813.01c-.672 0-.988.275-1.069.861l-.022.104-.675 4.28-.031.163a.37.37 0 0 1-.363.306zm7.723-10.07c.112-.726.184-1.204.216-1.434.165-1.194-.003-1.988-.495-2.361-.563-.426-1.549-.639-2.931-.639H8.858c-.341 0-.635.24-.692.565l-1.445 9.157h2.079c.672 0 .988-.275 1.069-.861l.022-.104.675-4.28.031-.163a.77.77 0 0 1 .758-.64h.477c1.971 0 3.444-.798 4.417-2.391.445-.728.729-1.545.85-2.449z" />
                 </svg>
-                <p className="text-lg text-gray-700">
+                <p style={{ fontSize: 16, lineHeight: 1.6, color: brand.body }}>
                   {t.paypalInfo}
                 </p>
-                <div className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-500">
+                <div className="flex items-center justify-center gap-2 mt-4 text-sm" style={{ color: brand.muted }}>
                   <CreditCard className="w-4 h-4" />
                   <span>Visa • Mastercard • Amex</span>
                 </div>
               </div>
 
               {/* Order Summary */}
-              <div className="mt-8 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl p-6 border-2" style={{ borderColor: colors.primary.teal }}>
-                <h3 className="font-bold text-lg mb-4">{t.orderSummary}</h3>
+              <div className="mt-8 rounded-xl p-6" style={{ background: brand.creamAlt, border: `1.5px solid ${brand.blue}` }}>
+                <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 18, fontWeight: 500, color: brand.navy, marginBottom: 16 }}>{t.orderSummary}</h3>
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between">
-                    <span className="text-gray-700">{t.giftCardAmount}:</span>
+                    <span style={{ color: brand.body }}>{t.giftCardAmount}:</span>
                     <span className="font-semibold">C${formData.amount}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">{t.to}:</span>
+                    <span style={{ color: brand.body }}>{t.to}:</span>
                     <span className="font-semibold">{formData.recipientName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">{t.from}:</span>
+                    <span style={{ color: brand.body }}>{t.from}:</span>
                     <span className="font-semibold">{formData.senderName}</span>
                   </div>
                 </div>
-                <div className="border-t-2 border-teal-200 pt-4 mt-4">
+                <div className="pt-4 mt-4" style={{ borderTop: `1px solid ${brand.line}` }}>
                   <div className="flex justify-between items-center">
                     <span className="text-xl font-bold">{t.total}:</span>
-                    <span className="text-3xl font-bold" style={{ color: colors.primary.teal }}>
+                    <span className="text-3xl font-bold" style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 500, color: brand.navy }}>
                       C${formData.amount}
                     </span>
                   </div>
@@ -389,8 +433,8 @@ const GiftCardPurchase = () => {
               </div>
 
               {error && (
-                <div className="mt-6 bg-red-50 border-2 border-red-200 rounded-lg p-4">
-                  <p className="text-sm text-red-700">{error}</p>
+                <div className="mt-6 rounded-lg p-4 border-2 border-[#8E1F1B]/25 bg-[#8E1F1B]/5">
+                  <p className="text-sm" style={{ color: brand.redMuted }}>{error}</p>
                 </div>
               )}
 
@@ -400,7 +444,8 @@ const GiftCardPurchase = () => {
                   type="button"
                   onClick={() => setStep(1)}
                   disabled={loading}
-                  className="flex-1 py-4 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold text-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="flex-1 py-4 rounded-lg font-semibold text-lg transition-colors disabled:opacity-50"
+                  style={{ border: `1.5px solid ${brand.lineStrong}`, color: brand.navy, background: 'transparent' }}
                 >
                   {t.back}
                 </button>
@@ -408,14 +453,14 @@ const GiftCardPurchase = () => {
                   type="submit"
                   disabled={loading}
                   className="flex-1 py-4 text-white rounded-lg font-semibold text-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-                  style={{ backgroundColor: colors.primary.teal }}
+                  style={{ backgroundColor: brand.blue }}
                 >
                   {loading ? t.processing : t.payNow}
                 </button>
               </div>
 
               {/* Security Note */}
-              <p className="flex items-center justify-center gap-1.5 text-xs text-gray-500 text-center mt-6">
+              <p className="flex items-center justify-center gap-1.5 text-xs text-center mt-6" style={{ color: brand.muted }}>
                 <Lock className="w-3 h-3" />
                 {t.securePayment} • {t.terms}
               </p>
@@ -423,6 +468,22 @@ const GiftCardPurchase = () => {
           )}
         </div>
       </div>
+
+      {/* Compact footer — enough to close the page in the brand without
+          duplicating the landing page's full sitemap. */}
+      <footer style={{ background: brand.navy, color: brand.cream, padding: '2.5rem 1.5rem 2rem', marginTop: '3rem' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
+          <div style={{ fontFamily: '"Fraunces", Georgia, serif', fontStyle: 'italic', fontWeight: 350, fontSize: 'clamp(1.25rem, 3vw, 2rem)', lineHeight: 0.9, color: brand.cream, letterSpacing: '-0.03em', opacity: 0.9 }}>
+            IVRYTOURS
+          </div>
+          <img src={siteLogoLight} alt="IVRYTOURS INC" style={{ height: 64, width: 'auto', display: 'block', opacity: 0.95 }} />
+        </div>
+        <div style={{ maxWidth: 1280, margin: '1.5rem auto 0', borderTop: '1px solid rgba(247,248,243,0.15)', paddingTop: '1.25rem' }}>
+          <p style={{ color: brand.onDarkMuted, fontSize: 13 }}>
+            © 2026 IVRYTOURS INC. {language === 'ru' ? 'Все права защищены.' : 'All rights reserved.'}
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };

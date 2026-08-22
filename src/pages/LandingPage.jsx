@@ -18,12 +18,18 @@ import siteLogoLight from '../assets/ivrytours-logo-light.png';
 
 // Bump this key to re-show the announcement to visitors who dismissed it.
 const MERGE_NOTICE_KEY = 'mergeNoticeDismissed.v2';
+// The band wipes in, holds, then wipes out. The auto-hide deliberately does NOT
+// write MERGE_NOTICE_KEY — only an explicit dismiss does — so it plays once per visit.
+const MERGE_HOLD_MS = 10000;
+const MERGE_EXIT_MS = 950;
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const { language, setLanguage } = useLanguage();
   const [showWelcome, setShowWelcome] = useState(false);
   const [showMergeNotice, setShowMergeNotice] = useState(false);
+  // Drives the wipe-out; the band unmounts once the animation has run.
+  const [mergeExiting, setMergeExiting] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [showCookieConsent, setShowCookieConsent] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -264,6 +270,23 @@ const LandingPage = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Hold the announcement, then start the wipe-out.
+  useEffect(() => {
+    if (!showMergeNotice) return;
+    const startExit = setTimeout(() => setMergeExiting(true), MERGE_HOLD_MS);
+    return () => clearTimeout(startExit);
+  }, [showMergeNotice]);
+
+  // Unmount once the wipe-out has finished. This is deliberately a separate
+  // effect: folding it into the one above meant that flipping mergeExiting
+  // re-ran that effect, and its cleanup cancelled the unmount timer — so the
+  // band wiped away but stayed in the layout forever.
+  useEffect(() => {
+    if (!mergeExiting) return;
+    const unmount = setTimeout(() => setShowMergeNotice(false), MERGE_EXIT_MS);
+    return () => clearTimeout(unmount);
+  }, [mergeExiting]);
 
   useEffect(() => {
     document.documentElement.style.fontSize = `${accessibilitySettings.fontSize}%`;
@@ -657,9 +680,11 @@ const LandingPage = () => {
     setShowCookieConsent(false);
   };
 
+  // Manual dismiss persists, so the band never returns for this visitor.
+  // The unmount is handled by the mergeExiting effect above.
   const dismissMergeNotice = () => {
     localStorage.setItem(MERGE_NOTICE_KEY, 'true');
-    setShowMergeNotice(false);
+    setMergeExiting(true);
   };
 
   return (
@@ -930,7 +955,48 @@ const LandingPage = () => {
               .merge-inner { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
               .merge-cta { width: 100%; text-align: center; }
             }
+            /* Wipes open left-to-right like a loading bar, then wipes away the
+               same direction. The shell collapses its row so the hero rises
+               into place instead of snapping up on unmount. */
+            @keyframes mergeWipeIn {
+              from { clip-path: inset(0 100% 0 0); }
+              to   { clip-path: inset(0 0 0 0); }
+            }
+            @keyframes mergeWipeOut {
+              from { clip-path: inset(0 0 0 0); }
+              to   { clip-path: inset(0 0 0 100%); }
+            }
+            .merge-shell {
+              display: grid;
+              grid-template-rows: 1fr;
+              transition: grid-template-rows 520ms ease 380ms;
+            }
+            .merge-shell.is-exiting { grid-template-rows: 0fr; }
+            .merge-clip {
+              overflow: hidden;
+              animation: mergeWipeIn 900ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+            }
+            .merge-shell.is-exiting .merge-clip {
+              animation: mergeWipeOut 620ms cubic-bezier(0.55, 0.06, 0.68, 0.19) both;
+            }
+            /* Mirror the wipe for RTL so it still reads as left-to-right on screen. */
+            [dir="rtl"] .merge-clip { animation-name: mergeWipeInRtl; }
+            [dir="rtl"] .merge-shell.is-exiting .merge-clip { animation-name: mergeWipeOutRtl; }
+            @keyframes mergeWipeInRtl {
+              from { clip-path: inset(0 100% 0 0); }
+              to   { clip-path: inset(0 0 0 0); }
+            }
+            @keyframes mergeWipeOutRtl {
+              from { clip-path: inset(0 0 0 0); }
+              to   { clip-path: inset(0 0 0 100%); }
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .merge-clip, .merge-shell.is-exiting .merge-clip { animation: none; }
+              .merge-shell { transition: none; }
+            }
           `}</style>
+          <div className={`merge-shell${mergeExiting ? ' is-exiting' : ''}`}>
+          <div className="merge-clip">
           <section
             role="region"
             aria-label={t.mergeTitle}
@@ -975,6 +1041,8 @@ const LandingPage = () => {
               <X className="w-4 h-4" />
             </button>
           </section>
+          </div>
+          </div>
         </>
       )}
 
