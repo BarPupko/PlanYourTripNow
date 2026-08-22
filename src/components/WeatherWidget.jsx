@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Cloud, CloudRain, Sun, CloudSnow, Wind, MapPin, Search } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
-import colors from '../utils/colors';
+import brand from '../utils/brand';
 
 const WeatherWidget = ({ compact = false }) => {
   const { language } = useLanguage();
@@ -124,10 +124,10 @@ const WeatherWidget = ({ compact = false }) => {
               <div className="scale-50 sm:scale-75">
                 {getWeatherIcon(weather.weatherCode)}
               </div>
-              <div className="text-xs sm:text-sm font-bold text-gray-900">{weather.temperature}°C</div>
+              <div className="text-xs sm:text-sm font-bold" style={{ color: brand.navy }}>{weather.temperature}°C</div>
             </div>
           ) : (
-            <Cloud className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: colors.primary.teal }} />
+            <Cloud className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: brand.red }} />
           )}
         </button>
 
@@ -144,7 +144,7 @@ const WeatherWidget = ({ compact = false }) => {
               {/* Header with close */}
               <div className="flex justify-between items-center p-4 border-b">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Cloud className="w-5 h-5" style={{ color: colors.primary.teal }} />
+                  <Cloud className="w-5 h-5" style={{ color: brand.blue }} />
                   {t.weather}
                 </h3>
                 <button
@@ -180,7 +180,7 @@ const WeatherWidget = ({ compact = false }) => {
                     {/* Location */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" style={{ color: colors.primary.teal }} />
+                        <MapPin className="w-4 h-4" style={{ color: brand.blue }} />
                         <span className="text-sm font-medium text-gray-700">
                           {weather.city}, {weather.country}
                         </span>
@@ -207,7 +207,7 @@ const WeatherWidget = ({ compact = false }) => {
                           />
                           <button
                             type="submit"
-                            style={{ backgroundColor: colors.primary.teal }}
+                            style={{ backgroundColor: brand.blue }}
                             className="px-4 py-2 text-white rounded-lg text-sm"
                           >
                             Go
@@ -323,7 +323,7 @@ const WeatherWidget = ({ compact = false }) => {
     <div className="bg-white rounded-lg shadow p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <Cloud className="w-5 h-5" style={{ color: colors.primary.teal }} />
+          <Cloud className="w-5 h-5" style={{ color: brand.blue }} />
           Weather
         </h2>
         <button
@@ -348,7 +348,7 @@ const WeatherWidget = ({ compact = false }) => {
             />
             <button
               type="submit"
-              style={{ backgroundColor: colors.primary.teal }}
+              style={{ backgroundColor: brand.blue }}
               className="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
             >
               Search
@@ -375,7 +375,7 @@ const WeatherWidget = ({ compact = false }) => {
 
       {/* Current Location */}
       <div className="flex items-center gap-2 mb-4">
-        <MapPin className="w-4 h-4" style={{ color: colors.primary.teal }} />
+        <MapPin className="w-4 h-4" style={{ color: brand.blue }} />
         <span className="text-sm font-medium text-gray-700">
           {weather ? `${weather.city}, ${weather.country}` : location}
         </span>

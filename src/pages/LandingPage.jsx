@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Facebook, Instagram, MapPin, Clock, Users, Gift, X, Cookie, Eye, ZoomIn, Type, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, MessageCircle, BookOpen, ChevronDown } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Clock, Users, Gift, X, Cookie, Eye, ZoomIn, Type, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, MessageCircle, BookOpen, ChevronDown, ArrowRight } from 'lucide-react';
 import colors from '../utils/colors';
+import brand from '../utils/brand';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -12,11 +13,11 @@ import ChatWidget from '../components/ChatWidget';
 import WeatherWidget from '../components/WeatherWidget';
 import BlogPostModal from '../components/BlogPostModal';
 import { createQuestion, getWebsiteFeedbacks, getSiteSettings, getPublishedBlogPosts, getPartners, getDrivers, getCustomDestinations } from '../utils/firestoreUtils';
-import siteLogo from '../assets/site_logo.png';
-import mergeLogo from '../assets/merged_announcement_logo.png';
+import siteLogo from '../assets/ivrytours-logo.png';
+import siteLogoLight from '../assets/ivrytours-logo-light.png';
 
-// Bump this key to re-show the merge announcement to visitors who dismissed it.
-const MERGE_NOTICE_KEY = 'mergeNoticeDismissed.v1';
+// Bump this key to re-show the announcement to visitors who dismissed it.
+const MERGE_NOTICE_KEY = 'mergeNoticeDismissed.v2';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -280,16 +281,16 @@ const LandingPage = () => {
 
   const translations = {
     en: {
-      // Site merge announcement (ivritours.com + ivritours.ca)
-      mergeBadge: "ivritours.com is now ivritours.ca",
-      mergeTitle: "A new home for IVRITours",
-      mergeBody: "Our two websites have been brought together into one. Same trusted team, same tours across Canada — now easier to browse, book and manage in a single place. Welcome aboard.",
+      // Rebrand announcement (IVRITours → IVRYTOURS INC)
+      mergeBadge: "ivritours is now ivrytours inc",
+      mergeTitle: "New name, new look — same team",
+      mergeBody: "Both of our websites now live in one place, under one name: IVRYTOURS INC. Same guides, same tours across Canada — easier to browse, book and manage. Welcome aboard.",
       mergeCta: "Explore our tours",
       mergeDismiss: "Dismiss announcement",
-      welcome: "Welcome to IVRITours!",
+      welcome: "Welcome to IVRYTOURS!",
       welcomeMsg: "Discover breathtaking destinations with expert tour guides in multiple languages. Your adventure begins here!",
       getStarted: "Get Started",
-      heroTitle: "Explore Canada with IVRITours",
+      heroTitle: "Explore Canada with IVRYTOURS",
       heroSubtitle: "Professional guided tours in English, Hebrew, and Russian",
       destinationsTitle: "Our Amazing Destinations",
       multiLang: "Multi-language Tours",
@@ -363,21 +364,21 @@ const LandingPage = () => {
       questionSuccessMsg: "Your question has been sent! We'll get back to you soon.",
       testimonials: [
         { text: "Amazing experience! The tour guide was knowledgeable and friendly. Seeing Niagara Falls was a dream come true!", author: "Sarah M.", trip: "Niagara Falls, 2024" },
-        { text: "The multi-language support made everything so comfortable for our family. Highly recommend IVRITours!", author: "David L.", trip: "Toronto Downtown, 2024" },
+        { text: "The multi-language support made everything so comfortable for our family. Highly recommend IVRYTOURS!", author: "David L.", trip: "Toronto Downtown, 2024" },
         { text: "Quebec City tour was magical! Our guide shared fascinating stories and insider tips. Best vacation ever!", author: "Rachel K.", trip: "Old Québec, 2024" }
       ]
     },
     he: {
-      // Site merge announcement (ivritours.com + ivritours.ca)
-      mergeBadge: "ivritours.com הוא עכשיו ivritours.ca",
-      mergeTitle: "בית חדש ל-IVRITours",
-      mergeBody: "איחדנו את שני האתרים שלנו לאתר אחד. אותו צוות מנוסה, אותם טיולים בקנדה — עכשיו הכול במקום אחד, נוח יותר לעיון, להזמנה ולניהול. ברוכים הבאים!",
+      // Rebrand announcement (IVRITours → IVRYTOURS INC)
+      mergeBadge: "IVRITours הוא עכשיו IVRYTOURS INC",
+      mergeTitle: "שם חדש, מראה חדש — אותו צוות",
+      mergeBody: "שני האתרים שלנו נמצאים עכשיו במקום אחד, תחת שם אחד: IVRYTOURS INC. אותם מדריכים, אותם טיולים בקנדה — נוח יותר לעיון, להזמנה ולניהול. ברוכים הבאים!",
       mergeCta: "לצפייה בטיולים",
       mergeDismiss: "סגירת ההודעה",
-      welcome: "ברוכים הבאים ל-IVRITours!",
+      welcome: "ברוכים הבאים ל-IVRYTOURS!",
       welcomeMsg: "גלו יעדים עוצרי נשימה עם מדריכי טיולים מומחים במספר שפות. ההרפתקה שלכם מתחילה כאן!",
       getStarted: "בואו נתחיל",
-      heroTitle: "חקרו את קנדה עם IVRITours",
+      heroTitle: "חקרו את קנדה עם IVRYTOURS",
       heroSubtitle: "סיורים מודרכים מקצועיים באנגלית, עברית ורוסית",
       destinationsTitle: "היעדים המדהימים שלנו",
       multiLang: "סיורים בריבוי שפות",
@@ -451,21 +452,21 @@ const LandingPage = () => {
       questionSuccessMsg: "השאלה שלך נשלחה! נחזור אליך בקרוב.",
       testimonials: [
         { text: "חוויה מדהימה! המדריך היה בעל ידע וידידותי. לראות את מפלי ניאגרה היה חלום שהתגשם!", author: "שרה מ.", trip: "מפלי ניאגרה, 2024" },
-        { text: "התמיכה הרב-לשונית הפכה הכל לנוח כל כך עבור המשפחה שלנו. ממליץ בחום על IVRITours!", author: "דוד ל.", trip: "טורונטו, 2024" },
+        { text: "התמיכה הרב-לשונית הפכה הכל לנוח כל כך עבור המשפחה שלנו. ממליץ בחום על IVRYTOURS!", author: "דוד ל.", trip: "טורונטו, 2024" },
         { text: "סיור קוויבק סיטי היה קסום! המדריך שלנו שיתף סיפורים מרתקים וטיפים פנימיים. החופשה הכי טובה אי פעם!", author: "רחל כ.", trip: "קוויבק העתיקה, 2024" }
       ]
     },
     ru: {
-      // Site merge announcement (ivritours.com + ivritours.ca)
-      mergeBadge: "ivritours.com теперь ivritours.ca",
-      mergeTitle: "У IVRITours новый дом",
-      mergeBody: "Мы объединили два наших сайта в один. Та же команда, те же туры по Канаде — теперь всё удобно собрано в одном месте. Добро пожаловать!",
+      // Rebrand announcement (IVRITours → IVRYTOURS INC)
+      mergeBadge: "IVRITours теперь IVRYTOURS INC",
+      mergeTitle: "Новое имя, новый облик — та же команда",
+      mergeBody: "Оба наших сайта теперь в одном месте и под одним именем: IVRYTOURS INC. Те же гиды, те же туры по Канаде — удобнее смотреть, бронировать и управлять. Добро пожаловать!",
       mergeCta: "Смотреть туры",
       mergeDismiss: "Закрыть объявление",
-      welcome: "Добро пожаловать в IVRITours!",
+      welcome: "Добро пожаловать в IVRYTOURS!",
       welcomeMsg: "Откройте для себя захватывающие дух направления с опытными гидами на нескольких языках. Ваше приключение начинается здесь!",
       getStarted: "Начать",
-      heroTitle: "Исследуйте Канаду с IVRITours",
+      heroTitle: "Исследуйте Канаду с IVRYTOURS",
       heroSubtitle: "Профессиональные экскурсии на английском, иврите и русском языках",
       destinationsTitle: "Наши удивительные направления",
       multiLang: "Многоязычные туры",
@@ -539,7 +540,7 @@ const LandingPage = () => {
       questionSuccessMsg: "Ваш вопрос отправлен! Мы свяжемся с вами в ближайшее время.",
       testimonials: [
         { text: "Потрясающий опыт! Гид был знающим и дружелюбным. Увидеть Ниагарский водопад было сбывшейся мечтой!", author: "Сара М.", trip: "Ниагарский водопад, 2024" },
-        { text: "Многоязычная поддержка сделала все таким комфортным для нашей семьи. Настоятельно рекомендую IVRITours!", author: "Давид Л.", trip: "Торонто, 2024" },
+        { text: "Многоязычная поддержка сделала все таким комфортным для нашей семьи. Настоятельно рекомендую IVRYTOURS!", author: "Давид Л.", trip: "Торонто, 2024" },
         { text: "Тур по Квебеку был волшебным! Наш гид делился захватывающими историями и инсайдерскими советами. Лучший отпуск в истории!", author: "Рахиль К.", trip: "Старый Квебек, 2024" }
       ]
     }
@@ -550,17 +551,17 @@ const LandingPage = () => {
   const giftCardTranslations = {
     en: {
       giftCardTitle: "Give the Gift of Travel",
-      giftCardDesc: "Share unforgettable experiences with IVRITours gift cards",
+      giftCardDesc: "Share unforgettable experiences with IVRYTOURS gift cards",
       purchaseGiftCard: "Purchase Gift Card"
     },
     he: {
       giftCardTitle: "תנו את המתנה של טיול",
-      giftCardDesc: "שתפו חוויות בלתי נשכחות עם כרטיסי מתנה של IVRITours",
+      giftCardDesc: "שתפו חוויות בלתי נשכחות עם כרטיסי מתנה של IVRYTOURS",
       purchaseGiftCard: "קנה כרטיס מתנה"
     },
     ru: {
       giftCardTitle: "Подарите путешествие",
-      giftCardDesc: "Поделитесь незабываемыми впечатлениями с подарочными картами IVRITours",
+      giftCardDesc: "Поделитесь незабываемыми впечатлениями с подарочными картами IVRYTOURS",
       purchaseGiftCard: "Купить подарочную карту"
     }
   };
@@ -662,15 +663,15 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#EAF6F8', color: '#0A2A33' }} dir={language === 'he' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen" style={{ background: '#EFF1E9', color: '#16294F' }} dir={language === 'he' ? 'rtl' : 'ltr'}>
 
       {showWelcome && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4 animate-fadeIn">
-          <div className="rounded-2xl p-8 max-w-lg w-full text-center shadow-2xl animate-slideDown" style={{ background: '#F5FBFC' }}>
+          <div className="rounded-2xl p-8 max-w-lg w-full text-center shadow-2xl animate-slideDown" style={{ background: '#F7F8F3' }}>
             <div className="text-6xl mb-4">🌍</div>
-            <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: '"Fraunces", Georgia, serif', color: '#073944' }}>{t.welcome}</h2>
-            <p className="text-lg mb-6" style={{ color: '#3E5F68' }}>{t.welcomeMsg}</p>
-            <button onClick={() => setShowWelcome(false)} className="px-8 py-3 text-white rounded-lg text-lg font-semibold hover:opacity-90 transition-opacity" style={{ backgroundColor: colors.primary.teal }}>{t.getStarted}</button>
+            <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: '"Fraunces", Georgia, serif', color: '#16294F' }}>{t.welcome}</h2>
+            <p className="text-lg mb-6" style={{ color: '#465372' }}>{t.welcomeMsg}</p>
+            <button onClick={() => setShowWelcome(false)} className="px-8 py-3 text-white rounded-lg text-lg font-semibold hover:opacity-90 transition-opacity" style={{ backgroundColor: brand.blue }}>{t.getStarted}</button>
           </div>
         </div>
       )}
@@ -683,13 +684,13 @@ const LandingPage = () => {
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-xl font-bold" style={{ color: colors.primary.teal }}>{selectedTrip.title}</h3>
+                <h3 className="text-xl font-bold" style={{ color: brand.blue }}>{selectedTrip.title}</h3>
                 <div className="flex items-center gap-3 mt-1">
                   <p className="text-sm text-gray-500">
                     {language === 'ru' ? 'Заявка будет рассмотрена администратором' : language === 'he' ? 'הבקשה תאושר על ידי המנהל' : 'Your request will be reviewed by an admin'}
                   </p>
                   {selectedTrip.price && (
-                    <span className="text-sm font-bold text-white px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.primary.teal }}>C${selectedTrip.price}</span>
+                    <span className="text-sm font-bold text-white px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: brand.blue }}>C${selectedTrip.price}</span>
                   )}
                 </div>
               </div>
@@ -707,7 +708,7 @@ const LandingPage = () => {
                 <p className="text-gray-500 mb-6">
                   {language === 'ru' ? 'Мы свяжемся с вами после подтверждения.' : language === 'he' ? 'ניצור איתך קשר לאחר האישור.' : 'We will contact you once confirmed.'}
                 </p>
-                <button onClick={closeRegisterModal} className="px-6 py-2 text-white rounded-lg" style={{ backgroundColor: colors.primary.teal }}>
+                <button onClick={closeRegisterModal} className="px-6 py-2 text-white rounded-lg" style={{ backgroundColor: brand.blue }}>
                   {language === 'ru' ? 'Закрыть' : language === 'he' ? 'סגור' : 'Close'}
                 </button>
               </div>
@@ -718,34 +719,34 @@ const LandingPage = () => {
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
                       {language === 'ru' ? 'Имя *' : language === 'he' ? 'שם פרטי *' : 'First Name *'}
                     </label>
-                    <input type="text" required value={regForm.firstName} onChange={(e) => setRegForm({ ...regForm, firstName: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                    <input type="text" required value={regForm.firstName} onChange={(e) => setRegForm({ ...regForm, firstName: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#1E396C] focus:outline-none text-sm" />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
                       {language === 'ru' ? 'Фамилия *' : language === 'he' ? 'שם משפחה *' : 'Last Name *'}
                     </label>
-                    <input type="text" required value={regForm.lastName} onChange={(e) => setRegForm({ ...regForm, lastName: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                    <input type="text" required value={regForm.lastName} onChange={(e) => setRegForm({ ...regForm, lastName: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#1E396C] focus:outline-none text-sm" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     {language === 'ru' ? 'Email *' : language === 'he' ? 'אימייל *' : 'Email *'}
                   </label>
-                  <input type="email" required value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                  <input type="email" required value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#1E396C] focus:outline-none text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     {language === 'ru' ? 'Телефон *' : language === 'he' ? 'טלפון *' : 'Phone *'}
                   </label>
-                  <input type="tel" required value={regForm.phone} onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" />
+                  <input type="tel" required value={regForm.phone} onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#1E396C] focus:outline-none text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     {language === 'ru' ? 'Место посадки' : language === 'he' ? 'נקודת איסוף' : 'Pickup Location'}
                   </label>
-                  <input type="text" value={regForm.pickupLocation} onChange={(e) => setRegForm({ ...regForm, pickupLocation: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm" placeholder={language === 'ru' ? 'Необязательно' : language === 'he' ? 'אופציונלי' : 'Optional'} />
+                  <input type="text" value={regForm.pickupLocation} onChange={(e) => setRegForm({ ...regForm, pickupLocation: e.target.value })} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#1E396C] focus:outline-none text-sm" placeholder={language === 'ru' ? 'Необязательно' : language === 'he' ? 'אופציונלי' : 'Optional'} />
                 </div>
-                <button type="submit" disabled={regSubmitting} className="w-full py-3 text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50" style={{ backgroundColor: colors.primary.teal }}>
+                <button type="submit" disabled={regSubmitting} className="w-full py-3 text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50" style={{ backgroundColor: brand.blue }}>
                   {regSubmitting
                     ? (language === 'ru' ? 'Отправка...' : language === 'he' ? 'שולח...' : 'Submitting...')
                     : (language === 'ru' ? 'Отправить заявку' : language === 'he' ? 'שלח בקשה' : 'Submit Request')}
@@ -763,7 +764,7 @@ const LandingPage = () => {
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-5">
               <div>
-                <h3 className="text-xl font-bold" style={{ color: colors.primary.teal }}>
+                <h3 className="text-xl font-bold" style={{ color: brand.blue }}>
                   {t.questionModalTitle}: {questionDest.title}
                 </h3>
               </div>
@@ -785,7 +786,7 @@ const LandingPage = () => {
                     type="text" required
                     value={questionForm.name}
                     onChange={e => setQuestionForm({ ...questionForm, name: e.target.value })}
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm"
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#1E396C] focus:outline-none text-sm"
                   />
                 </div>
                 <div>
@@ -794,7 +795,7 @@ const LandingPage = () => {
                     type="email" required
                     value={questionForm.email}
                     onChange={e => setQuestionForm({ ...questionForm, email: e.target.value })}
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm"
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#1E396C] focus:outline-none text-sm"
                   />
                 </div>
                 <div>
@@ -803,7 +804,7 @@ const LandingPage = () => {
                     type="tel"
                     value={questionForm.phone}
                     onChange={e => setQuestionForm({ ...questionForm, phone: e.target.value })}
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm"
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#1E396C] focus:outline-none text-sm"
                   />
                 </div>
                 <div>
@@ -812,14 +813,14 @@ const LandingPage = () => {
                     required rows={4}
                     value={questionForm.message}
                     onChange={e => setQuestionForm({ ...questionForm, message: e.target.value })}
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#00BCD4] focus:outline-none text-sm resize-none"
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#1E396C] focus:outline-none text-sm resize-none"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={questionSubmitting}
                   className="w-full py-3 text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-                  style={{ backgroundColor: colors.primary.teal }}
+                  style={{ backgroundColor: brand.blue }}
                 >
                   {questionSubmitting ? '...' : t.questionSend}
                 </button>
@@ -830,8 +831,8 @@ const LandingPage = () => {
       )}
 
       {/* ── TOP BAR — language picker, scrolls away naturally ──── */}
-      <div style={{ background: '#0A2A33', height: 36, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem' }}>
-        <a href="tel:6473026849" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, textDecoration: 'none', letterSpacing: '0.02em' }}>
+      <div style={{ background: '#0F1D3A', height: 36, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem' }}>
+        <a href="tel:6473026849" style={{ color: 'rgba(247,248,243,0.5)', fontSize: 11, textDecoration: 'none', letterSpacing: '0.02em' }}>
           📞 647-302-6849
         </a>
         <div style={{ display: 'flex', gap: 2 }}>
@@ -844,8 +845,8 @@ const LandingPage = () => {
               key={l.code}
               onClick={() => setLanguage(l.code)}
               style={{
-                background: language === l.code ? '#00BCD4' : 'transparent',
-                color: language === l.code ? 'white' : 'rgba(255,255,255,0.45)',
+                background: language === l.code ? brand.red : 'transparent',
+                color: language === l.code ? brand.cream : 'rgba(247,248,243,0.5)',
                 border: 'none',
                 borderRadius: 5,
                 padding: '3px 9px',
@@ -867,48 +868,52 @@ const LandingPage = () => {
       {/* ── NAV — minimal, sticky ────────────────────────────── */}
       <style>{`
         @media (max-width: 640px) {
-          .nav-logo { height: 50px !important; }
-          .nav-inner { height: 64px !important; }
+          .nav-logo { height: 52px !important; }
+          .nav-inner { height: 72px !important; }
         }
         html { scroll-behavior: smooth; }
-        /* The nav is sticky (140px tall, 64px on mobile), so anchor targets need
+        /* The nav is sticky (124px tall, 72px on mobile), so anchor targets need
            clearance or the section heading lands underneath it. */
-        #destinations, #trips, #contact { scroll-margin-top: 156px; }
+        #destinations, #trips, #contact { scroll-margin-top: 130px; }
         @media (max-width: 640px) {
-          #destinations, #trips, #contact { scroll-margin-top: 80px; }
+          #destinations, #trips, #contact { scroll-margin-top: 84px; }
         }
         @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
       `}</style>
-      <nav style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(234,246,248,0.92)', backdropFilter: 'blur(14px) saturate(140%)', borderBottom: '1px solid #C6DFE4' }}>
-        <div className="nav-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 140 }}>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(247,248,243,0.93)', backdropFilter: 'blur(14px) saturate(140%)', borderBottom: '1px solid #CBD1C1' }}>
+        <div className="nav-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 124 }}>
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ display: 'block', lineHeight: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-            <img src={siteLogo} alt="IVRITours" className="nav-logo" style={{ height: 125, width: 'auto', display: 'block' }} />
+            <img src={siteLogo} alt="IVRYTOURS INC" className="nav-logo" style={{ height: 100, width: 'auto', display: 'block' }} />
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <WeatherWidget compact={true} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* The weather readout sits in a raised chip so it reads as a control
+                against the translucent cream nav, not as stray text. */}
+            <div style={{ background: '#FFFFFF', border: `1px solid ${brand.line}`, borderRadius: 9999, boxShadow: '0 6px 14px -6px rgba(15,29,58,0.25)', padding: '3px 6px', display: 'flex', alignItems: 'center' }}>
+              <WeatherWidget compact={true} />
+            </div>
             <div className="relative">
               <button
                 onClick={() => setShowBlogMenu(p => !p)}
                 onBlur={() => setTimeout(() => setShowBlogMenu(false), 150)}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 8, color: '#3E5F68', fontSize: 13, fontWeight: 500, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, color: brand.body, fontSize: 13, fontWeight: 500, background: 'transparent', border: '1px solid transparent', cursor: 'pointer' }}
               >
                 <BookOpen className="w-4 h-4" />
                 <span className="hidden sm:inline">Blog</span>
                 <ChevronDown className="w-3 h-3" />
               </button>
               {showBlogMenu && blogPosts.length > 0 && (
-                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, width: 256, background: 'white', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid #D9EBEE', padding: '4px 0', zIndex: 50 }}>
+                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, width: 256, background: 'white', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid #DCE0D4', padding: '4px 0', zIndex: 50 }}>
                   {blogPosts.map(post => (
                     <button key={post.id} onMouseDown={() => { setSelectedBlogPost(post); setShowBlogMenu(false); }}
                       style={{ width: '100%', textAlign: 'left', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:bg-gray-50">
-                      <p style={{ fontSize: 14, fontWeight: 500, color: '#0A2A33' }} className="truncate">{post.title}</p>
-                      {post.excerpt && <p style={{ fontSize: 12, color: '#78959D', marginTop: 2 }} className="truncate">{post.excerpt}</p>}
+                      <p style={{ fontSize: 14, fontWeight: 500, color: '#16294F' }} className="truncate">{post.title}</p>
+                      {post.excerpt && <p style={{ fontSize: 12, color: '#8A92A5', marginTop: 2 }} className="truncate">{post.excerpt}</p>}
                     </button>
                   ))}
                 </div>
               )}
               {showBlogMenu && blogPosts.length === 0 && (
-                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, width: 192, background: 'white', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid #D9EBEE', padding: 12, zIndex: 50, textAlign: 'center', fontSize: 14, color: '#78959D' }}>
+                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, width: 192, background: 'white', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid #DCE0D4', padding: 12, zIndex: 50, textAlign: 'center', fontSize: 14, color: '#8A92A5' }}>
                   No posts yet
                 </div>
               )}
@@ -917,7 +922,7 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      {/* ── SITE MERGE ANNOUNCEMENT (ivritours.com + ivritours.ca) ── */}
+      {/* ── REBRAND ANNOUNCEMENT (IVRITours → IVRYTOURS INC) ── */}
       {showMergeNotice && (
         <>
           <style>{`
@@ -929,25 +934,25 @@ const LandingPage = () => {
           <section
             role="region"
             aria-label={t.mergeTitle}
-            style={{ background: 'linear-gradient(135deg, #073944 0%, #0B5361 100%)', color: '#FFFFFF', padding: '1.75rem 1.5rem', position: 'relative' }}
+            style={{ background: brand.navy, color: brand.cream, padding: '1.75rem 1.5rem', position: 'relative', borderBottom: `3px solid ${brand.red}` }}
           >
             <div
               className="merge-inner"
               style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}
             >
-              {/* Logo sits on a white chip — the mark's dark blocks would vanish on the teal band */}
-              <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '14px 18px', flexShrink: 0, boxShadow: '0 6px 20px rgba(0,0,0,0.18)', lineHeight: 0 }}>
-                <img src={mergeLogo} alt="IVRITours" style={{ height: 46, width: 'auto', display: 'block' }} />
+              {/* Logo sits on a cream chip — the navy mark would vanish on the navy band */}
+              <div style={{ background: brand.cream, borderRadius: 12, padding: '12px 16px', flexShrink: 0, boxShadow: '0 6px 20px rgba(0,0,0,0.22)', lineHeight: 0 }}>
+                <img src={siteLogo} alt="IVRYTOURS INC" style={{ height: 58, width: 'auto', display: 'block' }} />
               </div>
 
               <div style={{ flex: '1 1 320px', minWidth: 0 }}>
-                <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7FD9E8', marginBottom: 8 }}>
+                <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: brand.onDarkAccent, marginBottom: 8 }}>
                   {t.mergeBadge}
                 </p>
                 <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 400, fontSize: 'clamp(1.35rem, 3vw, 1.9rem)', lineHeight: 1.2, letterSpacing: '-0.015em', marginBottom: 8 }}>
                   {t.mergeTitle}
                 </h2>
-                <p style={{ fontSize: 15, lineHeight: 1.6, color: '#CFE9EE', maxWidth: '68ch' }}>
+                <p style={{ fontSize: 15, lineHeight: 1.6, color: brand.onDark, maxWidth: '68ch' }}>
                   {t.mergeBody}
                 </p>
               </div>
@@ -955,7 +960,7 @@ const LandingPage = () => {
               <a
                 href="#destinations"
                 className="merge-cta"
-                style={{ flexShrink: 0, display: 'inline-block', padding: '12px 26px', background: colors.primary.teal, color: '#FFFFFF', borderRadius: 8, fontWeight: 600, textDecoration: 'none', fontSize: 15 }}
+                style={{ flexShrink: 0, display: 'inline-block', padding: '12px 26px', background: brand.red, color: '#FFFFFF', borderRadius: 8, fontWeight: 600, textDecoration: 'none', fontSize: 15 }}
               >
                 {t.mergeCta}
               </a>
@@ -965,7 +970,7 @@ const LandingPage = () => {
               onClick={dismissMergeNotice}
               aria-label={t.mergeDismiss}
               title={t.mergeDismiss}
-              style={{ position: 'absolute', top: 10, [language === 'he' ? 'left' : 'right']: 12, background: 'transparent', border: 'none', color: '#7FD9E8', cursor: 'pointer', padding: 6, lineHeight: 0, borderRadius: 6 }}
+              style={{ position: 'absolute', top: 10, [language === 'he' ? 'left' : 'right']: 12, background: 'transparent', border: 'none', color: brand.onDarkMuted, cursor: 'pointer', padding: 6, lineHeight: 0, borderRadius: 6 }}
             >
               <X className="w-4 h-4" />
             </button>
@@ -973,35 +978,61 @@ const LandingPage = () => {
         </>
       )}
 
-      {/* ── HERO ─────────────────────────────────────────────────── */}
-      <section className="hero-section" style={{ background: '#EAF6F8', padding: '5rem 1.5rem 4rem' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
-            <div className="hero-content">
-              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 16 }}>
-                {language === 'ru' ? '— Туристическое агентство' : language === 'he' ? '— סוכנות טיולים' : '— Travel Studio'}
+      {/* ── HERO — full-bleed cover ──────────────────────────────── */}
+      <section className="hero-section" style={{ position: 'relative', background: brand.ink, overflow: 'hidden' }}>
+        <img
+          src={siteSettings.heroImage || 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=2000&q=80'}
+          alt=""
+          aria-hidden="true"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 62%' }}
+        />
+        {/* Two overlays: a directional wash that keeps the headline legible over any
+            photo, plus a bottom fade so the route rail sits on solid ground. */}
+        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(${language === 'he' ? '260deg' : '100deg'}, rgba(15,29,58,0.97) 0%, rgba(15,29,58,0.9) 38%, rgba(15,29,58,0.55) 66%, rgba(15,29,58,0.28) 100%)` }} />
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 180, background: 'linear-gradient(180deg, rgba(15,29,58,0) 0%, rgba(15,29,58,0.75) 100%)' }} />
+        <div className="hero-pad" style={{ position: 'relative', maxWidth: 1280, margin: '0 auto', padding: '6.5rem 1.5rem 0', minHeight: 600, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <div className="hero-content" style={{ maxWidth: 760, paddingBottom: '3.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 26 }}>
+              <span style={{ width: 38, height: 2, background: brand.red, display: 'block', flexShrink: 0 }} />
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#B9C4DC' }}>
+                {language === 'ru' ? 'Экскурсии по всей Канаде' : language === 'he' ? 'סיורים מודרכים ברחבי קנדה' : 'Guided tours across Canada'}
               </p>
-              <h1 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2.2rem, 6vw, 4.5rem)', lineHeight: 1.05, letterSpacing: '-0.022em', color: '#073944', marginBottom: 24 }}>
-                {language === 'he' ? <>חקרו את <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>קנדה</em></> : language === 'ru' ? <>Исследуйте <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>Канаду</em></> : <>Explore <em style={{ color: colors.primary.teal, fontStyle: 'italic' }}>Canada</em></>}
-              </h1>
-              <p style={{ fontSize: 17, lineHeight: 1.65, color: '#3E5F68', marginBottom: 32, maxWidth: '40ch' }}>{t.heroSubtitle}</p>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <a href="#trips" style={{ display: 'inline-block', padding: '12px 28px', background: colors.primary.teal, color: 'white', borderRadius: 8, fontWeight: 600, textDecoration: 'none', fontSize: 15 }}>
-                  {language === 'ru' ? 'Туры' : language === 'he' ? 'טיולים' : 'View Tours'}
-                </a>
-                <a href="#contact" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: '1.5px solid #C6DFE4', color: '#0A2A33', borderRadius: 8, fontWeight: 600, textDecoration: 'none', fontSize: 15 }}>
-                  {language === 'ru' ? 'Связаться' : language === 'he' ? 'צרו קשר' : 'Contact Us'}
-                </a>
-              </div>
             </div>
-            <div className="hero-image-wrap" style={{ borderRadius: 16, overflow: 'hidden', aspectRatio: '4/3', boxShadow: '0 20px 60px rgba(7,57,68,0.15)', background: '#073944', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img
-                src={siteSettings.heroImage || 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=1200&q=80'}
-                alt="Hero"
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
+            <h1 className="hero-title" style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2.6rem, 7vw, 5.4rem)', lineHeight: 0.98, letterSpacing: '-0.025em', color: brand.cream, marginBottom: 26, textWrap: 'balance' }}>
+              {language === 'he' ? (
+                <>גלו את קנדה<br />עם מדריך<br /><span style={{ fontStyle: 'italic', boxShadow: `inset 0 -0.14em 0 ${brand.red}` }}>שחי כאן.</span></>
+              ) : language === 'ru' ? (
+                <>Откройте Канаду<br />с гидом, который<br /><span style={{ fontStyle: 'italic', boxShadow: `inset 0 -0.14em 0 ${brand.red}` }}>живёт здесь.</span></>
+              ) : (
+                <>Explore Canada<br />with a guide who<br /><span style={{ fontStyle: 'italic', boxShadow: `inset 0 -0.14em 0 ${brand.red}` }}>lives here.</span></>
+              )}
+            </h1>
+            <p style={{ fontSize: 18, lineHeight: 1.6, color: brand.onDark, marginBottom: 36, maxWidth: '46ch' }}>{t.heroSubtitle}</p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <a href="#trips" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '15px 32px', background: brand.red, color: '#FFFFFF', borderRadius: 8, fontWeight: 600, textDecoration: 'none', fontSize: 15 }}>
+                {language === 'ru' ? 'Туры' : language === 'he' ? 'טיולים' : 'View Tours'}
+                <ArrowRight style={{ width: 16, height: 16 }} />
+              </a>
+              <a href="#contact" style={{ display: 'inline-block', padding: '15px 32px', background: 'rgba(247,248,243,0.07)', border: '1.5px solid rgba(247,248,243,0.4)', color: brand.cream, borderRadius: 8, fontWeight: 600, textDecoration: 'none', fontSize: 15 }}>
+                {language === 'ru' ? 'Связаться' : language === 'he' ? 'צרו קשר' : 'Contact Us'}
+              </a>
             </div>
           </div>
+          {/* Route rail — the first five live destinations, numbered like a timetable */}
+          {destinations.length > 0 && (
+            <div className="hero-rail" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(5, destinations.length)}, 1fr)`, borderTop: '1px solid rgba(247,248,243,0.16)' }}>
+              {destinations.slice(0, 5).map((d, i) => (
+                <div key={d.type === 'custom' ? d.id : d.key} style={{ padding: '20px 8px 22px' }}>
+                  <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: brand.onDarkMuted, marginBottom: 6 }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </p>
+                  <p style={{ color: brand.cream, fontSize: 14, fontWeight: 500 }}>
+                    {d.type === 'custom' ? d.title : t.destinations[d.key]?.title}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -1012,22 +1043,22 @@ const LandingPage = () => {
 
       {/* TRIPS */}
       {(tripsLoading || upcomingTrips.length > 0) && siteSettings.showDestinations !== false && (
-        <section id="trips" style={{ order: getSectionOrder('trips'), padding: '5rem 1.5rem', background: '#F5FBFC' }}>
+        <section id="trips" style={{ order: getSectionOrder('trips'), padding: '5rem 1.5rem', background: '#F7F8F3' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             <div style={{ marginBottom: 48 }}>
-              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
                 {language === 'ru' ? '01 — ТУРЫ' : language === 'he' ? '01 — טיולים' : '01 — TOURS'}
               </p>
-              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#073944' }}>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#16294F' }}>
                 {language === 'ru' ? 'Ближайшие туры' : language === 'he' ? 'טיולים קרובים' : 'Upcoming Trips'}
               </h2>
             </div>
             {tripsLoading ? (
               <div style={{ textAlign: 'center', padding: '3rem' }}>
-                <div className="inline-block w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${colors.primary.teal} transparent ${colors.primary.teal} ${colors.primary.teal}` }} />
+                <div className="inline-block w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${brand.blue} transparent ${brand.blue} ${brand.blue}` }} />
               </div>
             ) : upcomingTrips.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#78959D', padding: '3rem', fontSize: 17 }}>
+              <p style={{ textAlign: 'center', color: '#8A92A5', padding: '3rem', fontSize: 17 }}>
                 {language === 'ru' ? 'Нет запланированных туров' : language === 'he' ? 'אין טיולים מתוכננים כרגע' : 'No upcoming trips at the moment'}
               </p>
             ) : (
@@ -1038,14 +1069,14 @@ const LandingPage = () => {
                   const available = Math.max(0, capacity - taken);
                   const tripDate = trip.date?.toDate?.() || (trip.date ? new Date(trip.date) : null);
                   return (
-                    <div key={trip.id} className="hover:-translate-y-1" style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(7,57,68,0.08)', border: '1px solid #D9EBEE', display: 'flex', flexDirection: 'column', transition: 'all 0.3s' }}>
+                    <div key={trip.id} className="hover:-translate-y-1" style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(15,29,58,0.07)', border: '1px solid #DCE0D4', display: 'flex', flexDirection: 'column', transition: 'all 0.3s' }}>
                       <div style={{ padding: '20px 20px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                        <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#073944' }}>{trip.title}</h3>
-                        {trip.price && <span style={{ flexShrink: 0, background: colors.primary.teal, color: 'white', fontWeight: 700, fontSize: 13, padding: '4px 12px', borderRadius: 100 }}>C${trip.price}</span>}
+                        <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#16294F' }}>{trip.title}</h3>
+                        {trip.price && <span style={{ flexShrink: 0, background: brand.blue, color: 'white', fontWeight: 700, fontSize: 13, padding: '4px 12px', borderRadius: 100 }}>C${trip.price}</span>}
                       </div>
                       <div style={{ margin: '0 20px', borderRadius: 12, height: 192, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden', backgroundImage: `url(${trip.websiteImage || getImageForTrip(trip.title)})` }}>
                         {available === 0 && (
-                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(153,27,27,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,29,58,0.62)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <span style={{ color: 'white', fontWeight: 900, fontSize: 22, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '8px 20px', border: '4px solid white', borderRadius: 8, transform: 'rotate(-8deg)', display: 'inline-block' }}>
                               {language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Sold Out'}
                             </span>
@@ -1054,41 +1085,41 @@ const LandingPage = () => {
                       </div>
                       <div style={{ padding: '12px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1, gap: 12 }}>
                         {tripDate && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#78959D' }}>
-                            <CalendarDays style={{ width: 14, height: 14, flexShrink: 0, color: colors.primary.teal }} />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#8A92A5' }}>
+                            <CalendarDays style={{ width: 14, height: 14, flexShrink: 0, color: brand.red }} />
                             {tripDate.toLocaleDateString(language === 'ru' ? 'ru-RU' : language === 'he' ? 'he-IL' : 'en-CA', { day: 'numeric', month: 'long', year: 'numeric' })}
                           </div>
                         )}
-                        {trip.websiteDescription && <p style={{ color: '#3E5F68', fontSize: 14, lineHeight: 1.6 }} className="line-clamp-3">{trip.websiteDescription}</p>}
+                        {trip.websiteDescription && <p style={{ color: '#465372', fontSize: 14, lineHeight: 1.6 }} className="line-clamp-3">{trip.websiteDescription}</p>}
                         {trip.itinerary && (
                           <div>
                             <button
                               onClick={() => setExpandedItinerary(prev => { const next = new Set(prev); next.has(trip.id) ? next.delete(trip.id) : next.add(trip.id); return next; })}
-                              style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: colors.primary.teal, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                              style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: brand.blue, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                             >
                               <span>📋</span>
                               <span>{expandedItinerary.has(trip.id) ? (language === 'ru' ? 'Скрыть маршрут' : language === 'he' ? 'הסתר מסלול' : 'Hide Itinerary') : (language === 'ru' ? 'Посмотреть маршрут' : language === 'he' ? 'הצג מסלול' : 'View Itinerary')}</span>
                               <span style={{ fontSize: 11 }}>{expandedItinerary.has(trip.id) ? '▲' : '▼'}</span>
                             </button>
                             {expandedItinerary.has(trip.id) && (
-                              <div style={{ marginTop: 8, padding: 12, background: '#EAF6F8', borderRadius: 8, border: '1px solid #C6DFE4' }}>
-                                <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, color: '#3E5F68', fontFamily: 'sans-serif', lineHeight: 1.5, margin: 0 }}>{trip.itinerary}</pre>
+                              <div style={{ marginTop: 8, padding: 12, background: '#EFF1E9', borderRadius: 8, border: '1px solid #CBD1C1' }}>
+                                <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, color: '#465372', fontFamily: 'sans-serif', lineHeight: 1.5, margin: 0 }}>{trip.itinerary}</pre>
                               </div>
                             )}
                           </div>
                         )}
                         {trip.showRegistrationCount && capacity > 0 && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ flex: 1, background: '#D9EBEE', borderRadius: 100, height: 6 }}>
-                              <div style={{ height: 6, borderRadius: 100, width: `${Math.min(100, (taken / capacity) * 100)}%`, backgroundColor: taken >= capacity ? '#dc2626' : colors.primary.teal }} />
+                            <div style={{ flex: 1, background: '#DCE0D4', borderRadius: 100, height: 6 }}>
+                              <div style={{ height: 6, borderRadius: 100, width: `${Math.min(100, (taken / capacity) * 100)}%`, backgroundColor: taken >= capacity ? '#8E1F1B' : brand.blue }} />
                             </div>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: '#0A2A33', flexShrink: 0 }}>{taken}/{capacity}</span>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: '#16294F', flexShrink: 0 }}>{taken}/{capacity}</span>
                           </div>
                         )}
                         <button
                           onClick={() => available > 0 && openRegisterModal(trip)}
                           disabled={available === 0}
-                          style={{ marginTop: 'auto', width: '100%', padding: '10px', color: 'white', fontWeight: 600, borderRadius: 8, background: available === 0 ? '#dc2626' : colors.primary.teal, border: 'none', cursor: available === 0 ? 'not-allowed' : 'pointer', fontSize: 14 }}
+                          style={{ marginTop: 'auto', width: '100%', padding: '10px', color: 'white', fontWeight: 600, borderRadius: 8, background: available === 0 ? '#8E1F1B' : brand.blue, border: 'none', cursor: available === 0 ? 'not-allowed' : 'pointer', fontSize: 14 }}
                         >
                           {available === 0 ? (language === 'ru' ? 'Мест нет' : language === 'he' ? 'אין מקומות' : 'Sold Out') : (language === 'ru' ? 'Записаться' : language === 'he' ? 'הירשם' : 'Register Now')}
                         </button>
@@ -1103,17 +1134,17 @@ const LandingPage = () => {
       )}
       {/* DESTINATIONS CAROUSEL */}
       {siteSettings.showDestinations !== false && (
-        <section id="destinations" style={{ padding: '5rem 1.5rem', background: '#EAF6F8' }}>
+        <section id="destinations" style={{ padding: '5rem 1.5rem', background: '#EFF1E9' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             <div style={{ marginBottom: 32 }}>
-              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
                 {language === 'ru' ? '02 — НАПРАВЛЕНИЯ' : language === 'he' ? '02 — יעדים' : '02 — DESTINATIONS'}
               </p>
-              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#073944' }}>{t.destinationsTitle}</h2>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#16294F' }}>{t.destinationsTitle}</h2>
             </div>
             {/* Duration filter */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 36, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#78959D', marginRight: 4 }}>
+              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A92A5', marginRight: 4 }}>
                 {language === 'ru' ? 'ДЛИТЕЛЬНОСТЬ:' : language === 'he' ? 'משך:' : 'DURATION:'}
               </span>
               {[
@@ -1127,9 +1158,9 @@ const LandingPage = () => {
                   onClick={() => { setDestFilter(key); setCarouselIndex(0); }}
                   style={{
                     padding: '5px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600,
-                    cursor: 'pointer', border: `1.5px solid ${destFilter === key ? colors.primary.teal : '#C6DFE4'}`,
-                    background: destFilter === key ? colors.primary.teal : 'transparent',
-                    color: destFilter === key ? 'white' : '#3E5F68',
+                    cursor: 'pointer', border: `1.5px solid ${destFilter === key ? brand.blue : '#CBD1C1'}`,
+                    background: destFilter === key ? brand.blue : 'transparent',
+                    color: destFilter === key ? 'white' : '#465372',
                     transition: 'all 0.2s',
                   }}
                 >
@@ -1143,15 +1174,15 @@ const LandingPage = () => {
                   onClick={() => setCarouselIndex(prev => Math.max(0, prev - 1))}
                   disabled={effectiveCarouselIndex === 0}
                   className="disabled:opacity-30"
-                  style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%) translateX(-16px)', zIndex: 10, width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                  style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%) translateX(-16px)', zIndex: 10, width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #CBD1C1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
                 >
-                  <ChevronLeft style={{ width: 20, height: 20, color: '#0A2A33' }} />
+                  <ChevronLeft style={{ width: 20, height: 20, color: '#16294F' }} />
                 </button>
               )}
               <div style={{ overflow: 'hidden' }}>
                 <div style={{ display: 'flex', transition: 'transform 0.5s ease', transform: `translateX(-${effectiveCarouselIndex * (100 / itemsPerView)}%)` }}>
                   {filteredDestinations.length === 0 ? (
-                    <div style={{ minWidth: '100%', padding: '3rem', textAlign: 'center', color: '#78959D', fontSize: 16 }}>
+                    <div style={{ minWidth: '100%', padding: '3rem', textAlign: 'center', color: '#8A92A5', fontSize: 16 }}>
                       {language === 'ru' ? 'Нет направлений в этой категории' : language === 'he' ? 'אין יעדים בקטגוריה זו' : 'No destinations in this category'}
                     </div>
                   ) : filteredDestinations.map((dest) => {
@@ -1164,54 +1195,54 @@ const LandingPage = () => {
                     const destCardKey = isCustom ? dest.id : dest.key;
                     return (
                     <div key={destCardKey} style={{ flexShrink: 0, padding: '0 12px', width: `${100 / itemsPerView}%` }}>
-                      <div className="hover:-translate-y-2" style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(7,57,68,0.08)', border: '1px solid #D9EBEE', display: 'flex', flexDirection: 'column', height: '100%', transition: 'all 0.3s' }}>
+                      <div className="hover:-translate-y-2" style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(15,29,58,0.07)', border: '1px solid #DCE0D4', display: 'flex', flexDirection: 'column', height: '100%', transition: 'all 0.3s' }}>
                         <div style={{ height: 220, backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${dest.image})`, position: 'relative' }}>
                           <div style={{ position: 'absolute', top: 10, left: 10 }}>
                             <span style={{ fontSize: 22, lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}>{dest.country === 'ca' ? '🇨🇦' : '🌍'}</span>
                           </div>
                         </div>
                         <div style={{ padding: 20, display: 'flex', flexDirection: 'column', flex: 1 }}>
-                          <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#073944', marginBottom: 8 }}>{destTitle}</h3>
-                          <p style={{ color: '#3E5F68', fontSize: 14, lineHeight: 1.6, marginBottom: 12 }} className="line-clamp-3">{destDesc}</p>
+                          <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#16294F', marginBottom: 8 }}>{destTitle}</h3>
+                          <p style={{ color: '#465372', fontSize: 14, lineHeight: 1.6, marginBottom: 12 }} className="line-clamp-3">{destDesc}</p>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
                             {destDuration && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#3E5F68' }}>
-                                <Clock style={{ width: 13, height: 13, color: colors.primary.teal }} />
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#465372' }}>
+                                <Clock style={{ width: 13, height: 13, color: brand.red }} />
                                 <span style={{ fontWeight: 600 }}>{t.duration}:</span> {destDuration}
                               </div>
                             )}
                             {destGroupSize && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#3E5F68' }}>
-                                <Users style={{ width: 13, height: 13, color: colors.primary.teal }} />
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#465372' }}>
+                                <Users style={{ width: 13, height: 13, color: brand.red }} />
                                 <span style={{ fontWeight: 600 }}>{t.groupSize}:</span> {destGroupSize}
                               </div>
                             )}
                           </div>
                           {destHighlights.length > 0 && (
                             <div style={{ marginBottom: 12 }}>
-                              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, fontWeight: 600, color: '#0A2A33', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.highlights}</p>
+                              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, fontWeight: 600, color: '#16294F', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.highlights}</p>
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                 {destHighlights.map((h, i) => (
-                                  <span key={i} style={{ background: '#EAF6F8', color: '#3E5F68', fontSize: 11, padding: '3px 10px', borderRadius: 100, border: '1px solid #C6DFE4' }}>{h}</span>
+                                  <span key={i} style={{ background: '#EFF1E9', color: '#465372', fontSize: 11, padding: '3px 10px', borderRadius: 100, border: '1px solid #CBD1C1' }}>{h}</span>
                                 ))}
                               </div>
                             </div>
                           )}
                           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            <span style={{ background: colors.primary.teal, color: 'white', fontSize: 11, padding: '4px 12px', borderRadius: 100, alignSelf: 'flex-start' }}>🗣️ {t.multiLang}</span>
+                            <span style={{ background: brand.teal, color: 'white', fontSize: 11, padding: '4px 12px', borderRadius: 100, alignSelf: 'flex-start' }}>🗣️ {t.multiLang}</span>
                             <div style={{ display: 'flex', gap: 8 }}>
                               <button
                                 onClick={() => { setQuestionDest({ key: destCardKey, title: destTitle }); setQuestionForm({ name: '', email: '', phone: '', message: '' }); setQuestionSuccess(false); }}
-                                className="hover:bg-[#00BCD4] hover:text-white transition-colors"
-                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, border: `2px solid ${colors.primary.teal}`, color: colors.primary.teal, background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                                className="hover:bg-[#1E396C] hover:text-white transition-colors"
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, border: `2px solid ${brand.blue}`, color: brand.blue, background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
                               >
                                 <MessageCircle style={{ width: 14, height: 14 }} />
                                 {t.askQuestion}
                               </button>
                               <a
                                 href="tel:6473026849"
-                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, border: '2px solid #25D366', color: '#25D366', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
-                                className="hover:bg-[#25D366] hover:text-white transition-colors"
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, border: '2px solid #C92A26', color: '#C92A26', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+                                className="hover:bg-[#C92A26] hover:text-white transition-colors"
                               >
                                 📞 Call us
                               </a>
@@ -1230,16 +1261,16 @@ const LandingPage = () => {
                   onClick={() => setCarouselIndex(prev => Math.min(maxCarouselIndex, prev + 1))}
                   disabled={carouselIndex >= maxCarouselIndex}
                   className="disabled:opacity-30"
-                  style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%) translateX(16px)', zIndex: 10, width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                  style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%) translateX(16px)', zIndex: 10, width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #CBD1C1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
                 >
-                  <ChevronRight style={{ width: 20, height: 20, color: '#0A2A33' }} />
+                  <ChevronRight style={{ width: 20, height: 20, color: '#16294F' }} />
                 </button>
               )}
             </div>
             {canScroll && (
               <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
                 {Array.from({ length: maxCarouselIndex + 1 }).map((_, i) => (
-                  <button key={i} onClick={() => setCarouselIndex(i)} style={{ width: 10, height: 10, borderRadius: '50%', background: i === effectiveCarouselIndex ? colors.primary.teal : '#C6DFE4', transform: i === effectiveCarouselIndex ? 'scale(1.3)' : 'scale(1)', border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0 }} />
+                  <button key={i} onClick={() => setCarouselIndex(i)} style={{ width: 10, height: 10, borderRadius: '50%', background: i === effectiveCarouselIndex ? brand.blue : '#CBD1C1', transform: i === effectiveCarouselIndex ? 'scale(1.3)' : 'scale(1)', border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0 }} />
                 ))}
               </div>
             )}
@@ -1247,7 +1278,7 @@ const LandingPage = () => {
         </section>
       )}
  {/* ── STATS ─────────────────────────────────────────────────── */}
-      <section style={{ background: '#073944', padding: '3rem 1.5rem' }}>
+      <section style={{ background: '#16294F', padding: '3rem 1.5rem' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div className="hero-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {[
@@ -1266,26 +1297,26 @@ const LandingPage = () => {
       </section>
       {/* REVIEWS */}
       {(siteSettings.showTestimonials !== false || (people.length > 0 && siteSettings.showPeople !== false)) && (
-        <section style={{ order: getSectionOrder('reviews'), padding: '5rem 1.5rem', background: '#F5FBFC' }}>
+        <section style={{ order: getSectionOrder('reviews'), padding: '5rem 1.5rem', background: '#F7F8F3' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             {/* Editorial header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 32, marginBottom: 48, borderBottom: '1px solid #D9EBEE', paddingBottom: 32, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 32, marginBottom: 48, borderBottom: '1px solid #DCE0D4', paddingBottom: 32, flexWrap: 'wrap' }}>
               <div>
-                <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>
+                <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 12 }}>
                   {language === 'ru' ? '03 / Голоса ОТ ГОСТЕЙ' : language === 'he' ? '03 / קולות מאורחים' : '03 / Voices FROM GUESTS'}
                 </p>
-                <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3.25rem)', letterSpacing: '-0.02em', color: '#073944', lineHeight: 1.1 }}>
+                <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3.25rem)', letterSpacing: '-0.02em', color: '#16294F', lineHeight: 1.1 }}>
                   {language === 'ru' ? <>Письма <em style={{ fontStyle: 'italic' }}>с дороги.</em></> : language === 'he' ? <>מכתבים <em style={{ fontStyle: 'italic' }}>מהדרך.</em></> : <>Letters from the <em style={{ fontStyle: 'italic' }}>road.</em></>}
                 </h2>
               </div>
-              <p style={{ color: '#3E5F68', fontSize: 14, lineHeight: 1.65, maxWidth: '30ch', textAlign: language === 'he' ? 'left' : 'right', flexShrink: 0 }} className="hidden sm:block">
+              <p style={{ color: '#465372', fontSize: 14, lineHeight: 1.65, maxWidth: '30ch', textAlign: language === 'he' ? 'left' : 'right', flexShrink: 0 }} className="hidden sm:block">
                 {language === 'ru' ? 'Мы отправляем открытку домой после каждой поездки. Вот что приходит в ответ.' : language === 'he' ? 'אנו שולחים גלויה כתובה ביד לכל טיול. הנה מה שחוזר.' : "We send a handwritten postcard home for every trip. Here's what comes back."}
               </p>
             </div>
             {/* Google Rating Badge */}
             {siteSettings.googleRating && (
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 48 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16, background: 'white', borderRadius: 16, boxShadow: '0 4px 24px rgba(7,57,68,0.10)', border: '1px solid #D9EBEE', padding: '18px 28px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16, background: 'white', borderRadius: 16, boxShadow: '0 4px 24px rgba(15,29,58,0.09)', border: '1px solid #DCE0D4', padding: '18px 28px', flexWrap: 'wrap', justifyContent: 'center' }}>
                   {/* Google G logo */}
                   <svg width="32" height="32" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1310,32 +1341,32 @@ const LandingPage = () => {
                           </svg>
                         );
                       })}
-                      <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 16, fontWeight: 700, color: '#073944', marginLeft: 6 }}>
+                      <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 16, fontWeight: 700, color: '#16294F', marginLeft: 6 }}>
                         {Number(siteSettings.googleRating).toFixed(1)}
                       </span>
                     </div>
                     {siteSettings.googleReviewCount && (
-                      <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: '#78959D', letterSpacing: '0.04em' }}>
+                      <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: '#8A92A5', letterSpacing: '0.04em' }}>
                         {siteSettings.googleReviewCount} {language === 'ru' ? 'отзывов на Google' : language === 'he' ? 'ביקורות ב-Google' : 'reviews on Google'}
                       </p>
                     )}
                   </div>
                   {/* Divider */}
-                  <div style={{ width: 1, height: 40, background: '#D9EBEE', flexShrink: 0 }} />
+                  <div style={{ width: 1, height: 40, background: '#DCE0D4', flexShrink: 0 }} />
                   {/* Review CTA */}
                   {siteSettings.googleReviewUrl ? (
                     <a
                       href={siteSettings.googleReviewUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#073944', color: 'white', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', transition: 'opacity 0.2s' }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#16294F', color: 'white', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', transition: 'opacity 0.2s' }}
                       onMouseOver={e => e.currentTarget.style.opacity = '0.85'}
                       onMouseOut={e => e.currentTarget.style.opacity = '1'}
                     >
                       {language === 'ru' ? 'Оставить отзыв →' : language === 'he' ? 'כתוב ביקורת →' : 'Leave a review →'}
                     </a>
                   ) : (
-                    <p style={{ fontSize: 13, color: '#3E5F68', fontWeight: 600 }}>
+                    <p style={{ fontSize: 13, color: '#465372', fontWeight: 600 }}>
                       {language === 'ru' ? 'Оставьте отзыв на Google' : language === 'he' ? 'דרגו אותנו ב-Google' : 'Rate us on Google'}
                     </p>
                   )}
@@ -1365,16 +1396,16 @@ const LandingPage = () => {
                       {allCards.map((c, i) => {
                         const inits = c.initials || (c.author || '').split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase();
                         return (
-                          <div key={i} style={{ minWidth: '100%', background: '#F5FBFC', border: '1px solid #D9EBEE', borderRadius: 20, padding: '44px 48px 40px', display: 'flex', flexDirection: 'column', gap: 24, boxSizing: 'border-box' }}>
-                            <span style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 60, lineHeight: 1, color: colors.primary.teal, opacity: 0.45, fontStyle: 'italic', marginTop: -12, display: 'block' }}>"</span>
-                            <p style={{ color: '#0A2A33', fontSize: 17, lineHeight: 1.7, fontStyle: 'italic', textAlign: 'center' }}>{c.text}</p>
+                          <div key={i} style={{ minWidth: '100%', background: '#F7F8F3', border: '1px solid #DCE0D4', borderRadius: 20, padding: '44px 48px 40px', display: 'flex', flexDirection: 'column', gap: 24, boxSizing: 'border-box' }}>
+                            <span style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 60, lineHeight: 1, color: brand.red, opacity: 0.45, fontStyle: 'italic', marginTop: -12, display: 'block' }}>"</span>
+                            <p style={{ color: '#16294F', fontSize: 17, lineHeight: 1.7, fontStyle: 'italic', textAlign: 'center' }}>{c.text}</p>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
-                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#D9EBEE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, fontWeight: 600, color: '#3E5F68' }}>{inits || '✦'}</span>
+                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#DCE0D4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, fontWeight: 600, color: '#465372' }}>{inits || '✦'}</span>
                               </div>
                               <div>
-                                <p style={{ fontWeight: 600, fontSize: 15, color: '#073944' }}>{c.author}</p>
-                                {c.trip && <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: '#78959D', marginTop: 2 }}>{c.trip}</p>}
+                                <p style={{ fontWeight: 600, fontSize: 15, color: '#16294F' }}>{c.author}</p>
+                                {c.trip && <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: '#8A92A5', marginTop: 2 }}>{c.trip}</p>}
                               </div>
                             </div>
                           </div>
@@ -1384,15 +1415,15 @@ const LandingPage = () => {
                   </div>
                   {allCards.length > 1 && (
                     <>
-                      <button onClick={goBack} style={{ position: 'absolute', left: -24, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', zIndex: 2 }}>
-                        <ChevronLeft style={{ width: 20, height: 20, color: '#0A2A33' }} />
+                      <button onClick={goBack} style={{ position: 'absolute', left: -24, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'white', border: '1px solid #CBD1C1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', zIndex: 2 }}>
+                        <ChevronLeft style={{ width: 20, height: 20, color: '#16294F' }} />
                       </button>
-                      <button onClick={goNext} style={{ position: 'absolute', right: -24, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'white', border: '1px solid #C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', zIndex: 2 }}>
-                        <ChevronRight style={{ width: 20, height: 20, color: '#0A2A33' }} />
+                      <button onClick={goNext} style={{ position: 'absolute', right: -24, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'white', border: '1px solid #CBD1C1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', zIndex: 2 }}>
+                        <ChevronRight style={{ width: 20, height: 20, color: '#16294F' }} />
                       </button>
                       <div style={{ display: 'flex', justifyContent: 'center', gap: 7, marginTop: 28 }}>
                         {allCards.map((_, i) => (
-                          <button key={i} onClick={() => setReviewsIdx(i)} style={{ width: 8, height: 8, borderRadius: '50%', background: i === idx ? colors.primary.teal : '#C6DFE4', border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0, transform: i === idx ? 'scale(1.35)' : 'scale(1)' }} />
+                          <button key={i} onClick={() => setReviewsIdx(i)} style={{ width: 8, height: 8, borderRadius: '50%', background: i === idx ? brand.red : '#CBD1C1', border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0, transform: i === idx ? 'scale(1.35)' : 'scale(1)' }} />
                         ))}
                       </div>
                     </>
@@ -1406,14 +1437,14 @@ const LandingPage = () => {
 
       {/* SOCIAL */}
       {siteSettings.showSocial !== false && (
-        <section style={{ order: getSectionOrder('social'), padding: '5rem 1.5rem', background: '#EAF6F8' }}>
+        <section style={{ order: getSectionOrder('social'), padding: '5rem 1.5rem', background: '#EFF1E9' }}>
           <div style={{ maxWidth: 960, margin: '0 auto', textAlign: 'center' }}>
             <div style={{ marginBottom: 40 }}>
-              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
                 {language === 'ru' ? '04 — СОЦСЕТИ' : language === 'he' ? '04 — רשתות' : '04 — SOCIAL'}
               </p>
-              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#073944', marginBottom: 12 }}>{t.socialTitle}</h2>
-              <p style={{ color: '#3E5F68', fontSize: 16 }}>{t.socialDesc}</p>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#16294F', marginBottom: 12 }}>{t.socialTitle}</h2>
+              <p style={{ color: '#465372', fontSize: 16 }}>{t.socialDesc}</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="https://www.facebook.com/Ivritours/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: '#1877F2', color: 'white', borderRadius: 8, fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
@@ -1429,21 +1460,21 @@ const LandingPage = () => {
 
       {/* BLOG */}
       {blogPosts.length > 0 && siteSettings.showBlog !== false && (
-        <section style={{ order: getSectionOrder('blog'), padding: '5rem 1.5rem', background: '#EAF6F8' }}>
+        <section style={{ order: getSectionOrder('blog'), padding: '5rem 1.5rem', background: '#EFF1E9' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             {/* Editorial header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, marginBottom: 40, borderBottom: '1px solid #D9EBEE', paddingBottom: 32, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, marginBottom: 40, borderBottom: '1px solid #DCE0D4', paddingBottom: 32, flexWrap: 'wrap' }}>
               <div>
-                <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>
+                <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 12 }}>
                   {language === 'ru' ? '05 / Журнал ПОЛЕВЫЕ ЗАМЕТКИ' : language === 'he' ? '05 / יומן הערות שטח' : '05 / Journal FIELD NOTES'}
                 </p>
-                <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3.25rem)', letterSpacing: '-0.02em', color: '#073944', lineHeight: 1.1 }}>
+                <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3.25rem)', letterSpacing: '-0.02em', color: '#16294F', lineHeight: 1.1 }}>
                   {language === 'ru' ? <>Отправления <em style={{ fontStyle: 'italic' }}>из студии.</em></> : language === 'he' ? <>שגרים <em style={{ fontStyle: 'italic' }}>מהאולפן.</em></> : <>Dispatches from the <em style={{ fontStyle: 'italic' }}>studio.</em></>}
                 </h2>
               </div>
               <button
                 onClick={() => navigate('/blog')}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#0A2A33', fontSize: 14, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 4, paddingBottom: 4, flexShrink: 0 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#16294F', fontSize: 14, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 4, paddingBottom: 4, flexShrink: 0 }}
               >
                 {language === 'ru' ? 'Все записи →' : language === 'he' ? 'כל הכתבות →' : 'Read all entries →'}
               </button>
@@ -1462,23 +1493,23 @@ const LandingPage = () => {
                       {post.images?.[0] ? (
                         <img src={post.images[0]} alt={post.title} className="group-hover:scale-105" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', background: '#C6DFE4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <BookOpen style={{ width: 40, height: 40, color: '#78959D' }} />
+                        <div style={{ width: '100%', height: '100%', background: '#CBD1C1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <BookOpen style={{ width: 40, height: 40, color: '#8A92A5' }} />
                         </div>
                       )}
                       <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
-                        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.92)', background: 'rgba(7,57,68,0.72)', borderRadius: 4, backdropFilter: 'blur(4px)', padding: '3px 8px', display: 'inline-block', textTransform: 'lowercase' }}>
+                        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.92)', background: 'rgba(15,29,58,0.72)', borderRadius: 4, backdropFilter: 'blur(4px)', padding: '3px 8px', display: 'inline-block', textTransform: 'lowercase' }}>
                           journal · {category.toLowerCase()}
                         </span>
                       </div>
                     </div>
-                    <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#78959D', marginBottom: 10 }}>
+                    <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 10 }}>
                       {category.toUpperCase()}{dateStr ? ` · ${dateStr}` : ''} · {readTime} min read
                     </p>
-                    <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#073944', marginBottom: 8, lineHeight: 1.3 }} className="group-hover:underline">
+                    <h3 style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 20, fontWeight: 500, color: '#16294F', marginBottom: 8, lineHeight: 1.3 }} className="group-hover:underline">
                       {post.title}
                     </h3>
-                    {post.excerpt && <p style={{ color: '#3E5F68', fontSize: 14, lineHeight: 1.6 }} className="line-clamp-2">{post.excerpt}</p>}
+                    {post.excerpt && <p style={{ color: '#465372', fontSize: 14, lineHeight: 1.6 }} className="line-clamp-2">{post.excerpt}</p>}
                   </div>
                 );
               })}
@@ -1497,10 +1528,10 @@ const LandingPage = () => {
             @media (max-width: 640px) { .nav-logo { height: 60px !important; } }
           `}</style>
           <div style={{ maxWidth: 1280, margin: '0 auto', textAlign: 'center', padding: '0 1.5rem', marginBottom: 40 }}>
-            <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+            <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
               {language === 'ru' ? '— ПАРТНЁРЫ' : language === 'he' ? '— שותפים' : '— PARTNERS'}
             </p>
-            <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.02em', color: '#073944' }}>
+            <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.02em', color: '#16294F' }}>
               {language === 'ru' ? 'С кем мы работаем' : language === 'he' ? 'עם מי אנו עובדים' : 'Who We Work With'}
             </h2>
           </div>
@@ -1517,9 +1548,9 @@ const LandingPage = () => {
                       cursor: 'pointer',
                       padding: '12px 20px',
                       borderRadius: 14,
-                      border: isSelected ? '2px solid #00BCD4' : '2px solid transparent',
-                      background: isSelected ? '#EAF6F8' : 'transparent',
-                      boxShadow: isSelected ? '0 4px 16px rgba(0,188,212,0.22)' : 'none',
+                      border: isSelected ? '2px solid #1E396C' : '2px solid transparent',
+                      background: isSelected ? '#EFF1E9' : 'transparent',
+                      boxShadow: isSelected ? '0 4px 16px rgba(30,57,108,0.22)' : 'none',
                       transition: 'border 0.2s, background 0.2s, box-shadow 0.2s',
                       flexShrink: 0,
                       textDecoration: 'none',
@@ -1539,14 +1570,14 @@ const LandingPage = () => {
                         }}
                       />
                     ) : (
-                      <div style={{ height: 80, display: 'flex', alignItems: 'center', fontSize: 20, fontWeight: 700, color: isSelected ? '#00BCD4' : '#78959D', letterSpacing: '-0.02em', transition: 'color 0.2s' }}>
+                      <div style={{ height: 80, display: 'flex', alignItems: 'center', fontSize: 20, fontWeight: 700, color: isSelected ? '#1E396C' : '#8A92A5', letterSpacing: '-0.02em', transition: 'color 0.2s' }}>
                         {p.name}
                       </div>
                     )}
-                    <span style={{ fontSize: 11, fontWeight: 600, color: isSelected ? '#00BCD4' : '#78959D', transition: 'color 0.2s' }}>{p.name}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: isSelected ? '#1E396C' : '#8A92A5', transition: 'color 0.2s' }}>{p.name}</span>
                     {isSelected && p.website && (
                       <a href={p.website} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                        style={{ fontSize: 11, color: '#00BCD4', textDecoration: 'underline', marginTop: 2 }}>
+                        style={{ fontSize: 11, color: '#1E396C', textDecoration: 'underline', marginTop: 2 }}>
                         Visit site →
                       </a>
                     )}
@@ -1560,13 +1591,13 @@ const LandingPage = () => {
 
       {/* STAFF — Our Staff */}
       {siteSettings.showDrivers !== false && drivers.filter(d => d.visible !== false).length > 0 && (
-        <section style={{ order: getSectionOrder('drivers'), padding: '5rem 1.5rem', background: '#F5FBFC' }}>
+        <section style={{ order: getSectionOrder('drivers'), padding: '5rem 1.5rem', background: '#F7F8F3' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
                 {language === 'ru' ? '— КОМАНДА' : language === 'he' ? '— הצוות שלנו' : '— OUR TEAM'}
               </p>
-              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.02em', color: '#073944' }}>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.02em', color: '#16294F' }}>
                 {language === 'ru' ? 'Наш персонал' : language === 'he' ? 'הצוות שלנו' : 'Our Staff'}
               </h2>
             </div>
@@ -1582,17 +1613,17 @@ const LandingPage = () => {
               return (
                 <div className={isSingle ? 'staff-grid-single' : 'staff-grid'}>
                   {visibleStaff.map(d => (
-                    <div key={d.id} style={{ background: 'white', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 20px rgba(7,57,68,0.08)', border: '1px solid #D9EBEE' }}>
+                    <div key={d.id} style={{ background: 'white', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 20px rgba(15,29,58,0.07)', border: '1px solid #DCE0D4' }}>
                       {d.photoUrl ? (
                         <img src={d.photoUrl} alt={d.name} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', objectPosition: 'top', display: 'block' }} />
                       ) : (
-                        <div style={{ aspectRatio: '1/1', background: '#EAF6F8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>👤</div>
+                        <div style={{ aspectRatio: '1/1', background: '#EFF1E9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>👤</div>
                       )}
                       <div style={{ padding: '10px 12px 14px' }}>
-                        <p style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 15, fontWeight: 500, color: '#073944', marginBottom: 2 }}>{d.name}</p>
-                        {d.since && <p style={{ fontSize: 10, color: colors.primary.teal, fontWeight: 600, marginBottom: 4 }}>Since {d.since}</p>}
-                        {d.languages && <p style={{ fontSize: 10, color: '#78959D', marginBottom: 4 }}>🌐 {d.languages}</p>}
-                        {d.bio && <p style={{ fontSize: 11, color: '#3E5F68', lineHeight: 1.5 }}>{d.bio}</p>}
+                        <p style={{ fontFamily: '"Fraunces", Georgia, serif', fontSize: 15, fontWeight: 500, color: '#16294F', marginBottom: 2 }}>{d.name}</p>
+                        {d.since && <p style={{ fontSize: 10, color: brand.blue, fontWeight: 600, marginBottom: 4 }}>Since {d.since}</p>}
+                        {d.languages && <p style={{ fontSize: 10, color: '#8A92A5', marginBottom: 4 }}>🌐 {d.languages}</p>}
+                        {d.bio && <p style={{ fontSize: 11, color: '#465372', lineHeight: 1.5 }}>{d.bio}</p>}
                       </div>
                     </div>
                   ))}
@@ -1605,48 +1636,48 @@ const LandingPage = () => {
 
       {/* CONTACT */}
       {siteSettings.showContact !== false && (
-        <section id="contact" style={{ order: getSectionOrder('contact'), padding: '5rem 1.5rem', background: '#EAF6F8' }}>
+        <section id="contact" style={{ order: getSectionOrder('contact'), padding: '5rem 1.5rem', background: '#EFF1E9' }}>
           <div style={{ maxWidth: 768, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 8 }}>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
                 {language === 'ru' ? '06 — КОНТАКТЫ' : language === 'he' ? '06 — יצירת קשר' : '06 — CONTACT'}
               </p>
-              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#073944' }}>{t.contactTitle}</h2>
+              <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#16294F' }}>{t.contactTitle}</h2>
               <button
                 onClick={() => setContactOpen(p => !p)}
-                style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: colors.primary.teal, color: 'white', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
+                style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: brand.blue, color: 'white', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
               >
                 {contactOpen ? (language === 'ru' ? 'Скрыть форму' : language === 'he' ? 'הסתר טופס' : 'Hide Form') : (language === 'ru' ? 'Написать нам' : language === 'he' ? 'פתח טופס' : 'Show Form')}
                 <ChevronDown style={{ width: 16, height: 16, transform: contactOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
               </button>
             </div>
             <div style={{ display: contactOpen ? 'block' : 'none' }}>
-              <form onSubmit={handleSubmit} style={{ background: 'white', borderRadius: 16, boxShadow: '0 4px 20px rgba(7,57,68,0.08)', padding: 32, border: '1px solid #D9EBEE' }}>
+              <form onSubmit={handleSubmit} style={{ background: 'white', borderRadius: 16, boxShadow: '0 4px 20px rgba(15,29,58,0.07)', padding: 32, border: '1px solid #DCE0D4' }}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: 24 }}>
                   <div>
-                    <label style={{ display: 'block', fontWeight: 600, color: '#0A2A33', marginBottom: 8, fontSize: 14 }}>{t.nameLabel} *</label>
-                    <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="focus:border-[#00BCD4]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #D9EBEE', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
+                    <label style={{ display: 'block', fontWeight: 600, color: '#16294F', marginBottom: 8, fontSize: 14 }}>{t.nameLabel} *</label>
+                    <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="focus:border-[#1E396C]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #DCE0D4', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontWeight: 600, color: '#0A2A33', marginBottom: 8, fontSize: 14 }}>{t.emailLabel} *</label>
-                    <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="focus:border-[#00BCD4]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #D9EBEE', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
+                    <label style={{ display: 'block', fontWeight: 600, color: '#16294F', marginBottom: 8, fontSize: 14 }}>{t.emailLabel} *</label>
+                    <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="focus:border-[#1E396C]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #DCE0D4', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: 24 }}>
                   <div>
-                    <label style={{ display: 'block', fontWeight: 600, color: '#0A2A33', marginBottom: 8, fontSize: 14 }}>{t.phoneLabel}</label>
-                    <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="focus:border-[#00BCD4]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #D9EBEE', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
+                    <label style={{ display: 'block', fontWeight: 600, color: '#16294F', marginBottom: 8, fontSize: 14 }}>{t.phoneLabel}</label>
+                    <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="focus:border-[#1E396C]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #DCE0D4', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontWeight: 600, color: '#0A2A33', marginBottom: 8, fontSize: 14 }}>{t.destinationLabel}</label>
-                    <input type="text" value={formData.destination} onChange={(e) => setFormData({ ...formData, destination: e.target.value })} className="focus:border-[#00BCD4]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #D9EBEE', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
+                    <label style={{ display: 'block', fontWeight: 600, color: '#16294F', marginBottom: 8, fontSize: 14 }}>{t.destinationLabel}</label>
+                    <input type="text" value={formData.destination} onChange={(e) => setFormData({ ...formData, destination: e.target.value })} className="focus:border-[#1E396C]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #DCE0D4', borderRadius: 8, outline: 'none', fontSize: 14, boxSizing: 'border-box' }} />
                   </div>
                 </div>
                 <div style={{ marginBottom: 24 }}>
-                  <label style={{ display: 'block', fontWeight: 600, color: '#0A2A33', marginBottom: 8, fontSize: 14 }}>{t.messageLabel} *</label>
-                  <textarea required rows={5} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="focus:border-[#00BCD4]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #D9EBEE', borderRadius: 8, outline: 'none', fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }} />
+                  <label style={{ display: 'block', fontWeight: 600, color: '#16294F', marginBottom: 8, fontSize: 14 }}>{t.messageLabel} *</label>
+                  <textarea required rows={5} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="focus:border-[#1E396C]" style={{ width: '100%', padding: '12px 16px', border: '2px solid #DCE0D4', borderRadius: 8, outline: 'none', fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }} />
                 </div>
-                <button type="submit" disabled={sending} style={{ width: '100%', padding: '14px', color: 'white', fontSize: 16, fontWeight: 700, borderRadius: 8, background: colors.primary.teal, border: 'none', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? 0.5 : 1 }}>
+                <button type="submit" disabled={sending} style={{ width: '100%', padding: '14px', color: 'white', fontSize: 16, fontWeight: 700, borderRadius: 8, background: brand.blue, border: 'none', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? 0.5 : 1 }}>
                   {sending ? (language === 'ru' ? 'Отправка...' : language === 'he' ? 'שולח...' : 'Sending...') : t.submitBtn}
                 </button>
               </form>
@@ -1659,47 +1690,49 @@ const LandingPage = () => {
       {/* ── End orderable sections ──────────────────────────────── */}
 
       {/* FOOTER */}
-      <footer style={{ background: '#073944', color: 'white', padding: '4rem 1.5rem 2rem' }}>
+      <footer style={{ background: brand.navy, color: brand.cream, padding: '4rem 1.5rem 2rem' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <div style={{ borderBottom: '1px solid rgba(198,223,228,0.15)', paddingBottom: '2rem', marginBottom: '2.5rem' }}>
-            <div className="footer-wordmark" style={{ fontFamily: '"Fraunces", Georgia, serif', fontStyle: 'italic', fontWeight: 350, fontSize: 'clamp(1.5rem, 4vw, 3rem)', lineHeight: 0.85, color: '#EAF6F8', letterSpacing: '-0.03em', opacity: 0.88 }}>
-              IVRITours
+          <div style={{ borderBottom: '1px solid rgba(247,248,243,0.15)', paddingBottom: '2rem', marginBottom: '2.5rem', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
+            <div className="footer-wordmark" style={{ fontFamily: '"Fraunces", Georgia, serif', fontStyle: 'italic', fontWeight: 350, fontSize: 'clamp(1.5rem, 4vw, 3rem)', lineHeight: 0.85, color: brand.cream, letterSpacing: '-0.03em', opacity: 0.9 }}>
+              IVRYTOURS
             </div>
+            {/* Light mark — the navy primary logo would disappear on this band */}
+            <img className="footer-mark" src={siteLogoLight} alt="IVRYTOURS INC" style={{ height: 96, width: 'auto', display: 'block', opacity: 0.95 }} />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8" style={{ marginBottom: '2.5rem' }}>
             <div>
-              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>Tours</p>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: brand.onDarkMuted, marginBottom: 12 }}>Tours</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {destinations.slice(0, 4).map(d => <span key={d.type === 'custom' ? d.id : d.key} style={{ color: '#C6DFE4', fontSize: 14 }}>{d.type === 'custom' ? d.title : t.destinations[d.key]?.title}</span>)}
+                {destinations.slice(0, 4).map(d => <span key={d.type === 'custom' ? d.id : d.key} style={{ color: '#C8D0E2', fontSize: 14 }}>{d.type === 'custom' ? d.title : t.destinations[d.key]?.title}</span>)}
               </div>
             </div>
             <div>
-              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>{language === 'ru' ? 'Ещё' : language === 'he' ? 'עוד' : 'More'}</p>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: brand.onDarkMuted, marginBottom: 12 }}>{language === 'ru' ? 'Ещё' : language === 'he' ? 'עוד' : 'More'}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {destinations.slice(4).map(d => <span key={d.type === 'custom' ? d.id : d.key} style={{ color: '#C6DFE4', fontSize: 14 }}>{d.type === 'custom' ? d.title : t.destinations[d.key]?.title}</span>)}
+                {destinations.slice(4).map(d => <span key={d.type === 'custom' ? d.id : d.key} style={{ color: '#C8D0E2', fontSize: 14 }}>{d.type === 'custom' ? d.title : t.destinations[d.key]?.title}</span>)}
               </div>
             </div>
             <div>
-              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>{language === 'ru' ? 'Соцсети' : language === 'he' ? 'עקבו' : 'Follow'}</p>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: brand.onDarkMuted, marginBottom: 12 }}>{language === 'ru' ? 'Соцсети' : language === 'he' ? 'עקבו' : 'Follow'}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <a href="https://www.facebook.com/Ivritours/" target="_blank" rel="noopener noreferrer" style={{ color: '#C6DFE4', fontSize: 14, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}><Facebook style={{ width: 14, height: 14 }} />Facebook</a>
-                <a href="https://www.instagram.com/ivritours_ca/" target="_blank" rel="noopener noreferrer" style={{ color: '#C6DFE4', fontSize: 14, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}><Instagram style={{ width: 14, height: 14 }} />Instagram</a>
+                <a href="https://www.facebook.com/Ivritours/" target="_blank" rel="noopener noreferrer" style={{ color: '#C8D0E2', fontSize: 14, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}><Facebook style={{ width: 14, height: 14 }} />Facebook</a>
+                <a href="https://www.instagram.com/ivritours_ca/" target="_blank" rel="noopener noreferrer" style={{ color: '#C8D0E2', fontSize: 14, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}><Instagram style={{ width: 14, height: 14 }} />Instagram</a>
               </div>
             </div>
             <div>
-              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#78959D', marginBottom: 12 }}>{language === 'ru' ? 'Прочее' : language === 'he' ? 'כללי' : 'General'}</p>
+              <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: brand.onDarkMuted, marginBottom: 12 }}>{language === 'ru' ? 'Прочее' : language === 'he' ? 'כללי' : 'General'}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button onClick={() => navigate('/gift-card-purchase')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C6DFE4', fontSize: 14, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, padding: 0 }}>
+                <button onClick={() => navigate('/gift-card-purchase')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C8D0E2', fontSize: 14, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, padding: 0 }}>
                   <Gift style={{ width: 14, height: 14 }} />{tGift.purchaseGiftCard}
                 </button>
-                <button onClick={() => setShowTerms(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C6DFE4', fontSize: 14, textAlign: 'left', padding: 0 }}>
+                <button onClick={() => setShowTerms(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C8D0E2', fontSize: 14, textAlign: 'left', padding: 0 }}>
                   {language === 'he' ? 'תנאי שימוש' : language === 'ru' ? 'Условия использования' : 'Terms of Use'}
                 </button>
               </div>
             </div>
           </div>
-          <div style={{ borderTop: '1px solid rgba(198,223,228,0.15)', paddingTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-            <p style={{ color: '#78959D', fontSize: 13 }}>© 2026 IVRITours. {t.footerText}</p>
+          <div style={{ borderTop: '1px solid rgba(247,248,243,0.15)', paddingTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <p style={{ color: brand.onDarkMuted, fontSize: 13 }}>© 2026 IVRYTOURS INC. {t.footerText}</p>
             <div className="[&_button]:!text-white [&_button]:!border-white/20 [&_button]:hover:!bg-white/10">
               <LanguageSelector />
             </div>
@@ -1732,7 +1765,7 @@ const LandingPage = () => {
 
               {/* Cancellation Policy */}
               <div>
-                <h3 className="text-base font-bold text-gray-900 mb-3" style={{ color: colors.primary.teal }}>Cancellation Policy</h3>
+                <h3 className="text-base font-bold text-gray-900 mb-3" style={{ color: brand.blue }}>Cancellation Policy</h3>
                 <ol className="list-decimal list-inside space-y-2">
                   <li>Cancellations made <strong>7 days or more</strong> before the trip date will receive a full refund.</li>
                   <li>Cancellations made <strong>4 days</strong> before the trip date will receive a <strong>50% refund</strong>.</li>
@@ -1746,13 +1779,13 @@ const LandingPage = () => {
 
               {/* Waiver */}
               <div>
-                <h3 className="text-base font-bold text-gray-900 mb-3" style={{ color: colors.primary.teal }}>Waiver of Liability & Assumption of Risk</h3>
-                <p className="mb-3">By participating in any IVRITours trip or activity, you acknowledge and agree to the following:</p>
+                <h3 className="text-base font-bold text-gray-900 mb-3" style={{ color: brand.blue }}>Waiver of Liability & Assumption of Risk</h3>
+                <p className="mb-3">By participating in any IVRYTOURS INC trip or activity, you acknowledge and agree to the following:</p>
                 <ol className="list-decimal list-inside space-y-2">
                   <li>You are voluntarily participating and understand that participation involves inherent risks, including but not limited to personal injury, property damage, or death.</li>
-                  <li>You <strong>waive, release, and discharge</strong> IVRITours, its officers, employees, and agents from any and all liability for any loss, damage, injury, or death that may occur during your participation.</li>
+                  <li>You <strong>waive, release, and discharge</strong> IVRYTOURS INC, its officers, employees, and agents from any and all liability for any loss, damage, injury, or death that may occur during your participation.</li>
                   <li>You <strong>assume all risks</strong> associated with participation, whether known or unknown.</li>
-                  <li>You agree to <strong>indemnify and hold harmless</strong> IVRITours from any claims, actions, or losses arising from your participation.</li>
+                  <li>You agree to <strong>indemnify and hold harmless</strong> IVRYTOURS INC from any claims, actions, or losses arising from your participation.</li>
                   <li>You <strong>consent</strong> to receive emergency medical treatment if necessary.</li>
                 </ol>
               </div>
@@ -1761,8 +1794,8 @@ const LandingPage = () => {
 
               {/* General */}
               <div>
-                <h3 className="text-base font-bold text-gray-900 mb-3" style={{ color: colors.primary.teal }}>General</h3>
-                <p>These terms apply to all trips and activities organized by IVRITours. By registering for a trip you confirm that you have read, understood, and agree to these terms in full.</p>
+                <h3 className="text-base font-bold text-gray-900 mb-3" style={{ color: brand.blue }}>General</h3>
+                <p>These terms apply to all trips and activities organized by IVRYTOURS INC. By registering for a trip you confirm that you have read, understood, and agree to these terms in full.</p>
                 <p className="mt-2">For questions, contact us through the contact form on this website.</p>
               </div>
             </div>
@@ -1771,7 +1804,7 @@ const LandingPage = () => {
               <button
                 onClick={() => setShowTerms(false)}
                 className="w-full py-2.5 rounded-xl text-white font-semibold text-sm hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: colors.primary.teal }}
+                style={{ backgroundColor: brand.blue }}
               >
                 Close
               </button>
@@ -1781,17 +1814,17 @@ const LandingPage = () => {
       )}
 
       {showBackToTop && (
-        <button onClick={() => navigate('/gift-card-purchase')} className="animate-float" style={{ position: 'fixed', bottom: 32, left: 32, background: 'white', borderRadius: '50%', boxShadow: '0 10px 30px rgba(0,188,212,0.3)', padding: 16, border: 'none', cursor: 'pointer', zIndex: 50 }} title={language === 'ru' ? 'Купить подарочную карту' : language === 'he' ? 'קנה כרטיס מתנה' : 'Purchase Gift Card'}>
-          <Gift style={{ width: 32, height: 32, color: colors.primary.teal }} />
+        <button onClick={() => navigate('/gift-card-purchase')} className="animate-float" style={{ position: 'fixed', bottom: 32, left: 32, background: 'white', borderRadius: '50%', boxShadow: '0 10px 30px rgba(30,57,108,0.28)', padding: 16, border: 'none', cursor: 'pointer', zIndex: 50 }} title={language === 'ru' ? 'Купить подарочную карту' : language === 'he' ? 'קנה כרטיס מתנה' : 'Purchase Gift Card'}>
+          <Gift style={{ width: 32, height: 32, color: brand.red }} />
         </button>
       )}
 
       <div style={{ position: 'fixed', top: 96, right: 16, zIndex: 50 }}>
-        <button onClick={() => setShowAccessibility(!showAccessibility)} style={{ background: '#2563EB', color: 'white', borderRadius: '50%', padding: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: 'none', cursor: 'pointer' }} aria-label="Accessibility Menu">
+        <button onClick={() => setShowAccessibility(!showAccessibility)} style={{ background: '#1E396C', color: 'white', borderRadius: '50%', padding: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: 'none', cursor: 'pointer' }} aria-label="Accessibility Menu">
           <Eye style={{ width: 24, height: 24 }} />
         </button>
         {showAccessibility && (
-          <div style={{ position: 'absolute', top: 56, right: 0, background: 'white', borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', padding: 16, width: 256, border: '2px solid #2563EB' }}>
+          <div style={{ position: 'absolute', top: 56, right: 0, background: 'white', borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', padding: 16, width: 256, border: '2px solid #1E396C' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h3 style={{ fontWeight: 700, fontSize: 18 }}>{language === 'ru' ? 'Доступность' : language === 'he' ? 'נגישות' : 'Accessibility'}</h3>
               <button onClick={() => setShowAccessibility(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}><X style={{ width: 20, height: 20 }} /></button>
@@ -1807,13 +1840,13 @@ const LandingPage = () => {
                   <button onClick={() => setAccessibilitySettings(prev => ({ ...prev, fontSize: Math.min(150, prev.fontSize + 10) }))} style={{ padding: '4px 12px', background: '#E5E7EB', borderRadius: 4, border: 'none', cursor: 'pointer' }}>A+</button>
                 </div>
               </div>
-              <button onClick={() => setAccessibilitySettings(prev => ({ ...prev, contrast: !prev.contrast }))} style={{ width: '100%', padding: 12, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, background: accessibilitySettings.contrast ? '#2563EB' : '#F3F4F6', color: accessibilitySettings.contrast ? 'white' : 'inherit', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => setAccessibilitySettings(prev => ({ ...prev, contrast: !prev.contrast }))} style={{ width: '100%', padding: 12, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, background: accessibilitySettings.contrast ? '#1E396C' : '#F3F4F6', color: accessibilitySettings.contrast ? 'white' : 'inherit', border: 'none', cursor: 'pointer' }}>
                 <ZoomIn style={{ width: 20, height: 20 }} />{language === 'ru' ? 'Высокий контраст' : language === 'he' ? 'ניגודיות גבוהה' : 'High Contrast'}
               </button>
-              <button onClick={() => setAccessibilitySettings(prev => ({ ...prev, grayScale: !prev.grayScale }))} style={{ width: '100%', padding: 12, borderRadius: 8, background: accessibilitySettings.grayScale ? '#1F2937' : '#F3F4F6', color: accessibilitySettings.grayScale ? 'white' : 'inherit', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => setAccessibilitySettings(prev => ({ ...prev, grayScale: !prev.grayScale }))} style={{ width: '100%', padding: 12, borderRadius: 8, background: accessibilitySettings.grayScale ? '#16294F' : '#F3F4F6', color: accessibilitySettings.grayScale ? 'white' : 'inherit', border: 'none', cursor: 'pointer' }}>
                 {language === 'ru' ? 'Оттенки серого' : language === 'he' ? 'גווני אפור' : 'Grayscale'}
               </button>
-              <button onClick={() => setAccessibilitySettings({ fontSize: 100, contrast: false, grayScale: false })} style={{ padding: 8, fontSize: 14, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => setAccessibilitySettings({ fontSize: 100, contrast: false, grayScale: false })} style={{ padding: 8, fontSize: 14, color: '#1E396C', background: 'none', border: 'none', cursor: 'pointer' }}>
                 {language === 'ru' ? 'Сбросить' : language === 'he' ? 'איפוס' : 'Reset'}
               </button>
             </div>
@@ -1822,18 +1855,18 @@ const LandingPage = () => {
       </div>
 
       {showCookieConsent && (
-        <div className="animate-slideUp" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '4px solid #2563EB', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)', padding: 24, zIndex: 50 }}>
+        <div className="animate-slideUp" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '3px solid #C92A26', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)', padding: 24, zIndex: 50 }}>
           <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flex: 1 }}>
-              <Cookie style={{ width: 32, height: 32, flexShrink: 0, color: colors.primary.teal }} />
+              <Cookie style={{ width: 32, height: 32, flexShrink: 0, color: brand.red }} />
               <div>
                 <h3 style={{ fontWeight: 700, fontSize: 17, marginBottom: 6 }}>{language === 'ru' ? 'Мы используем cookies' : language === 'he' ? 'אנו משתמשים בעוגיות' : 'We use cookies'}</h3>
                 <p style={{ fontSize: 14, color: '#4B5563' }}>{language === 'ru' ? 'Этот сайт использует cookies для улучшения вашего опыта.' : language === 'he' ? 'אתר זה משתמש בעוגיות כדי לשפר את החוויה שלך.' : 'This website uses cookies to enhance your experience.'}</p>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={declineCookies} style={{ padding: '8px 20px', border: `2px solid ${colors.primary.teal}`, borderRadius: 8, color: colors.primary.teal, background: 'transparent', cursor: 'pointer' }}>{language === 'ru' ? 'Отклонить' : language === 'he' ? 'דחה' : 'Decline'}</button>
-              <button onClick={acceptCookies} style={{ padding: '8px 20px', background: colors.primary.teal, color: 'white', borderRadius: 8, border: 'none', cursor: 'pointer' }}>{language === 'ru' ? 'Принять' : language === 'he' ? 'קבל' : 'Accept'}</button>
+              <button onClick={declineCookies} style={{ padding: '8px 20px', border: `2px solid ${brand.blue}`, borderRadius: 8, color: brand.blue, background: 'transparent', cursor: 'pointer' }}>{language === 'ru' ? 'Отклонить' : language === 'he' ? 'דחה' : 'Decline'}</button>
+              <button onClick={acceptCookies} style={{ padding: '8px 20px', background: brand.blue, color: 'white', borderRadius: 8, border: 'none', cursor: 'pointer' }}>{language === 'ru' ? 'Принять' : language === 'he' ? 'קבל' : 'Accept'}</button>
             </div>
           </div>
         </div>
@@ -1850,26 +1883,21 @@ const LandingPage = () => {
         .animate-slideUp { animation: slideUp 0.5s ease-out; }
         .high-contrast { filter: contrast(2); }
         .high-contrast * { border-color: #000 !important; }
+        @media (max-width: 980px) {
+          .hero-rail { grid-template-columns: repeat(2, 1fr) !important; }
+        }
         @media (max-width: 767px) {
-          .hero-section { padding: 3rem 1rem 2.5rem !important; position: relative !important; overflow: hidden !important; }
-          .hero-grid { grid-template-columns: 1fr !important; }
-          .hero-image-wrap {
-            position: absolute !important;
-            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-            border-radius: 0 !important;
-            aspect-ratio: unset !important;
-            box-shadow: none !important;
-            z-index: 0 !important;
-            opacity: 0.5 !important;
-            filter: blur(1px) !important;
-            overflow: hidden !important;
-          }
-          .hero-content { position: relative !important; z-index: 1 !important; }
+          .hero-pad { padding: 3.5rem 1.25rem 0 !important; min-height: 480px !important; }
+          .hero-content { padding-bottom: 2.5rem !important; }
           .hero-stats { grid-template-columns: repeat(2, 1fr) !important; }
           .section-pad { padding: 3rem 1rem !important; }
         }
+        @media (max-width: 640px) {
+          .footer-mark { height: 64px !important; }
+        }
         @media (max-width: 479px) {
           .footer-wordmark { font-size: clamp(1.2rem, 8vw, 2rem) !important; }
+          .footer-mark { height: 52px !important; }
         }
       `}</style>
 

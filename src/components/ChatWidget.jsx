@@ -3,7 +3,7 @@ import { MessageCircle, X, Send, Bot, Phone, Users } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { createQuestion } from '../utils/firestoreUtils';
-import colors from '../utils/colors';
+import brand from '../utils/brand';
 
 const PROMPT_DELAY_MS = 60_000;
 const INACTIVITY_MSG_DELAY_MS = 60_000;
@@ -211,7 +211,7 @@ export default function ChatWidget({ language = 'en' }) {
           style={{ maxHeight: '600px' }}
         >
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 text-white" style={{ backgroundColor: colors.primary.teal }}>
+          <div className="flex items-center gap-3 px-4 py-3 text-white" style={{ backgroundColor: brand.blue }}>
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
               <Bot className="w-4 h-4 text-white" />
             </div>
@@ -247,7 +247,7 @@ export default function ChatWidget({ language = 'en' }) {
                       ? 'text-white rounded-br-sm'
                       : 'bg-white text-gray-800 shadow-sm rounded-bl-sm'
                   }`}
-                  style={msg.role === 'user' ? { backgroundColor: colors.primary.teal } : {}}
+                  style={msg.role === 'user' ? { backgroundColor: brand.blue } : {}}
                 >
                   {msg.content}
                 </div>
@@ -294,28 +294,28 @@ export default function ChatWidget({ language = 'en' }) {
                     placeholder={language === 'en' ? 'Name *' : language === 'he' ? 'שם *' : 'Имя *'}
                     value={contactForm.name}
                     onChange={e => setContactForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#00BCD4]"
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#1E396C]"
                   />
                   <input
                     type="email"
                     placeholder={language === 'en' ? 'Email *' : language === 'he' ? 'דוא"ל *' : 'Почта *'}
                     value={contactForm.email}
                     onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#00BCD4]"
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#1E396C]"
                   />
                   <input
                     type="tel"
                     placeholder={language === 'en' ? 'Phone *' : language === 'he' ? 'טלפון *' : 'Телефон *'}
                     value={contactForm.phone}
                     onChange={e => setContactForm(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#00BCD4]"
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#1E396C]"
                   />
                   <textarea
                     placeholder={language === 'en' ? 'Additional notes (optional)' : language === 'he' ? 'הערות נוספות (אופציונלי)' : 'Доп. заметки (опционально)'}
                     rows={2}
                     value={contactForm.message}
                     onChange={e => setContactForm(prev => ({ ...prev, message: e.target.value }))}
-                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#00BCD4] resize-none"
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#1E396C] resize-none"
                   />
                   <p className="text-[10px] text-gray-400">
                     {language === 'en'
@@ -335,7 +335,7 @@ export default function ChatWidget({ language = 'en' }) {
                       onClick={handleContactSubmit}
                       disabled={submittingContact}
                       className="flex-1 px-2 py-1.5 text-white rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-50"
-                      style={{ backgroundColor: colors.primary.teal }}
+                      style={{ backgroundColor: brand.blue }}
                     >
                       {submittingContact
                         ? (language === 'en' ? 'Sending…' : language === 'he' ? 'שולח…' : 'Отправка…')
@@ -358,14 +358,14 @@ export default function ChatWidget({ language = 'en' }) {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={PLACEHOLDER[language] || PLACEHOLDER.en}
-              className="flex-1 resize-none text-sm border-2 border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:border-[#00BCD4] transition-colors"
+              className="flex-1 resize-none text-sm border-2 border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:border-[#1E396C] transition-colors"
               style={{ maxHeight: '80px' }}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || loading}
               className="flex-shrink-0 w-9 h-9 rounded-xl text-white flex items-center justify-center hover:opacity-90 transition-all disabled:opacity-40"
-              style={{ backgroundColor: colors.primary.teal }}
+              style={{ backgroundColor: brand.blue }}
               title={SEND_LABEL[language]}
             >
               <Send className="w-4 h-4" />
@@ -386,7 +386,7 @@ export default function ChatWidget({ language = 'en' }) {
       <button
         onClick={() => setOpen(prev => !prev)}
         className="w-14 h-14 rounded-full text-white shadow-2xl flex items-center justify-center hover:scale-110 transition-all duration-300 relative"
-        style={{ backgroundColor: colors.primary.teal, boxShadow: '0 10px 30px rgba(0,188,212,0.4)' }}
+        style={{ backgroundColor: brand.blue, boxShadow: '0 10px 30px rgba(30,57,108,0.35)' }}
         title="Chat with Yefim"
         aria-label="Open chat"
       >
