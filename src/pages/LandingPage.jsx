@@ -15,6 +15,9 @@ import BlogPostModal from '../components/BlogPostModal';
 import { createQuestion, getWebsiteFeedbacks, getSiteSettings, getPublishedBlogPosts, getPartners, getDrivers, getCustomDestinations } from '../utils/firestoreUtils';
 import siteLogo from '../assets/ivrytours-logo.png';
 import siteLogoLight from '../assets/ivrytours-logo-light.png';
+// The outgoing IVRITours mark, shown in the rename announcement so visitors
+// recognise the brand they arrived looking for.
+import mergeLogo from '../assets/merged_announcement_logo.png';
 
 // Bump this key to re-show the announcement to visitors who dismissed it.
 const MERGE_NOTICE_KEY = 'mergeNoticeDismissed.v2';
@@ -1006,9 +1009,9 @@ const LandingPage = () => {
               className="merge-inner"
               style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}
             >
-              {/* Logo sits on a cream chip — the navy mark would vanish on the navy band */}
-              <div style={{ background: brand.cream, borderRadius: 12, padding: '12px 16px', flexShrink: 0, boxShadow: '0 6px 20px rgba(0,0,0,0.22)', lineHeight: 0 }}>
-                <img src={siteLogo} alt="IVRYTOURS INC" style={{ height: 58, width: 'auto', display: 'block' }} />
+              {/* Old mark on a cream chip — its dark blocks would vanish on the navy band */}
+              <div style={{ background: brand.cream, borderRadius: 12, padding: '14px 18px', flexShrink: 0, boxShadow: '0 6px 20px rgba(0,0,0,0.22)', lineHeight: 0 }}>
+                <img src={mergeLogo} alt="IVRITours" style={{ height: 46, width: 'auto', display: 'block' }} />
               </div>
 
               <div style={{ flex: '1 1 320px', minWidth: 0 }}>
