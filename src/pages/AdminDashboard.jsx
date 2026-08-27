@@ -176,7 +176,7 @@ const AdminDashboard = () => {
     try { await updateSiteSettings(updated); } catch (e) { console.error(e); } finally { setSettingsSaving(false); }
   };
 
-  // Section order & visibility — persisted in siteSettings.sectionOrder
+  // Section order & visibility - persisted in siteSettings.sectionOrder
   const SECTION_CONFIG = [
     { key: 'trips',    label: 'Upcoming Trips',         icon: '🗺️',  visKey: 'showDestinations' },
     { key: 'partners', label: 'Who We Work With',       icon: '🤝',  visKey: 'showPartners' },
@@ -411,7 +411,7 @@ const AdminDashboard = () => {
     const pending = {};
 
     for (const trip of trips) {
-      // Skip draft trips — they should not be auto-promoted
+      // Skip draft trips - they should not be auto-promoted
       if (trip.status === 'draft') {
         counts[trip.id] = 0;
         pending[trip.id] = 0;
@@ -541,7 +541,7 @@ const AdminDashboard = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Exclude drafts from the main list — they appear in the Pending Review section
+    // Exclude drafts from the main list - they appear in the Pending Review section
     let filtered = allTrips.filter(t => t.status !== 'draft');
 
     // Apply date/time filter
@@ -771,7 +771,7 @@ const AdminDashboard = () => {
                         : on ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'
                     }`}
                   >
-                    {/* Drag handle — hidden/locked for partners */}
+                    {/* Drag handle - hidden/locked for partners */}
                     {isLocked
                       ? <Lock className="w-4 h-4 text-gray-300 flex-shrink-0" title="Position locked on desktop" />
                       : <GripVertical className="w-5 h-5 text-gray-300 cursor-grab flex-shrink-0" />
@@ -786,7 +786,7 @@ const AdminDashboard = () => {
                     {/* Position badge */}
                     <span className="text-xs text-gray-300 font-mono flex-shrink-0">#{idx + 1}</span>
 
-                    {/* Up / Down arrows — hidden for locked rows */}
+                    {/* Up / Down arrows - hidden for locked rows */}
                     {!isLocked && (
                       <div className="flex flex-col gap-0.5 flex-shrink-0">
                         <button
@@ -1351,7 +1351,7 @@ const AdminDashboard = () => {
             {commentsLoading ? (
               <div className="text-center py-8 text-gray-400 text-sm">Loading comments…</div>
             ) : pendingComments.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">No pending comments — you're all caught up!</p>
+              <p className="text-sm text-gray-400 text-center py-6">No pending comments - you're all caught up!</p>
             ) : (
               <div className="space-y-3">
                 {pendingComments.map(c => {
@@ -1534,7 +1534,7 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Draft trips — created via WhatsApp bot, pending admin review */}
+            {/* Draft trips - created via WhatsApp bot, pending admin review */}
             {draftTrips.length > 0 && (
               <div className="mb-2">
                 <h2 className="flex items-center gap-2 text-sm font-bold text-amber-700 mb-2">

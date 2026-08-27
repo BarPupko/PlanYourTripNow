@@ -8,10 +8,10 @@ import { hasSeenCreateTripTour, startCreateTripTour } from '../utils/tour';
 
 const PRESET_PICKUP_LOCATIONS = [
   'Yummy Market North',
-  'Bathurst/Centre — Walmart Store',
-  'Bathurst/Steeles — Metro Plaza',
-  'Bathurst/Finch — Shell Gas Station',
-  'Bathurst/Sheppard — Metro Plaza',
+  'Bathurst/Centre - Walmart Store',
+  'Bathurst/Steeles - Metro Plaza',
+  'Bathurst/Finch - Shell Gas Station',
+  'Bathurst/Sheppard - Metro Plaza',
   'Sheppard West',
 ];
 
@@ -73,7 +73,7 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
         ...formData,
         startDateTime: Timestamp.fromDate(startDateTime),
         endDateTime: Timestamp.fromDate(endDateTime),
-        startTimeStr: formData.startTime,  // raw "HH:MM" — timezone-safe for email display
+        startTimeStr: formData.startTime,  // raw "HH:MM" - timezone-safe for email display
         endTimeStr: formData.endTime,
       };
 
@@ -460,7 +460,7 @@ const CreateTripModal = ({ selectedDate, onClose, onCreate }) => {
             </div>
             {formData.pickupLocations.length === 0 && (
               <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                ⚠️ No locations selected — participants won't see a pickup field during registration.
+                ⚠️ No locations selected - participants won't see a pickup field during registration.
               </p>
             )}
           </div>

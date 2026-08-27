@@ -9,10 +9,10 @@ import { hasSeenEditTripTour, startEditTripTour } from '../utils/tour';
 
 const PRESET_PICKUP_LOCATIONS = [
   'Yummy Market North',
-  'Bathurst/Centre — Walmart Store',
-  'Bathurst/Steeles — Metro Plaza',
-  'Bathurst/Finch — Shell Gas Station',
-  'Bathurst/Sheppard — Metro Plaza',
+  'Bathurst/Centre - Walmart Store',
+  'Bathurst/Steeles - Metro Plaza',
+  'Bathurst/Finch - Shell Gas Station',
+  'Bathurst/Sheppard - Metro Plaza',
   'Sheppard West',
 ];
 
@@ -146,7 +146,7 @@ HH:MM – HH:MM | [Activity / Location Name with relevant emoji]
 [Repeat block for every distinct activity]
 
 Rules:
-- Create a SEPARATE block for EACH distinct location, activity, or travel segment — never combine multiple venues into one block
+- Create a SEPARATE block for EACH distinct location, activity, or travel segment - never combine multiple venues into one block
 - Always include a departure/travel block at the start and a return journey block at the end
 - Minimum 4 blocks for a single-day trip; more if there are more activities described
 - For each block include 2–5 bullet points with specific details drawn from the description
@@ -523,7 +523,7 @@ Rules:
             </div>
             {formData.pickupLocations.length === 0 && (
               <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                ⚠️ No locations selected — participants won't see a pickup field during registration.
+                ⚠️ No locations selected - participants won't see a pickup field during registration.
               </p>
             )}
           </div>

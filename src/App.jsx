@@ -48,7 +48,7 @@ function App() {
           <Route path="/blog/:postId" element={<BlogPostPage />} />
           <Route path="/gift-card-purchase" element={<GiftCardPurchase />} />
           <Route path="/PlanYourTripNow/gift-card-purchase" element={<GiftCardPurchase />} />
-          {/* PayPal return URL — must match return_url in functions/paypal.js */}
+          {/* PayPal return URL - must match return_url in functions/paypal.js */}
           <Route path="/gift-card/complete" element={<GiftCardComplete />} />
           <Route path="/PlanYourTripNow/gift-card/complete" element={<GiftCardComplete />} />
           <Route

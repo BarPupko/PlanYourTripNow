@@ -1,14 +1,14 @@
-// IVRYTOURS INC — public-site brand palette.
+// IVRYTOURS INC - public-site brand palette.
 //
 // Kept separate from utils/colors.js on purpose: colors.js still drives the
 // admin dashboard and the operational modals, which were not part of the
 // rebrand. Only the public-facing pages read from here.
 export const brand = {
-  ink: '#0F1D3A',        // deepest navy — top utility bar, hero ground
+  ink: '#0F1D3A',        // deepest navy - top utility bar, hero ground
   navy: '#16294F',       // headings, stats band, footer
   blue: '#1E396C',       // primary action / links
   blueDeep: '#16294F',   // primary action hover
-  red: '#C92A26',        // accent — icons, rules, active language
+  red: '#C92A26',        // accent - icons, rules, active language
   redDeep: '#AE221E',    // accent hover
   redMuted: '#8E1F1B',   // sold out
   cream: '#F7F8F3',      // page ground

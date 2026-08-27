@@ -8,14 +8,14 @@ import colors from '../utils/colors';
 
 const PRESET_PICKUP_LOCATIONS = [
   'Yummy Market North',
-  'Bathurst/Centre — Walmart Store',
-  'Bathurst/Steeles — Metro Plaza',
-  'Bathurst/Finch — Shell Gas Station',
-  'Bathurst/Sheppard — Metro Plaza',
+  'Bathurst/Centre - Walmart Store',
+  'Bathurst/Steeles - Metro Plaza',
+  'Bathurst/Finch - Shell Gas Station',
+  'Bathurst/Sheppard - Metro Plaza',
   'Sheppard West',
 ];
 
-const PLACEHOLDER = 'Paste a tour announcement here — Russian, English or Hebrew. The date, price, deposit and program are read automatically.';
+const PLACEHOLDER = 'Paste a tour announcement here - Russian, English or Hebrew. The date, price, deposit and program are read automatically.';
 
 // Firestore rejects undefined; the parser may omit fields
 const num = (v) => (typeof v === 'number' && !isNaN(v) ? v : '');
@@ -186,7 +186,7 @@ const QuickTripChat = ({ onCreated }) => {
       </div>
 
       <div className="p-3 space-y-3">
-        {/* Step 1 — paste the text */}
+        {/* Step 1 - paste the text */}
         {!draft && !created && (
           <>
             <textarea
@@ -220,11 +220,11 @@ const QuickTripChat = ({ onCreated }) => {
           </>
         )}
 
-        {/* Step 2 — review what was read, then create */}
+        {/* Step 2 - review what was read, then create */}
         {draft && (
           <>
             <p className="text-[11px] text-gray-500">
-              Read from your text — adjust anything, then create the trip.
+              Read from your text - adjust anything, then create the trip.
             </p>
             <div>
               <label className="block text-[11px] font-medium text-gray-600 mb-1">Title</label>
@@ -338,7 +338,7 @@ const QuickTripChat = ({ onCreated }) => {
               </div>
               {draft.pickupLocations.length === 0 && (
                 <p className="text-[11px] text-amber-600 mt-1.5">
-                  No stops selected — participants won't see a pickup field when registering.
+                  No stops selected - participants won't see a pickup field when registering.
                 </p>
               )}
             </div>
@@ -377,11 +377,11 @@ const QuickTripChat = ({ onCreated }) => {
           </>
         )}
 
-        {/* Step 3 — the link */}
+        {/* Step 3 - the link */}
         {created && (
           <div className="space-y-2">
             <p className="text-xs font-semibold text-green-700 flex items-center gap-1.5">
-              <Check className="w-4 h-4" /> Trip created — “{created.title}”
+              <Check className="w-4 h-4" /> Trip created - “{created.title}”
             </p>
             <div className="flex items-center gap-1.5">
               <input

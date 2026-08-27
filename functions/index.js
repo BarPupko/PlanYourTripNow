@@ -19,7 +19,7 @@ const formatTime = (ts) => {
   } catch { return null; }
 };
 
-// Format a raw "HH:MM" string (e.g. "08:00") as "8:00 AM" — no timezone conversion needed
+// Format a raw "HH:MM" string (e.g. "08:00") as "8:00 AM" - no timezone conversion needed
 const formatTimeStr = (timeStr) => {
   if (!timeStr) return null;
   const [h, m] = timeStr.split(':').map(Number);
@@ -65,7 +65,7 @@ const getAnthropic = () => {
 
 // Concatenate the text blocks of a Messages response.
 // Claude can decline a request with stop_reason 'refusal' on a successful HTTP 200,
-// in which case content is empty or partial — check that before reading it.
+// in which case content is empty or partial - check that before reading it.
 const claudeText = (message) => {
   if (message.stop_reason === 'refusal') {
     const category = message.stop_details?.category || 'unspecified';
@@ -787,7 +787,7 @@ exports.parseTripFromText = functions
 Today's date is ${today}. All tours take place in the ${TZ} timezone.
 
 Rules:
-- Resolve dates relative to today. A month and day with no year means the next occurrence of that date — never a date in the past.
+- Resolve dates relative to today. A month and day with no year means the next occurrence of that date - never a date in the past.
 - Prices written as "$109", "109$", or "109 CAD" all become 109.
 - If several dates are announced, use the NEW or additional date the message is about.
 - If no date can be determined, set date to null and still fill in everything else you found.
@@ -1079,16 +1079,16 @@ async function handleNewTourCommand(rawMessage, reqBody, language) {
 
   const prompt = `Extract tour/trip information from this announcement text.
 
-Today's date is ${today}. A month and day with no year means the next occurrence of that date — never a date in the past.
+Today's date is ${today}. A month and day with no year means the next occurrence of that date - never a date in the past.
 Set isTourAnnouncement to false (and leave the other fields null) if this is not a tour announcement.
-The description should be clean marketing text suitable for a website — keep the experience description, remove prices and booking instructions.
+The description should be clean marketing text suitable for a website - keep the experience description, remove prices and booking instructions.
 
 Text:
 ${tourText}`;
 
   let parsed;
   try {
-    // effort 'low' — a short extraction, and the Twilio webhook is latency-sensitive
+    // effort 'low' - a short extraction, and the Twilio webhook is latency-sensitive
     const message = await anthropic.beta.messages.create({
       ...CLAUDE_FALLBACK,
       model: CLAUDE_MODEL,
@@ -2328,7 +2328,7 @@ exports.onTripStatusDone = functions.firestore
       const reg = regDoc.data();
       if (!reg.email) return;
 
-      // Ensure companionToken exists — generate if missing (admin-added participants)
+      // Ensure companionToken exists - generate if missing (admin-added participants)
       let token = reg.companionToken;
       if (!token) {
         token = require('crypto').randomUUID();
@@ -2355,7 +2355,7 @@ exports.onTripStatusDone = functions.firestore
                 Your presence made the trip even more special, and we hope you had an incredible time.
               </p>
               <p style="color: #374151; font-size: 16px; line-height: 1.7;">
-                We'd love to hear your thoughts — your feedback helps us make every future tour even better.
+                We'd love to hear your thoughts - your feedback helps us make every future tour even better.
                 It only takes a minute! 🙏
               </p>
 
@@ -2436,11 +2436,11 @@ exports.sendFeedbackReminder = functions.https.onCall(async (data, context) => {
   const sends = eligibleDocs.map(async (regDoc) => {
     const reg = regDoc.data();
     if (!reg.email) {
-      console.log(`[sendFeedbackReminder] Skipping ${reg.firstName} ${reg.lastName} — no email`);
+      console.log(`[sendFeedbackReminder] Skipping ${reg.firstName} ${reg.lastName} - no email`);
       return;
     }
 
-    // Ensure companionToken exists — generate one if missing (admin-added participants)
+    // Ensure companionToken exists - generate one if missing (admin-added participants)
     let token = reg.companionToken;
     if (!token) {
       token = require('crypto').randomUUID();
@@ -2454,7 +2454,7 @@ exports.sendFeedbackReminder = functions.https.onCall(async (data, context) => {
       .doc(token)
       .get();
     if (feedbackDoc.exists) {
-      console.log(`[sendFeedbackReminder] Skipping ${reg.firstName} — already submitted`);
+      console.log(`[sendFeedbackReminder] Skipping ${reg.firstName} - already submitted`);
       return;
     }
 
@@ -2474,7 +2474,7 @@ exports.sendFeedbackReminder = functions.https.onCall(async (data, context) => {
 
           <div style="background: white; padding: 36px 32px;">
             <p style="color: #374151; font-size: 16px; line-height: 1.7; margin-top: 0;">
-              Just a quick reminder — we'd really appreciate hearing about your experience on <strong>${trip.title}</strong>.
+              Just a quick reminder - we'd really appreciate hearing about your experience on <strong>${trip.title}</strong>.
               Your feedback helps us improve every future tour. It only takes a minute! 🙏
             </p>
 
@@ -2574,7 +2574,7 @@ exports.onQuestionCreated = functions.firestore
     }
   });
 
-// AI Chat — Yefim persona powered by Claude (key loaded from functions/.env)
+// AI Chat - Yefim persona powered by Claude (key loaded from functions/.env)
 exports.chatWithYefim = functions
   .runWith({ timeoutSeconds: 120 })
   .https.onCall(async (data, context) => {
@@ -2588,7 +2588,7 @@ exports.chatWithYefim = functions
       throw new functions.https.HttpsError('failed-precondition', 'Anthropic API key not configured');
     }
 
-    const systemPrompt = `You are Yefim, a warm and knowledgeable tour assistant for IVRITours — a Canadian tour company offering guided trips across North America (Toronto, Niagara Falls, Quebec City, Mont-Tremblant, Detroit, Chicago, Barrie, and more). Tours are conducted in English, Hebrew, and Russian.
+    const systemPrompt = `You are Yefim, a warm and knowledgeable tour assistant for IVRITours - a Canadian tour company offering guided trips across North America (Toronto, Niagara Falls, Quebec City, Mont-Tremblant, Detroit, Chicago, Barrie, and more). Tours are conducted in English, Hebrew, and Russian.
 
 IMPORTANT CONTACT INFORMATION:
 - Phone: (647) 302-6846
@@ -2610,11 +2610,11 @@ Your role is to:
 
 If a user wants the company to contact them, ask for: name, phone number, email, and what they're interested in.
 
-This is a small chat bubble on a website, so keep replies short — two or three sentences, or a few
+This is a small chat bubble on a website, so keep replies short - two or three sentences, or a few
 short bullets at most. Answer the question directly without preamble or a recap of what was asked.`;
 
     // The widget seeds the transcript with Yefim's greeting, so history can start with an
-    // assistant turn — Claude requires the first message to be from the user.
+    // assistant turn - Claude requires the first message to be from the user.
     const trimmed = history.slice(-10).map(m => ({ role: m.role, content: m.content }));
     while (trimmed.length && trimmed[0].role !== 'user') trimmed.shift();
 
@@ -2639,7 +2639,7 @@ short bullets at most. Answer the question directly without preamble or a recap 
   });
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  PayPal — gift card purchase (see paypal.js)
+//  PayPal - gift card purchase (see paypal.js)
 // ═══════════════════════════════════════════════════════════════════════════
 
 const paypal = require('./paypal')({

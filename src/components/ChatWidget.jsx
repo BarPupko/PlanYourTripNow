@@ -114,7 +114,7 @@ export default function ChatWidget({ language = 'en' }) {
     try {
       const history = messages.slice(-10);
 
-      // Always via the callable — the model API key stays server-side
+      // Always via the callable - the model API key stays server-side
       const chatWithYefim = httpsCallable(functions, 'chatWithYefim');
       const result = await chatWithYefim({ message: text, history, language });
       const reply = result.data.reply || '';
@@ -164,7 +164,7 @@ export default function ChatWidget({ language = 'en' }) {
         source: 'chat_widget',
       });
 
-      // Send email notification (non-blocking — don't fail the whole flow if email fails)
+      // Send email notification (non-blocking - don't fail the whole flow if email fails)
       try {
         const sendEmail = httpsCallable(functions, 'sendContactEmail');
         await sendEmail({
@@ -220,7 +220,7 @@ export default function ChatWidget({ language = 'en' }) {
               <p className="text-xs opacity-80 mt-0.5">IVRITours Assistant</p>
             </div>
 
-            {/* Send to Team button — visible once user has sent a message */}
+            {/* Send to Team button - visible once user has sent a message */}
             {hasUserMessages && !submitted && (
               <button
                 onClick={handleOpenSendToTeam}

@@ -22,7 +22,7 @@ import mergeLogo from '../assets/merged_announcement_logo.png';
 // Bump this key to re-show the announcement to visitors who dismissed it.
 const MERGE_NOTICE_KEY = 'mergeNoticeDismissed.v2';
 // The band wipes in, holds, then wipes out. The auto-hide deliberately does NOT
-// write MERGE_NOTICE_KEY — only an explicit dismiss does — so it plays once per visit.
+// write MERGE_NOTICE_KEY - only an explicit dismiss does - so it plays once per visit.
 const MERGE_HOLD_MS = 10000;
 const MERGE_EXIT_MS = 950;
 
@@ -283,7 +283,7 @@ const LandingPage = () => {
 
   // Unmount once the wipe-out has finished. This is deliberately a separate
   // effect: folding it into the one above meant that flipping mergeExiting
-  // re-ran that effect, and its cleanup cancelled the unmount timer — so the
+  // re-ran that effect, and its cleanup cancelled the unmount timer - so the
   // band wiped away but stayed in the layout forever.
   useEffect(() => {
     if (!mergeExiting) return;
@@ -309,8 +309,8 @@ const LandingPage = () => {
     en: {
       // Rebrand announcement (IVRITours → IVRYTOURS INC)
       mergeBadge: "ivritours is now ivrytours inc",
-      mergeTitle: "New name, new look — same team",
-      mergeBody: "Both of our websites now live in one place, under one name: IVRYTOURS INC. Same guides, same tours across Canada — easier to browse, book and manage. Welcome aboard.",
+      mergeTitle: "New name, new look - same team",
+      mergeBody: "Both of our websites now live in one place, under one name: IVRYTOURS INC. Same guides, same tours across Canada - easier to browse, book and manage. Welcome aboard.",
       mergeCta: "Explore our tours",
       mergeDismiss: "Dismiss announcement",
       welcome: "Welcome to IVRYTOURS!",
@@ -397,8 +397,8 @@ const LandingPage = () => {
     he: {
       // Rebrand announcement (IVRITours → IVRYTOURS INC)
       mergeBadge: "IVRITours הוא עכשיו IVRYTOURS INC",
-      mergeTitle: "שם חדש, מראה חדש — אותו צוות",
-      mergeBody: "שני האתרים שלנו נמצאים עכשיו במקום אחד, תחת שם אחד: IVRYTOURS INC. אותם מדריכים, אותם טיולים בקנדה — נוח יותר לעיון, להזמנה ולניהול. ברוכים הבאים!",
+      mergeTitle: "שם חדש, מראה חדש - אותו צוות",
+      mergeBody: "שני האתרים שלנו נמצאים עכשיו במקום אחד, תחת שם אחד: IVRYTOURS INC. אותם מדריכים, אותם טיולים בקנדה - נוח יותר לעיון, להזמנה ולניהול. ברוכים הבאים!",
       mergeCta: "לצפייה בטיולים",
       mergeDismiss: "סגירת ההודעה",
       welcome: "ברוכים הבאים ל-IVRYTOURS!",
@@ -485,8 +485,8 @@ const LandingPage = () => {
     ru: {
       // Rebrand announcement (IVRITours → IVRYTOURS INC)
       mergeBadge: "IVRITours теперь IVRYTOURS INC",
-      mergeTitle: "Новое имя, новый облик — та же команда",
-      mergeBody: "Оба наших сайта теперь в одном месте и под одним именем: IVRYTOURS INC. Те же гиды, те же туры по Канаде — удобнее смотреть, бронировать и управлять. Добро пожаловать!",
+      mergeTitle: "Новое имя, новый облик - та же команда",
+      mergeBody: "Оба наших сайта теперь в одном месте и под одним именем: IVRYTOURS INC. Те же гиды, те же туры по Канаде - удобнее смотреть, бронировать и управлять. Добро пожаловать!",
       mergeCta: "Смотреть туры",
       mergeDismiss: "Закрыть объявление",
       welcome: "Добро пожаловать в IVRYTOURS!",
@@ -600,7 +600,7 @@ const LandingPage = () => {
     return t.testimonials;
   };
 
-  // Section ordering — index in array becomes the CSS `order` value
+  // Section ordering - index in array becomes the CSS `order` value
   const DEFAULT_SECTION_ORDER = ['trips', 'partners', 'drivers', 'reviews', 'social', 'blog', 'contact'];
   const activeSectionOrder = siteSettings.sectionOrder?.length
     ? siteSettings.sectionOrder
@@ -620,7 +620,7 @@ const LandingPage = () => {
   ].filter(d => !hiddenDestinations.includes(d.key));
 
   // Canada only. US tours are discontinued, so any destination still stored
-  // with country 'us' — an older Firestore record, say — is filtered out here
+  // with country 'us' - an older Firestore record, say - is filtered out here
   // rather than relying on it having been deleted from the database.
   const destinations = [
     ...staticDestinations,
@@ -858,7 +858,7 @@ const LandingPage = () => {
         </div>
       )}
 
-      {/* ── TOP BAR — language picker, scrolls away naturally ──── */}
+      {/* ── TOP BAR - language picker, scrolls away naturally ──── */}
       <div style={{ background: '#0F1D3A', height: 36, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem' }}>
         <a href="tel:6473026849" style={{ color: 'rgba(247,248,243,0.5)', fontSize: 11, textDecoration: 'none', letterSpacing: '0.02em' }}>
           📞 647-302-6849
@@ -893,7 +893,7 @@ const LandingPage = () => {
         </div>
       </div>
 
-      {/* ── NAV — minimal, sticky ────────────────────────────── */}
+      {/* ── NAV - minimal, sticky ────────────────────────────── */}
       <style>{`
         @media (max-width: 640px) {
           .nav-logo { height: 52px !important; }
@@ -1009,7 +1009,7 @@ const LandingPage = () => {
               className="merge-inner"
               style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}
             >
-              {/* Old mark on a cream chip — its dark blocks would vanish on the navy band */}
+              {/* Old mark on a cream chip - its dark blocks would vanish on the navy band */}
               <div style={{ background: brand.cream, borderRadius: 12, padding: '14px 18px', flexShrink: 0, boxShadow: '0 6px 20px rgba(0,0,0,0.22)', lineHeight: 0 }}>
                 <img src={mergeLogo} alt="IVRITours" style={{ height: 46, width: 'auto', display: 'block' }} />
               </div>
@@ -1049,7 +1049,7 @@ const LandingPage = () => {
         </>
       )}
 
-      {/* ── HERO — full-bleed cover ──────────────────────────────── */}
+      {/* ── HERO - full-bleed cover ──────────────────────────────── */}
       <section className="hero-section" style={{ position: 'relative', background: brand.ink, overflow: 'hidden' }}>
         <img
           src={siteSettings.heroImage || 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=2000&q=80'}
@@ -1089,7 +1089,7 @@ const LandingPage = () => {
               </a>
             </div>
           </div>
-          {/* Route rail — the first five live destinations, numbered like a timetable */}
+          {/* Route rail - the first five live destinations, numbered like a timetable */}
           {destinations.length > 0 && (
             <div className="hero-rail" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(5, destinations.length)}, 1fr)`, borderTop: '1px solid rgba(247,248,243,0.16)' }}>
               {destinations.slice(0, 5).map((d, i) => (
@@ -1118,7 +1118,7 @@ const LandingPage = () => {
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             <div style={{ marginBottom: 48 }}>
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
-                {language === 'ru' ? '01 — ТУРЫ' : language === 'he' ? '01 — טיולים' : '01 — TOURS'}
+                {language === 'ru' ? '01 - ТУРЫ' : language === 'he' ? '01 - טיולים' : '01 - TOURS'}
               </p>
               <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#16294F' }}>
                 {language === 'ru' ? 'Ближайшие туры' : language === 'he' ? 'טיולים קרובים' : 'Upcoming Trips'}
@@ -1209,7 +1209,7 @@ const LandingPage = () => {
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             <div style={{ marginBottom: 32 }}>
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
-                {language === 'ru' ? '02 — НАПРАВЛЕНИЯ' : language === 'he' ? '02 — יעדים' : '02 — DESTINATIONS'}
+                {language === 'ru' ? '02 - НАПРАВЛЕНИЯ' : language === 'he' ? '02 - יעדים' : '02 - DESTINATIONS'}
               </p>
               <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#16294F' }}>{t.destinationsTitle}</h2>
             </div>
@@ -1445,7 +1445,7 @@ const LandingPage = () => {
               </div>
             )}
 
-            {/* Quote cards — carousel */}
+            {/* Quote cards - carousel */}
             {(() => {
               const allCards = [
                 ...(siteSettings.showTestimonials !== false ? getDisplayTestimonials() : []),
@@ -1512,7 +1512,7 @@ const LandingPage = () => {
           <div style={{ maxWidth: 960, margin: '0 auto', textAlign: 'center' }}>
             <div style={{ marginBottom: 40 }}>
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
-                {language === 'ru' ? '04 — СОЦСЕТИ' : language === 'he' ? '04 — רשתות' : '04 — SOCIAL'}
+                {language === 'ru' ? '04 - СОЦСЕТИ' : language === 'he' ? '04 - רשתות' : '04 - SOCIAL'}
               </p>
               <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#16294F', marginBottom: 12 }}>{t.socialTitle}</h2>
               <p style={{ color: '#465372', fontSize: 16 }}>{t.socialDesc}</p>
@@ -1550,7 +1550,7 @@ const LandingPage = () => {
                 {language === 'ru' ? 'Все записи →' : language === 'he' ? 'כל הכתבות →' : 'Read all entries →'}
               </button>
             </div>
-            {/* Cards — borderless editorial grid */}
+            {/* Cards - borderless editorial grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {blogPosts.slice(0, 3).map(post => {
                 const category = post.category || 'Journal';
@@ -1589,7 +1589,7 @@ const LandingPage = () => {
         </section>
       )}
 
-      {/* PARTNERS — Who We Work With */}
+      {/* PARTNERS - Who We Work With */}
       {siteSettings.showPartners !== false && partners.filter(p => p.visible !== false).length > 0 && (
         <section style={{ order: getSectionOrder('partners'), padding: '4rem 0', background: 'white' }}>
           <style>{`
@@ -1600,7 +1600,7 @@ const LandingPage = () => {
           `}</style>
           <div style={{ maxWidth: 1280, margin: '0 auto', textAlign: 'center', padding: '0 1.5rem', marginBottom: 40 }}>
             <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
-              {language === 'ru' ? '— ПАРТНЁРЫ' : language === 'he' ? '— שותפים' : '— PARTNERS'}
+              {language === 'ru' ? '- ПАРТНЁРЫ' : language === 'he' ? '- שותפים' : '- PARTNERS'}
             </p>
             <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.02em', color: '#16294F' }}>
               {language === 'ru' ? 'С кем мы работаем' : language === 'he' ? 'עם מי אנו עובדים' : 'Who We Work With'}
@@ -1660,13 +1660,13 @@ const LandingPage = () => {
         </section>
       )}
 
-      {/* STAFF — Our Staff */}
+      {/* STAFF - Our Staff */}
       {siteSettings.showDrivers !== false && drivers.filter(d => d.visible !== false).length > 0 && (
         <section style={{ order: getSectionOrder('drivers'), padding: '5rem 1.5rem', background: '#F7F8F3' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
-                {language === 'ru' ? '— КОМАНДА' : language === 'he' ? '— הצוות שלנו' : '— OUR TEAM'}
+                {language === 'ru' ? '- КОМАНДА' : language === 'he' ? '- הצוות שלנו' : '- OUR TEAM'}
               </p>
               <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.02em', color: '#16294F' }}>
                 {language === 'ru' ? 'Наш персонал' : language === 'he' ? 'הצוות שלנו' : 'Our Staff'}
@@ -1711,7 +1711,7 @@ const LandingPage = () => {
           <div style={{ maxWidth: 768, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
               <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8A92A5', marginBottom: 8 }}>
-                {language === 'ru' ? '06 — КОНТАКТЫ' : language === 'he' ? '06 — יצירת קשר' : '06 — CONTACT'}
+                {language === 'ru' ? '06 - КОНТАКТЫ' : language === 'he' ? '06 - יצירת קשר' : '06 - CONTACT'}
               </p>
               <h2 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: '#16294F' }}>{t.contactTitle}</h2>
               <button
@@ -1767,7 +1767,7 @@ const LandingPage = () => {
             <div className="footer-wordmark" style={{ fontFamily: '"Fraunces", Georgia, serif', fontStyle: 'italic', fontWeight: 350, fontSize: 'clamp(1.5rem, 4vw, 3rem)', lineHeight: 0.85, color: brand.cream, letterSpacing: '-0.03em', opacity: 0.9 }}>
               IVRYTOURS
             </div>
-            {/* Light mark — the navy primary logo would disappear on this band */}
+            {/* Light mark - the navy primary logo would disappear on this band */}
             <img className="footer-mark" src={siteLogoLight} alt="IVRYTOURS INC" style={{ height: 96, width: 'auto', display: 'block', opacity: 0.95 }} />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8" style={{ marginBottom: '2.5rem' }}>

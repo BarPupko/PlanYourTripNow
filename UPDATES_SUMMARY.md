@@ -249,7 +249,7 @@ If you encounter issues:
 
 ---
 
-# 2026-08-03 — Homepage: site-merge announcement + anchor/scroll fixes
+# 2026-08-03 - Homepage: site-merge announcement + anchor/scroll fixes
 
 Scope: landing page only. All changes in [src/pages/LandingPage.jsx](src/pages/LandingPage.jsx)
 plus one new image asset.
@@ -260,10 +260,10 @@ plus one new image asset.
 - New full-width band between the sticky nav and the hero announcing that the two
   sites are now one.
 - Copy in all three languages (EN / RU / HE), added to the **local** `translations`
-  object inside `LandingPage.jsx` — keys `mergeBadge`, `mergeTitle`, `mergeBody`,
+  object inside `LandingPage.jsx` - keys `mergeBadge`, `mergeTitle`, `mergeBody`,
   `mergeCta`, `mergeDismiss`.
 - New brand mark saved to [src/assets/merged_announcement_logo.png](src/assets/merged_announcement_logo.png)
-  (500×220, 3.1 KB). Downloaded rather than hot-linked — the original source was a
+  (500×220, 3.1 KB). Downloaded rather than hot-linked - the original source was a
   Google Images thumbnail-cache URL, which rotates and would have broken. Under
   Vite's 4 KB inline limit, so it compiles into the bundle as a data URI.
 - Logo sits on a white chip: the mark's near-black blocks disappear on the teal band.
@@ -273,11 +273,11 @@ plus one new image asset.
 - Full RTL support (logo flips right, text right-aligns, close button moves left) and
   stacks vertically below 860px.
 
-### ✅ 2. Fixed "Explore our tours" — Dead Anchor
+### ✅ 2. Fixed "Explore our tours" - Dead Anchor
 - **Problem**: the button did nothing.
 - **Two causes**: the "Our Amazing Destinations" section had no `id` at all, and the
   button pointed at `#trips`, which is conditionally rendered
-  (`{(tripsLoading || upcomingTrips.length > 0) && ...}`) — so with no upcoming trips
+  (`{(tripsLoading || upcomingTrips.length > 0) && ...}`) - so with no upcoming trips
   in Firestore the anchor target did not exist.
 - **Fix**: added `id="destinations"` to the destinations carousel section and pointed
   the CTA there.
@@ -289,7 +289,7 @@ plus one new image asset.
 - `prefers-reduced-motion: reduce` disables the animation.
 
 ### ✅ 4. Fixed Scroll Performance (root cause of stalling anchors)
-- **Problem**: smooth scrolling was effectively broken. Measured in dev —
+- **Problem**: smooth scrolling was effectively broken. Measured in dev -
   `behavior: 'instant'` landed correctly, `behavior: 'smooth'` stayed at 0 for 2.4s.
   Anchor links stalled part-way.
 - **Cause**: `handleScroll` called `setScrollY(window.scrollY)` on *every* scroll event,
@@ -299,7 +299,7 @@ plus one new image asset.
 - **Fix**: replaced the `scrollY` number with a `showBackToTop` boolean. React bails out
   when the value is unchanged, so scrolling now renders twice per page instead of
   continuously.
-- **Affects every anchor on the page**, not just the new button — "Contact Us",
+- **Affects every anchor on the page**, not just the new button - "Contact Us",
   "View Tours" and the nav logo's scroll-to-top were all janky and now work.
 
 ---
@@ -307,7 +307,7 @@ plus one new image asset.
 ## Known Issues / Follow-ups
 
 ### ❌ 1. Hero "View Tours" is still a dead link
-Points at `#trips`, which does not render when there are no upcoming trips — the same
+Points at `#trips`, which does not render when there are no upcoming trips - the same
 defect that was just fixed on the banner CTA. Needs to either point at `#destinations`
 or fall back when the trips section is absent.
 
@@ -318,24 +318,24 @@ shows the old one.
 
 ### ❌ 3. Destinations section is missing an `order` value
 Every sibling in the orderable flex container sets `order: getSectionOrder(...)`, but the
-destinations section does not — so it defaults to `order: 0` and jumps to the top of the
+destinations section does not - so it defaults to `order: 0` and jumps to the top of the
 container regardless of the order configured in the admin. Real bug, not cosmetic.
 
 ### 🔲 4. Two competing translation sources
 `LandingPage.jsx` defines its own local `translations` object (~line 280) that is entirely
 separate from [src/utils/translations.js](src/utils/translations.js). Copy added to the
-shared file does **not** appear on the landing page. Worth consolidating — this already
+shared file does **not** appear on the landing page. Worth consolidating - this already
 caused one wasted round of edits.
 
 ---
 
 ## Verification Performed
 
-- `npm run build` — passes.
-- ESLint on `LandingPage.jsx` — clean.
+- `npm run build` - passes.
+- ESLint on `LandingPage.jsx` - clean.
 - Rendered and clicked through in the browser, dev and production preview.
 - Banner verified in EN and HE (RTL); dismiss + persistence across reload confirmed,
   then reset.
 - Smooth scroll measured landing at exactly `target − 156px`.
 
-**Not deployed** — changes are local only.
+**Not deployed** - changes are local only.

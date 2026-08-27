@@ -332,9 +332,9 @@ const TripViewModal = ({ tripId, onClose }) => {
     if (!trip || confirmedRegistrations.length === 0) return;
 
     const fmt = (v) => {
-      if (!v) return '—';
+      if (!v) return '-';
       try { const d = v?.toDate ? v.toDate() : new Date(v); return d.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }); }
-      catch { return '—'; }
+      catch { return '-'; }
     };
     const tripDate = fmt(trip.date);
     const tripEnd  = trip.endDate ? fmt(trip.endDate) : null;
@@ -342,7 +342,7 @@ const TripViewModal = ({ tripId, onClose }) => {
 
     const invoiceHTML = (reg) => {
       const regDate = reg.registrationDate
-        ? new Date(reg.registrationDate).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+        ? new Date(reg.registrationDate).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
       return `<div style="padding:28px 32px;font-family:Arial,sans-serif;page-break-after:always;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
           <div><div style="font-size:26px;font-weight:900;color:#00BCD4;">IVRITours</div><div style="font-size:12px;color:#9CA3AF;">ivritours.ca</div></div>
@@ -361,8 +361,8 @@ const TripViewModal = ({ tripId, onClose }) => {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;">
             <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Name</span><strong style="font-size:14px;color:#111;">${reg.firstName} ${reg.lastName}</strong></div>
             <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Seat</span><span style="font-size:13px;color:#374151;">${reg.seatNumber ? `Seat ${reg.seatNumber}` : 'Assigned upon arrival'}</span></div>
-            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Email</span><span style="font-size:13px;color:#374151;">${reg.email || '—'}</span></div>
-            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Phone</span><span style="font-size:13px;color:#374151;">${reg.phone || '—'}</span></div>
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Email</span><span style="font-size:13px;color:#374151;">${reg.email || '-'}</span></div>
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Phone</span><span style="font-size:13px;color:#374151;">${reg.phone || '-'}</span></div>
           </div></div>
         <hr style="border:none;border-top:1px solid #E5E7EB;margin:0 0 18px;">
         <div style="margin-bottom:18px;"><p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#9CA3AF;margin:0 0 10px;">Payment</p>
@@ -532,7 +532,7 @@ const TripViewModal = ({ tripId, onClose }) => {
                           </div>
                           <button
                             onClick={() => handleToggleContacted(reg.id, reg.contacted)}
-                            title={reg.contacted ? 'Contacted — click to unmark' : 'Not contacted yet'}
+                            title={reg.contacted ? 'Contacted - click to unmark' : 'Not contacted yet'}
                             className="flex-shrink-0 flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-all hover:bg-yellow-100"
                           >
                             <Phone className="w-4 h-4" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }} />
@@ -582,7 +582,7 @@ const TripViewModal = ({ tripId, onClose }) => {
                           </div>
                           <button
                             onClick={() => handleToggleContacted(reg.id, reg.contacted)}
-                            title={reg.contacted ? 'Contacted — click to unmark' : 'Not contacted yet'}
+                            title={reg.contacted ? 'Contacted - click to unmark' : 'Not contacted yet'}
                             className="flex-shrink-0 flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-all hover:bg-orange-100"
                           >
                             <Phone className="w-4 h-4" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }} />
@@ -1009,7 +1009,7 @@ const TripViewModal = ({ tripId, onClose }) => {
                 )}
               </div>
 
-              {/* Feedback Panel — visible only for completed trips */}
+              {/* Feedback Panel - visible only for completed trips */}
               {trip.status === 'done' && (
                 <div className="bg-white rounded-xl border-2 p-4" style={{ borderColor: '#f59e0b' }}>
                   <div className="flex items-center justify-between mb-3">

@@ -347,7 +347,7 @@ const RegistrationForm = () => {
       <div className="max-w-4xl mx-auto py-8 px-4">
 
         <form onSubmit={handleSubmit} autoComplete="on" className="space-y-6">
-          {/* Number of Seats — hidden in pre-registration mode */}
+          {/* Number of Seats - hidden in pre-registration mode */}
           {!regId && <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Number of Seats</h2>
             <div>
@@ -515,7 +515,7 @@ const RegistrationForm = () => {
                         errors[`passenger${index}Pickup`] ? 'border-red-500' : 'border-gray-300'
                       }`}
                     >
-                      <option value="">— Select your pickup stop —</option>
+                      <option value="">- Select your pickup stop -</option>
                       {trip.pickupLocations.map(loc => (
                         <option key={loc} value={loc}>{loc}</option>
                       ))}

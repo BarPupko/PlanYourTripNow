@@ -72,14 +72,14 @@ const BlogAdminModal = ({ post, authorName = '', onSave, onClose }) => {
   const customLeafletMapRef = useRef(null);
   const customMarkerRef = useRef(null);
 
-  // Set initial HTML content once on mount — don't re-sync from state to avoid fighting contentEditable
+  // Set initial HTML content once on mount - don't re-sync from state to avoid fighting contentEditable
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.innerHTML = post?.content || '';
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Custom location map — init/destroy when location type changes
+  // Custom location map - init/destroy when location type changes
   useEffect(() => {
     if (form.location !== 'custom') {
       if (customLeafletMapRef.current) {
@@ -265,7 +265,7 @@ const BlogAdminModal = ({ post, authorName = '', onSave, onClose }) => {
     }
   };
 
-  // Toolbar button — onMouseDown with preventDefault so editor doesn't lose focus/selection
+  // Toolbar button - onMouseDown with preventDefault so editor doesn't lose focus/selection
   const ToolBtn = ({ cmd, value, title, children }) => (
     <button
       type="button"

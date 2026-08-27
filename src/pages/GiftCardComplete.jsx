@@ -11,7 +11,7 @@ import Header from '../components/Header';
  * ?token=<orderId>, which we hand to captureGiftCardOrder to take the money
  * and issue the card.
  *
- * If this page never loads — the buyer closes the tab on PayPal's side — the
+ * If this page never loads - the buyer closes the tab on PayPal's side - the
  * paypalWebhook function issues the card instead. This page is the fast path,
  * not the only path.
  */

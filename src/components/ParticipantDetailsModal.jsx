@@ -172,7 +172,7 @@ const ParticipantDetailsModal = ({ participant, onClose, onUpdate, registrations
                     const occupant = registrations.find(r => r.seatNumber === n && r.id !== participant.id);
                     return (
                       <option key={n} value={n}>
-                        Seat {n}{occupant ? ` (occupied by ${occupant.firstName} ${occupant.lastName} — will swap)` : ''}
+                        Seat {n}{occupant ? ` (occupied by ${occupant.firstName} ${occupant.lastName} - will swap)` : ''}
                       </option>
                     );
                   })}

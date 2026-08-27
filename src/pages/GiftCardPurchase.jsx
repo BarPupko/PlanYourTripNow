@@ -7,7 +7,7 @@ import brand from '../utils/brand';
 import siteLogo from '../assets/ivrytours-logo.png';
 import siteLogoLight from '../assets/ivrytours-logo-light.png';
 
-// Must match GIFT_CARD_MIN / GIFT_CARD_MAX in functions/paypal.js — the server
+// Must match GIFT_CARD_MIN / GIFT_CARD_MAX in functions/paypal.js - the server
 // re-validates, so this is only here to fail fast before the redirect.
 const MIN_AMOUNT = 25;
 const MAX_AMOUNT = 2000;
@@ -48,7 +48,7 @@ const GiftCardPurchase = () => {
       processing: "Redirecting to PayPal...",
       customAmount: "Custom Amount",
       presetAmounts: "Preset Amounts",
-      paypalInfo: "You'll be taken to PayPal to finish your purchase. You can pay with a credit or debit card there — a PayPal account isn't required.",
+      paypalInfo: "You'll be taken to PayPal to finish your purchase. You can pay with a credit or debit card there - a PayPal account isn't required.",
       orderSummary: "Order Summary",
       giftCardAmount: "Gift Card Amount",
       to: "To",
@@ -78,7 +78,7 @@ const GiftCardPurchase = () => {
       processing: "Перенаправляем в PayPal...",
       customAmount: "Своя сумма",
       presetAmounts: "Готовые суммы",
-      paypalInfo: "Вы перейдёте на сайт PayPal для завершения покупки. Там можно оплатить кредитной или дебетовой картой — аккаунт PayPal не требуется.",
+      paypalInfo: "Вы перейдёте на сайт PayPal для завершения покупки. Там можно оплатить кредитной или дебетовой картой - аккаунт PayPal не требуется.",
       orderSummary: "Ваш заказ",
       giftCardAmount: "Сумма подарочной карты",
       to: "Кому",
@@ -146,7 +146,7 @@ const GiftCardPurchase = () => {
         }
       `}</style>
 
-      {/* Top utility bar — mirrors the landing page */}
+      {/* Top utility bar - mirrors the landing page */}
       <div style={{ background: brand.ink, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem' }}>
         <a href="tel:6473026849" style={{ color: 'rgba(247,248,243,0.5)', fontSize: 11, textDecoration: 'none', letterSpacing: '0.02em' }}>
           📞 647-302-6849
@@ -187,7 +187,7 @@ const GiftCardPurchase = () => {
             <Gift className="w-14 h-14" style={{ color: brand.red }} />
           </div>
           <p style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: brand.muted, marginBottom: 10 }}>
-            {language === 'ru' ? '— ПОДАРОЧНЫЕ КАРТЫ' : '— GIFT CARDS'}
+            {language === 'ru' ? '- ПОДАРОЧНЫЕ КАРТЫ' : '- GIFT CARDS'}
           </p>
           <h1 style={{ fontFamily: '"Fraunces", Georgia, serif', fontWeight: 350, fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.02em', color: brand.navy, marginBottom: 12 }}>
             {t.title}
@@ -390,7 +390,7 @@ const GiftCardPurchase = () => {
                 {t.step2}
               </h2>
 
-              {/* PayPal handoff — no card fields here on purpose. Card data is
+              {/* PayPal handoff - no card fields here on purpose. Card data is
                   entered on PayPal's own page, so it never touches this site. */}
               <div className="rounded-xl p-8 text-center" style={{ background: brand.creamAlt, border: `1px solid ${brand.line}` }}>
                 <svg className="w-16 h-16 mx-auto mb-4" viewBox="0 0 24 24" fill="#00457C">
@@ -469,7 +469,7 @@ const GiftCardPurchase = () => {
         </div>
       </div>
 
-      {/* Compact footer — enough to close the page in the brand without
+      {/* Compact footer - enough to close the page in the brand without
           duplicating the landing page's full sitemap. */}
       <footer style={{ background: brand.navy, color: brand.cream, padding: '2.5rem 1.5rem 2rem', marginTop: '3rem' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>

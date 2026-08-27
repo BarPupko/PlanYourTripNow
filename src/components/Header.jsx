@@ -69,7 +69,7 @@ const Header = ({ showBackButton = false, title = '', subtitle = '', showLogout 
               </button>
             )}
 
-            {/* Logo — goes to admin dashboard on admin pages, or shows home confirmation elsewhere */}
+            {/* Logo - goes to admin dashboard on admin pages, or shows home confirmation elsewhere */}
             <button
               onClick={handleLogoClick}
               className="hidden sm:block hover:opacity-80 transition-opacity"

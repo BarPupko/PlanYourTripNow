@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════
-//  PayPal — gift card purchase
+//  PayPal - gift card purchase
 // ═══════════════════════════════════════════════════════════════════════════
 // Flow: createGiftCardOrder (callable) → redirect the buyer to PayPal → buyer
 // returns to /gift-card/complete → captureGiftCardOrder (callable) issues the
@@ -22,7 +22,7 @@ const SITE_URL = (process.env.PUBLIC_SITE_URL || 'https://barpupko.github.io/Pla
 const GIFT_CARD_MIN = 25;
 const GIFT_CARD_MAX = 2000;
 
-// Money as a string, always — never let a float round-trip decide what was charged.
+// Money as a string, always - never let a float round-trip decide what was charged.
 const toAmountString = (n) => Number(n).toFixed(2);
 
 const validGiftCardAmount = (raw) => {
@@ -130,7 +130,7 @@ module.exports = ({ admin, functions, transporter, adminEmail }) => {
     await transporter.sendMail({
       from: `IVRITours <${process.env.EMAIL_USER}>`,
       to: adminEmail,
-      subject: `Gift card sold — C$${amount}`,
+      subject: `Gift card sold - C$${amount}`,
       html: `<p>C$${amount} gift card purchased by ${senderName} (${escapeHtml(card.senderEmail)})
              for ${recipientName} (${escapeHtml(card.recipientEmail)}).</p>
              <p>Code: ${card.barcodeId}<br/>Link: ${link}</p>`,
@@ -156,7 +156,7 @@ module.exports = ({ admin, functions, transporter, adminEmail }) => {
       if (data.status === 'paid') return null; // already issued
 
       // The capture is authoritative. If PayPal took a different amount than
-      // the doc says, do not issue — flag it for a human instead.
+      // the doc says, do not issue - flag it for a human instead.
       if (capture && toAmountString(data.amount) !== toAmountString(capture.amount)) {
         console.error('[paypal] amount mismatch on', docId, data.amount, '!=', capture.amount);
         tx.update(ref, {
@@ -183,7 +183,7 @@ module.exports = ({ admin, functions, transporter, adminEmail }) => {
     try {
       await sendGiftCardEmails(docId, issued);
     } catch (e) {
-      // The card is paid for and valid — an email failure must not fail the
+      // The card is paid for and valid - an email failure must not fail the
       // capture. Log loudly so it can be resent by hand.
       console.error('[paypal] gift card issued but email failed:', docId, e.message);
     }
@@ -332,7 +332,7 @@ module.exports = ({ admin, functions, transporter, adminEmail }) => {
       return { giftCardId };
     }
 
-    // Already captured — find the doc by the order id stored at creation.
+    // Already captured - find the doc by the order id stored at creation.
     const found = await admin.firestore()
       .collection('giftCards')
       .where('paypalOrderId', '==', orderId)
@@ -345,8 +345,8 @@ module.exports = ({ admin, functions, transporter, adminEmail }) => {
   });
 
   /**
-   * Safety net. The buyer may never load the return page — they can close the
-   * tab the moment PayPal takes the money — so this is what guarantees a paid
+   * Safety net. The buyer may never load the return page - they can close the
+   * tab the moment PayPal takes the money - so this is what guarantees a paid
    * card actually gets issued.
    */
   const paypalWebhook = functions.https.onRequest(async (req, res) => {
@@ -357,7 +357,7 @@ module.exports = ({ admin, functions, transporter, adminEmail }) => {
 
     const webhookId = process.env.PAYPAL_WEBHOOK_ID;
     if (!webhookId) {
-      console.error('[paypal] PAYPAL_WEBHOOK_ID not set — refusing unverified webhook');
+      console.error('[paypal] PAYPAL_WEBHOOK_ID not set - refusing unverified webhook');
       res.status(500).send('Webhook not configured');
       return;
     }
@@ -395,7 +395,7 @@ module.exports = ({ admin, functions, transporter, adminEmail }) => {
         }
       }
 
-      // Always 200 on a verified event we understood — anything else makes
+      // Always 200 on a verified event we understood - anything else makes
       // PayPal retry a delivery we already handled.
       res.status(200).send('OK');
     } catch (e) {

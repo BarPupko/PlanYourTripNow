@@ -6,11 +6,11 @@ const InvoiceModal = ({ registration, trip, onClose }) => {
   const invoiceRef = useRef(null);
 
   const formatDate = (value) => {
-    if (!value) return '—';
+    if (!value) return '-';
     try {
       const d = value?.toDate ? value.toDate() : new Date(value);
       return d.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch { return '—'; }
+    } catch { return '-'; }
   };
 
   const handlePrint = () => {
@@ -98,7 +98,7 @@ const InvoiceModal = ({ registration, trip, onClose }) => {
               <div className="text-sm font-semibold text-gray-700">
                 {registration.registrationDate
                   ? new Date(registration.registrationDate).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
-                  : '—'}
+                  : '-'}
               </div>
             </div>
           </div>
@@ -111,7 +111,7 @@ const InvoiceModal = ({ registration, trip, onClose }) => {
             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
               <div>
                 <label className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold block mb-0.5">Trip</label>
-                <p className="text-sm font-semibold text-gray-900">{trip?.title || '—'}</p>
+                <p className="text-sm font-semibold text-gray-900">{trip?.title || '-'}</p>
               </div>
               <div>
                 <label className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold block mb-0.5">Date</label>
@@ -160,11 +160,11 @@ const InvoiceModal = ({ registration, trip, onClose }) => {
               </div>
               <div>
                 <label className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold block mb-0.5">Email</label>
-                <p className="text-sm text-gray-700">{registration.email || '—'}</p>
+                <p className="text-sm text-gray-700">{registration.email || '-'}</p>
               </div>
               <div>
                 <label className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold block mb-0.5">Phone</label>
-                <p className="text-sm text-gray-700">{registration.phone || '—'}</p>
+                <p className="text-sm text-gray-700">{registration.phone || '-'}</p>
               </div>
               {registration.preferredPickupPlace && (
                 <div>
@@ -261,7 +261,7 @@ const InvoiceModal = ({ registration, trip, onClose }) => {
                 <p className="text-xs text-gray-400 mt-2">
                   Signed: {registration.registrationDate
                     ? new Date(registration.registrationDate).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })
-                    : '—'}
+                    : '-'}
                 </p>
               </div>
             </>

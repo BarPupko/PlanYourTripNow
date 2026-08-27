@@ -88,7 +88,7 @@ const MigrationModal = ({ onClose }) => {
         log.push(`✓ Exported ${docs.length} registration${docs.length !== 1 ? 's' : ''} → registrations_${ts}.json`);
       }
 
-      if (log.length === 0) log.push('Nothing selected — enable at least one checkbox.');
+      if (log.length === 0) log.push('Nothing selected - enable at least one checkbox.');
     } catch (err) {
       log.push(`Error: ${err.message}`);
       success = false;
@@ -142,7 +142,7 @@ const MigrationModal = ({ onClose }) => {
         else log.push(`✓ Imported ${res.count} registration${res.count !== 1 ? 's' : ''}`);
       }
 
-      if (log.length === 0) log.push('Nothing selected — enable checkboxes and choose files.');
+      if (log.length === 0) log.push('Nothing selected - enable checkboxes and choose files.');
     } catch (err) {
       log.push(`Error: ${err.message}`);
       success = false;
@@ -227,7 +227,7 @@ const MigrationModal = ({ onClose }) => {
                   </div>
                 </label>
 
-                {/* File picker — import only */}
+                {/* File picker - import only */}
                 {tab === 'import' && includeTrips && (
                   <div className="mt-3 flex items-center gap-2">
                     <input ref={tripsInputRef} type="file" accept=".json"
@@ -260,12 +260,12 @@ const MigrationModal = ({ onClose }) => {
                     <div className="text-xs text-gray-500 mt-0.5">
                       {tab === 'export'
                         ? 'All registrations from the registrations collection'
-                        : 'Optional — leave empty to import trips only.'}
+                        : 'Optional - leave empty to import trips only.'}
                     </div>
                   </div>
                 </label>
 
-                {/* File picker — import only */}
+                {/* File picker - import only */}
                 {tab === 'import' && includeRegistrations && (
                   <div className="mt-3 flex items-center gap-2">
                     <input ref={regsInputRef} type="file" accept=".json"

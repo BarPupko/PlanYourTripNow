@@ -179,7 +179,7 @@ const FeedbackForm = () => {
           <div className="text-4xl mb-2">🌟</div>
           <h1 className="text-2xl font-bold text-gray-900">How was your trip?</h1>
           <p className="text-gray-600 mt-1 text-sm">
-            Hi <strong>{registration.firstName}</strong> — thanks for joining <strong>{trip.title}</strong>!
+            Hi <strong>{registration.firstName}</strong> - thanks for joining <strong>{trip.title}</strong>!
           </p>
         </div>
 
@@ -239,7 +239,7 @@ const FeedbackForm = () => {
           {/* Publish consent */}
           <div className="border-t border-gray-100 pt-4">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Feature your review on our website?</h2>
-            <p className="text-xs text-gray-400 mb-3">Your review may appear in the "What Our Travelers Say" section — only if you agree.</p>
+            <p className="text-xs text-gray-400 mb-3">Your review may appear in the "What Our Travelers Say" section - only if you agree.</p>
             <div className="flex gap-3 mb-3">
               {[
                 { value: true,  label: '🌟 Yes, share it!' },
@@ -263,7 +263,7 @@ const FeedbackForm = () => {
             {publishConsent === true && (
               <div className="mt-2">
                 <label className="block text-xs font-semibold text-gray-500 mb-1">
-                  Profile photo URL <span className="font-normal text-gray-400">(optional — shown as a circle)</span>
+                  Profile photo URL <span className="font-normal text-gray-400">(optional - shown as a circle)</span>
                 </label>
                 <input
                   type="url"

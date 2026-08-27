@@ -157,7 +157,7 @@ export const deleteRegistration = async (registrationId) => {
   }
 };
 
-// Companion token — generates (once) and persists a UUID on a registration doc.
+// Companion token - generates (once) and persists a UUID on a registration doc.
 // Returns the token string so the caller can build the magic link URL.
 export const ensureCompanionToken = async (registrationId) => {
   const docRef = doc(db, 'registrations', registrationId);
@@ -256,7 +256,7 @@ export const markQuestionRead = async (questionId) => {
   }
 };
 
-// Feedback showcase — mark/unmark a feedback to appear on the landing page
+// Feedback showcase - mark/unmark a feedback to appear on the landing page
 export const toggleFeedbackWebsite = async (id, show) => {
   await updateDoc(doc(db, 'feedbacks', id), { showOnWebsite: show });
 };

@@ -24,11 +24,11 @@ const BulkInvoicesModal = ({ trips, initialTrip, onClose }) => {
   }, [selectedTrip]);
 
   const formatDate = (value) => {
-    if (!value) return '—';
+    if (!value) return '-';
     try {
       const d = value?.toDate ? value.toDate() : new Date(value);
       return d.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch { return '—'; }
+    } catch { return '-'; }
   };
 
   const buildInvoiceHTML = (reg, trip) => {
@@ -37,7 +37,7 @@ const BulkInvoicesModal = ({ trips, initialTrip, onClose }) => {
     const dateDisplay = tripEnd && tripEnd !== tripDate ? `${tripDate} – ${tripEnd}` : tripDate;
     const regDate = reg.registrationDate
       ? new Date(reg.registrationDate).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })
-      : '—';
+      : '-';
 
     return `
       <div style="padding:28px 32px; font-family:Arial,sans-serif; page-break-after:always;">
@@ -56,7 +56,7 @@ const BulkInvoicesModal = ({ trips, initialTrip, onClose }) => {
         <div style="margin-bottom:20px;">
           <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#9CA3AF;margin:0 0 12px;">Trip Details</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;">
-            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Trip</span><strong style="font-size:14px;color:#111;">${trip?.title || '—'}</strong></div>
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Trip</span><strong style="font-size:14px;color:#111;">${trip?.title || '-'}</strong></div>
             <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Date</span><strong style="font-size:14px;color:#111;">${dateDisplay}</strong></div>
             ${trip?.price ? `<div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Price</span><strong style="font-size:14px;color:#111;">C$${trip.price}</strong></div>` : ''}
             ${trip?.driverName ? `<div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Driver</span><strong style="font-size:14px;color:#111;">${trip.driverName}</strong></div>` : ''}
@@ -69,8 +69,8 @@ const BulkInvoicesModal = ({ trips, initialTrip, onClose }) => {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;">
             <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Name</span><strong style="font-size:14px;color:#111;">${reg.firstName} ${reg.lastName}</strong></div>
             <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Seat</span><span style="font-size:13px;color:#374151;">${reg.seatNumber ? `Seat ${reg.seatNumber}` : 'Assigned upon arrival'}</span></div>
-            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Email</span><span style="font-size:13px;color:#374151;">${reg.email || '—'}</span></div>
-            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Phone</span><span style="font-size:13px;color:#374151;">${reg.phone || '—'}</span></div>
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Email</span><span style="font-size:13px;color:#374151;">${reg.email || '-'}</span></div>
+            <div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Phone</span><span style="font-size:13px;color:#374151;">${reg.phone || '-'}</span></div>
             ${reg.preferredPickupPlace ? `<div><span style="font-size:9px;text-transform:uppercase;color:#9CA3AF;display:block;margin-bottom:2px;">Pickup</span><span style="font-size:13px;color:#374151;">${reg.preferredPickupPlace}</span></div>` : ''}
           </div>
         </div>
@@ -155,12 +155,12 @@ const BulkInvoicesModal = ({ trips, initialTrip, onClose }) => {
             }}
             className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm font-medium focus:border-teal-400 focus:outline-none bg-white"
           >
-            <option value="">— Choose a trip —</option>
+            <option value="">- Choose a trip -</option>
             {trips.map(t => {
               const d = t.date?.toDate?.() || new Date(t.date);
               return (
                 <option key={t.id} value={t.id}>
-                  {t.title} — {d.toLocaleDateString('en-CA')}
+                  {t.title} - {d.toLocaleDateString('en-CA')}
                 </option>
               );
             })}

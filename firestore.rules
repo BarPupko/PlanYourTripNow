@@ -8,7 +8,7 @@ service cloud.firestore {
     }
 
     // ─── Trips ──────────────────────────────────────────────────────────────
-    // Trips are public information — needed by the landing page and registration
+    // Trips are public information - needed by the landing page and registration
     // form, both of which are accessible without authentication.
     match /trips/{tripId} {
       allow read: if true;
@@ -29,7 +29,7 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
 
       // Public can advance their own registration from form_sent → confirmed
-      // (completes the emailed registration link — no auth needed)
+      // (completes the emailed registration link - no auth needed)
       allow update: if resource.data.status == 'form_sent'
                     && request.resource.data.status == 'confirmed'
                     && request.resource.data.diff(resource.data)
@@ -70,12 +70,12 @@ service cloud.firestore {
       // (Firestore create semantics already guarantee this, but be explicit)
       allow create: if !exists(/databases/$(database)/documents/feedbacks/$(token));
 
-      // No updates or deletes — feedback is immutable once submitted
+      // No updates or deletes - feedback is immutable once submitted
       allow update, delete: if isAdmin();
     }
 
     // ─── Schedule Items ─────────────────────────────────────────────────────
-    // Used by the public participant companion app — read is public
+    // Used by the public participant companion app - read is public
     match /schedule_items/{itemId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -92,7 +92,7 @@ service cloud.firestore {
     // ─── Gift Cards ─────────────────────────────────────────────────────────
     match /giftCards/{giftCardId} {
       // A card bought through PayPal exists as status:'pending' from the moment
-      // checkout starts, before any money has moved. Those must stay invisible —
+      // checkout starts, before any money has moved. Those must stay invisible -
       // otherwise anyone could start a purchase, abandon it, and read a live
       // card. Only the paypalWebhook/capture functions (admin SDK, which
       // bypasses these rules) ever set status:'paid'.
@@ -106,7 +106,7 @@ service cloud.firestore {
       allow read: if isAdmin() || isIssued();
 
       // Only admin can create/delete. Public purchases are written server-side
-      // by createGiftCardOrder, which bypasses rules — do not open this up.
+      // by createGiftCardOrder, which bypasses rules - do not open this up.
       allow create, delete: if isAdmin();
 
       // Admin can update anything; public can only mark an issued card as viewed

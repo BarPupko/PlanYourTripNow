@@ -295,7 +295,7 @@ const TripView = () => {
               <div className="mb-3 p-3 rounded-lg border-2 flex items-center justify-between gap-2"
                 style={{ backgroundColor: '#FFF3CD', borderColor: colors.warning }}>
                 <span className="font-medium text-sm" style={{ color: '#856404' }}>
-                  Moving <strong>{selectedParticipant.firstName} {selectedParticipant.lastName}</strong> from seat #{selectedParticipant.seatNumber ?? '—'} — tap a seat to move
+                  Moving <strong>{selectedParticipant.firstName} {selectedParticipant.lastName}</strong> from seat #{selectedParticipant.seatNumber ?? '-'} - tap a seat to move
                 </span>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
@@ -450,7 +450,7 @@ const TripView = () => {
                     {/* Phone contact tracker */}
                     <button
                       onClick={() => handleToggleContacted(reg.id, reg.contacted)}
-                      title={reg.contacted ? 'Contacted — click to unmark' : 'Not contacted yet — click to mark as contacted'}
+                      title={reg.contacted ? 'Contacted - click to unmark' : 'Not contacted yet - click to mark as contacted'}
                       className="flex-shrink-0 flex flex-col items-center gap-0.5 p-2 rounded-lg transition-all hover:bg-yellow-100"
                     >
                       <Phone
@@ -513,7 +513,7 @@ const TripView = () => {
                     {/* Phone contact tracker */}
                     <button
                       onClick={() => handleToggleContacted(reg.id, reg.contacted)}
-                      title={reg.contacted ? 'Contacted — click to unmark' : 'Not contacted yet — click to mark as contacted'}
+                      title={reg.contacted ? 'Contacted - click to unmark' : 'Not contacted yet - click to mark as contacted'}
                       className="flex-shrink-0 flex flex-col items-center gap-0.5 p-2 rounded-lg transition-all hover:bg-orange-100"
                     >
                       <Phone className="w-5 h-5 transition-colors" style={{ color: reg.contacted ? colors.success : '#9CA3AF' }} />

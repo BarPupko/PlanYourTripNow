@@ -146,7 +146,7 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug">{post?.title}</h2>
             {previewMode && (
               <span className="inline-block mt-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                Preview — not yet published
+                Preview - not yet published
               </span>
             )}
           </div>
@@ -311,7 +311,7 @@ const BlogPostModal = ({ post, onClose, previewMode = false }) => {
           </div>
         )}
 
-        {/* Comments — hidden in preview mode */}
+        {/* Comments - hidden in preview mode */}
         {!previewMode && (
           <div className="px-6 mt-8 pb-6">
             <div className="border-t pt-6">
